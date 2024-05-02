@@ -1,7 +1,7 @@
 nelmio_cors:
     defaults:
         allow_credentials: false
-        allow_origin: ['http://dev.app.flexystock.com:5173']
+        allow_origin: ['%env(CORS_ALLOW_ORIGIN)%']
         allow_headers: ['Content-Type', 'Authorization']
         allow_methods: ['GET', 'POST', 'PUT', 'DELETE']
         expose_headers: ['Link']
