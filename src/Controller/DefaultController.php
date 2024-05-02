@@ -15,6 +15,6 @@ class DefaultController extends AbstractController
     #[Route('hola', name: 'hola', methods: ['GET','POST'])]
     public function __invoke(): JsonResponse
     {
-        return new JsonResponse(['message' => 'Has llamado correctamente al metodo de Back (symfony)']);
+        return new JsonResponse(['message' => 'Los entornos esta bien configurados']);
     }
 }
