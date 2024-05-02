@@ -3,7 +3,7 @@ FROM php:8.2-fpm
 ARG UID
 EXPOSE $UID
 
-RUN adduser -u ${UID} --disabled-password --gecos "" appuser
+RUN adduser -u 1001 --disabled-password --gecos "" appuser
 RUN mkdir /home/appuser/.ssh
 RUN chown -R appuser:appuser /home/appuser/
 RUN echo "StrictHostKeyChecking no" >> /home/appuser/.ssh/config
@@ -27,5 +27,3 @@ RUN chmod a+x php-cs-fixer
 RUN mv php-cs-fixer /usr/local/bin/php-cs-fixer
 
 RUN mkdir -p /appdata/www
-
-WORKDIR /appdata/www
