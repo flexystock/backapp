@@ -1,0 +1,8 @@
+doctrine_migrations:
+    ems:
+        default:
+            migrations_paths:
+                'DoctrineMigrations\Main': '%kernel.project_dir%/migrations/Main'
+        client:
+            migrations_paths:
+                'DoctrineMigrations\Client': '%kernel.project_dir%/migrations/Client'

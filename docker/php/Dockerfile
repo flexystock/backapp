@@ -1,9 +1,20 @@
 FROM php:8.2-fpm
 
-ARG UID
-EXPOSE $UID
+# Argumento para recibir el UID desde afuera
+ARG UID=1000
 
-RUN adduser -u 1001 --disabled-password --gecos "" appuser
+# Crear un nuevo usuario llamado 'appuser' con el UID especificado
+RUN useradd -m -u ${UID} -s /bin/bash appuser
+
+# Establecer el directorio de trabajo
+WORKDIR /var/www/html
+
+# Cambiar la propiedad del directorio a 'appuser'
+RUN chown -R appuser:appuser /var/www/html
+
+# Cambiar a usuario 'appuser'
+USER appuser
+
 RUN mkdir /home/appuser/.ssh
 RUN chown -R appuser:appuser /home/appuser/
 RUN echo "StrictHostKeyChecking no" >> /home/appuser/.ssh/config

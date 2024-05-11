@@ -1,0 +1,10 @@
+doctrine:
+  orm:
+    entity_managers:
+      client:
+        connection: client1 # Asumiendo que puedes hacer algún tipo de inclusión dinámica o que lo scripts generan partes de este archivo
+        mappings:
+          Product:
+            dir: '%kernel.project_dir%/src/Product/Domain/Entity'
+          Scale:
+            dir: '%kernel.project_dir%/src/Scale/Domain/Entity'
