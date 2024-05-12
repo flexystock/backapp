@@ -1,8 +1,14 @@
 doctrine_migrations:
-    ems:
-        default:
-            migrations_paths:
-                'DoctrineMigrations\Main': '%kernel.project_dir%/migrations/Main'
-        client:
-            migrations_paths:
-                'DoctrineMigrations\Client': '%kernel.project_dir%/migrations/Client'
+  migrations_paths:
+    'DoctrineMigrations\Main': '%kernel.project_dir%/migrations/Main'
+    'DoctrineMigrations\Client': '%kernel.project_dir%/migrations/Client'
+  storage:
+    table_storage:
+      table_name: migration_versions
+  em: default
+  services:
+    'doctrine.migrations.configuration.client':
+      migrations_paths:
+        'DoctrineMigrations\Client': '%kernel.project_dir%/migrations/Client'
+      connection: client
+      em: client

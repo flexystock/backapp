@@ -5,6 +5,8 @@ doctrine:
         connection: client1 # Asumiendo que puedes hacer algún tipo de inclusión dinámica o que lo scripts generan partes de este archivo
         mappings:
           Product:
+            is_bundle: false
+            type: attribute  # Asumiendo que estás usando PHP 8+ y quieres usar atributos
             dir: '%kernel.project_dir%/src/Product/Domain/Entity'
-          Scale:
-            dir: '%kernel.project_dir%/src/Scale/Domain/Entity'
+            prefix: 'App\Product\Domain\Entity'
+            alias: Product

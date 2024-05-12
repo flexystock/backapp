@@ -37,3 +37,11 @@ services:
     App\User\Infrastructure\OutputAdapters\JWTTokenManager:
         arguments:
             - '%env(APP_SECRET)%'
+
+    doctrine.migrations.configuration.client:
+        class: Doctrine\Migrations\Configuration\Migration\ConfigurationArray
+        arguments:
+            - migrations_paths:
+                  'DoctrineMigrations\Client': '%kernel.project_dir%/migrations/Client'
+              connection: client
+              em: client
