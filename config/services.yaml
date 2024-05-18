@@ -13,12 +13,46 @@ services:
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
+    # Autoload de los servicios de la aplicación
     App\:
-        resource: '../src/'
-        exclude:
-            - '../src/DependencyInjection/'
-            - '../src/Entity/'
-            - '../src/Kernel.php'
+        resource: '../src/*'
+        exclude: '../src/{DependencyInjection,Entity,Tests,Kernel.php}'
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    # Configuración del LoginUseCase
+    App\User\Application\LoginUseCase:
+        arguments:
+            $userRepository: '@App\User\Infrastructure\OutputPorts\UserRepositoryInterface'
+            # Esta línea asegura que el password hasher sea inyectado automáticamente
+            $passwordHasher: '@Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface'
+
+    # Configura controladores para que sean públicos y tengan las etiquetas adecuadas
+    App\User\Infrastructure\InputAdapters\:
+        resource: '../src/User/Infrastructure/InputAdapters'
+        tags: [ 'controller.service_arguments' ]
+        public: true
+
+    # Configura los servicios para el manejo de repositorios y tokens
+    App\User\Infrastructure\OutputAdapters\UserRepository:
+        arguments:
+            $registry: '@doctrine' # Este debe ser un alias para ManagerRegistry si es que está configurado así
+        tags:
+            - { name: 'doctrine.repository_service' }
+
+    App\User\Infrastructure\OutputAdapters\JWTTokenManager:
+        arguments:
+            - '%env(APP_SECRET)%'
+
+    App\Service\MainDatabaseConnection:
+        class: PDO
+        arguments:
+            - '%env(resolve:DATABASE_URL)%'
+
+#    App\Service\DatabaseConnectionManager:
+#        arguments:
+#            $mainConnection: '@App\Service\MainDatabaseConnection'
+
+    App\Service\DatabaseConnectionManager:
+        arguments:
+            $defaultEntityManager: '@doctrine.orm.default_entity_manager'
+            $params: '@parameter_bag'
+

@@ -1,42 +1,57 @@
 doctrine:
-    dbal:
-        default_connection: default
-        connections:
-            default:
-                url: '%env(resolve:DATABASE_URL)%'
-                driver: 'pdo_mysql'
-                server_version: '8.0'
-                charset: utf8mb4
-            client:
-                url: '%env(resolve:CLIENT_DATABASE_URL)%'
-                driver: 'pdo_mysql'
-                server_version: '8.0'
-                charset: utf8mb4
+  dbal:
+    default_connection: main
+    connections:
+      main:
+        url: '%env(resolve:DATABASE_URL)%'
+      carrefour:
+        url: '%env(resolve:CARREFOUR_DATABASE_URL)%'
+      fosforo:
+        url: '%env(resolve:FOSFORO_DATABASE_URL)%'
+      barrilon:
+        url: '%env(resolve:BARRILON_DATABASE_URL)%'
+  orm:
+    default_entity_manager: main
+    entity_managers:
+      main:
+        connection: main
+        mappings:
+          Main:
+            is_bundle: false
+            type: attribute
+            dir: '%kernel.project_dir%/src/Main/Entity'
+            prefix: 'App\Main\Entity'
+            alias: Main
+      carrefour:
+        connection: carrefour
+        mappings:
+          Carrefour:
+            is_bundle: false
+            type: attribute
+            dir: '%kernel.project_dir%/src/Client/Entity'
+            prefix: 'App\Client\Entity'
+            alias: Client
+      fosforo:
+        connection: fosforo
+        mappings:
+          Fosforo:
+            is_bundle: false
+            type: attribute
+            dir: '%kernel.project_dir%/src/Client/Entity'
+            prefix: 'App\Client\Entity'
+            alias: Client
+      barrilon:
+        connection: barrilon
+        mappings:
+          Barrilon:
+            is_bundle: false
+            type: attribute
+            dir: '%kernel.project_dir%/src/Client/Entity'
+            prefix: 'App\Client\Entity'
+            alias: Client
 
-    orm:
-        auto_generate_proxy_classes: true
-        default_entity_manager: default
-        entity_managers:
-            default:
-                connection: default
-                mappings:
-                    Main:
-                        is_bundle: false
-                        type: attribute
-                        dir: '%kernel.project_dir%/src/Entity/Main'
-                        prefix: 'App\Entity\Main'
-                        alias: Main
-            client:
-                connection: client
-                mappings:
-                    Client:
-                        is_bundle: false
-                        type: attribute
-                        dir: '%kernel.project_dir%/src/Entity/Client'
-                        prefix: 'App\Entity\Client'
-                        alias: Client
 
-    # Configuraciones específicas de entorno
+  # Configuraciones específicas de entorno
 when@test:
     doctrine:
         dbal:
