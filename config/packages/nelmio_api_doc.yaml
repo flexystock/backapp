@@ -1,0 +1,11 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: FlexyStock
+            description: Documentacion API Flexystock
+            version: 1.0.0
+
+    areas: # to filter documented areas
+        path_patterns:
+            #- ^/api(?!/doc|/doc.json$) # Accepts routes under /api except /api/doc
+            - ^/api(?!/(docs|context))
