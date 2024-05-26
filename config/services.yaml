@@ -14,12 +14,22 @@ services:
         resource: '../src/*'
         exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
 
-    # Configuración del LoginUseCase
-    App\User\Application\LoginUseCase:
+    # Configuración del LoginUserUseCase
+    App\User\Application\LoginUserUseCase:
         arguments:
             $userRepository: '@App\User\Infrastructure\OutputPorts\UserRepositoryInterface'
             # Esta línea asegura que el password hasher sea inyectado automáticamente
             $passwordHasher: '@Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface'
+
+    App\User\Application\RegisterUserUseCase:
+        arguments:
+            $userRepository: '@App\User\Infrastructure\OutputAdapters\UserRepository'
+            $passwordHasher: '@security.password_hasher'
+            $validator: '@validator'
+
+    App\User\Infrastructure\InputAdapters\RegisterUserController:
+        arguments:
+            $registerUseCase: '@App\User\Application\RegisterUserUseCase'
 
     # Configura controladores para que sean públicos y tengan las etiquetas adecuadas
     App\User\Infrastructure\InputAdapters\:
@@ -37,11 +47,26 @@ services:
     App\User\Infrastructure\OutputAdapters\JWTTokenManager:
         arguments:
             - '%env(APP_SECRET)%'
-
-    doctrine.migrations.configuration.client:
-        class: Doctrine\Migrations\Configuration\Migration\ConfigurationArray
+    # Configuración de servicios para la sección de Client
+    App\Client\Application\CreateClientUseCase:
         arguments:
-            - migrations_paths:
-                  'DoctrineMigrations\Client': '%kernel.project_dir%/migrations/Client'
-              connection: client
-              em: client
+            $clientRepository: '@App\Client\Infrastructure\OutputPorts\ClientRepositoryInterface'
+
+    App\Client\Infrastructure\InputAdapters\CreateClientController:
+        arguments:
+            $createClientUseCase: '@App\Client\Application\CreateClientUseCase'
+
+    App\Client\Infrastructure\InputAdapters\:
+        resource: '../src/Client/Infrastructure/InputAdapters'
+        tags: [ 'controller.service_arguments' ]
+        public: true
+
+    App\Client\Infrastructure\OutputAdapters\ClientRepository:
+        arguments:
+            $registry: '@doctrine'
+        tags:
+            - { name: 'doctrine.repository_service' }
+
+    App\Client\Infrastructure\OutputPorts\ClientRepositoryInterface:
+        alias: App\Client\Infrastructure\OutputAdapters\ClientRepository
+

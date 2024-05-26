@@ -1,31 +1,57 @@
-# config/packages/doctrine.yaml
-imports:
-  - { resource: doctrine_main.yaml }
-  - { resource: doctrine_clients.yaml }
 doctrine:
   dbal:
-    url: '%env(resolve:DATABASE_URL)%'
-    #server_version: '5.7' # Especifica tu versión de servidor de base de datos aquí
-
+    default_connection: main
+    connections:
+      main:
+        url: '%env(resolve:DATABASE_URL)%'
+      carrefour:
+        url: '%env(resolve:CARREFOUR_DATABASE_URL)%'
+      fosforo:
+        url: '%env(resolve:FOSFORO_DATABASE_URL)%'
+      barrilon:
+        url: '%env(resolve:BARRILON_DATABASE_URL)%'
   orm:
-    auto_generate_proxy_classes: true
-    naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
-    auto_mapping: true
-    mappings:
-      User:
-        is_bundle: false
-        type: attribute
-        dir: '%kernel.project_dir%/src/User/Domain/Entity'
-        prefix: 'App\User\Domain\Entity'
-        alias: User
-      Client:
-        is_bundle: false
-        type: attribute
-        dir: '%kernel.project_dir%/src/Client/Domain/Entity'
-        prefix: 'App\Client\Domain\Entity'
-        alias: Client
-      # Puedes añadir más módulos aquí de la misma forma
+    default_entity_manager: main
+    entity_managers:
+      main:
+        connection: main
+        mappings:
+          Main:
+            is_bundle: false
+            type: attribute
+            dir: '%kernel.project_dir%/src/Entity/Main'
+            prefix: 'App\Entity\Main'
+            alias: Main
+      carrefour:
+        connection: carrefour
+        mappings:
+          Carrefour:
+            is_bundle: false
+            type: attribute
+            dir: '%kernel.project_dir%/src/Entity/Client'
+            prefix: 'App\Entity\Client'
+            alias: Client
+      fosforo:
+        connection: fosforo
+        mappings:
+          Fosforo:
+            is_bundle: false
+            type: attribute
+            dir: '%kernel.project_dir%/src/Entity/Client'
+            prefix: 'App\Entity\Client'
+            alias: Client
+      barrilon:
+        connection: barrilon
+        mappings:
+          Barrilon:
+            is_bundle: false
+            type: attribute
+            dir: '%kernel.project_dir%/src/Entity/Client'
+            prefix: 'App\Entity\Client'
+            alias: Client
 
+
+  # Configuraciones específicas de entorno
 when@test:
   doctrine:
     dbal:
@@ -42,11 +68,10 @@ when@prod:
       result_cache_driver:
         type: pool
         pool: doctrine.result_cache_pool
-
-framework:
-  cache:
-    pools:
-      doctrine.result_cache_pool:
-        adapter: cache.app
-      doctrine.system_cache_pool:
-        adapter: cache.system
+  framework:
+    cache:
+      pools:
+        doctrine.result_cache_pool:
+          adapter: cache.app
+        doctrine.system_cache_pool:
+          adapter: cache.system

@@ -1,5 +1,11 @@
-controllers:
+controllers_user:
     resource:
         path: ../src/User/Infrastructure/InputAdapters/
         namespace: App\User\Infrastructure\InputAdapters
+    type: attribute
+
+controllers_client:
+    resource:
+        path: ../src/Client/Infrastructure/InputAdapters/
+        namespace: App\Client\Infrastructure\InputAdapters
     type: attribute

@@ -2,28 +2,27 @@
 declare(strict_types=1);
 namespace App\User\Infrastructure\OutputAdapters;
 
-use App\User\Domain\Entity\User;
+use App\Entity\Main\User;
 use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
+use Doctrine\ORM\EntityManagerInterface;
 
 class UserRepository extends ServiceEntityRepository implements UserRepositoryInterface, PasswordUpgraderInterface
 {
-    public function __construct(ManagerRegistry $registry)
+    private EntityManagerInterface $entityManager;
+    public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager)
     {
+        $this->entityManager = $entityManager;
         parent::__construct($registry, User::class);
     }
 
-    public function findByEmail(string $email): ?User
+    public function findByEmail(string $mail): ?User
     {
-        //die("llegamos");
-        $email2 = $this->findOneBy(['email' => $email]);
-        //var_dump($email2);
-        //die("email");
-        return $email2;
+        return $this->findOneBy(['mail' => $mail]);
     }
 
     public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
@@ -37,5 +36,9 @@ class UserRepository extends ServiceEntityRepository implements UserRepositoryIn
         $this->getEntityManager()->flush();
     }
 
-    // Otros métodos específicos que puedas necesitar
+    public function save(User $user): void
+    {
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+    }
 }

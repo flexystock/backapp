@@ -2,13 +2,14 @@
 
 namespace App\User\Application;
 
-use App\User\Domain\Entity\User;
-use App\User\Infrastructure\InputPorts\LoginInputPort;
+use App\Entity\Main\User;
+use App\User\Infrastructure\InputPorts\LoginUserInputPort;
+
 use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 
-class LoginUseCase implements LoginInputPort
+class LoginUserUseCase implements LoginUserInputPort
 {
     private UserRepositoryInterface $userRepository;
     private UserPasswordHasherInterface $passwordHasher;
@@ -19,13 +20,12 @@ class LoginUseCase implements LoginInputPort
         $this->passwordHasher = $passwordHasher;
     }
 
-    public function login(string $email, string $password): ?User
+    public function login(string $mail, string $password): ?User
     {
-        $user = $this->userRepository->findByEmail($email);
+        $user = $this->userRepository->findByEmail($mail);
         if (!$user || !$this->passwordHasher->isPasswordValid($user, $password)) {
             return null;
         }
-
         return $user;
     }
 

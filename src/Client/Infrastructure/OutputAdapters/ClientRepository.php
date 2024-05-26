@@ -2,16 +2,29 @@
 declare(strict_types=1);
 namespace App\Client\Infrastructure\OutputAdapters;
 
-use App\Client\Domain\Entity\Client;
+use App\Client\Infrastructure\OutputPorts\ClientRepositoryInterface;
+use App\Entity\Main\Client;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
-class ClientRepository extends ServiceEntityRepository
+class ClientRepository extends ServiceEntityRepository implements ClientRepositoryInterface
 {
-    public function __construct(ManagerRegistry $registry)
+    private EntityManagerInterface $entityManager;
+    public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager)
     {
+        $this->entityManager = $entityManager;
         parent::__construct($registry, Client::class);
     }
 
-    // Métodos adicionales como encontrar por nombre, etc.
+    public function save(Client $client): void
+    {
+        $this->entityManager->persist($client);
+        $this->entityManager->flush();
+    }
+
+    public function findByUuid(string $uuid): ?Client
+    {
+        // Todo
+    }
 }
