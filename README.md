@@ -8,8 +8,7 @@ repositorio para la parte de back de la Aplicación
 5. Si es la primera vez que se trabaja en este repositorio, ejecutar: 'make build' para crear la imagenes de los contenedores
 6. Levantar los contenedores con el comando 'make run'
 7. Una vez que esén levantados los contenedores, comprobar que se puede acceder desde el Workbench a las BBDD tanto la BBDD main como las Bases de Datos de los clientes.
-8. Una vez tengamos conexión a través del Workbenc, ejecutar la sentencia de Mysql para crear la tabla de Migraciones tanto en la BBDD principal como en le BBDD de los clientes
-9. Ejecutar las migraciones tanto en Main como en los clientes:
+8. Ejecutar las migraciones tanto en Main como en los clientes:
     - Accedemos al contenedor desde la terminal con el comando 'make ssh-be'
     - Situarse en /bin/migrations/main y ejecutar 'php BBDDmigratioinsMain.php'
     - Situarse en /bin/migrations/client y ejecutar 'php BBDDmigratioinsClient.php'
