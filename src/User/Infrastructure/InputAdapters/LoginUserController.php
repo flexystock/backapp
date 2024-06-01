@@ -80,6 +80,6 @@ class LoginUserController {
         }
 
         $token = $this->jwtManager->create($user);
-        return $response(['token' => $token]);
+        return new JsonResponse(['token' => $token]);
     }
 }

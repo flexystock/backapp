@@ -10,6 +10,19 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 -- ---------------------------------------------------
+DROP TABLE IF EXISTS `migrations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+
+CREATE TABLE migrations (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            migration VARCHAR(255),
+                            batch INT,
+                            version INT,
+                            applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+ALTER TABLE migrations ADD UNIQUE (version);
+-- ---------------------------------------------------
 --
 -- Table structure for table `clients`
 --
