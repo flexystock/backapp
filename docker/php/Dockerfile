@@ -36,13 +36,6 @@ RUN wget https://cs.symfony.com/download/php-cs-fixer-v2.phar -O php-cs-fixer \
 RUN mkdir -p /appdata/www \
     && chown -R appuser:appuser /appdata/www
 
-<<<<<<< HEAD
-# Establecer el directorio de trabajo
-WORKDIR /appdata/www
-
-# Cambiar al usuario creado
-USER appuser
-=======
 # Instalar Docker
 RUN apt-get update && \
     apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release && \
@@ -56,4 +49,3 @@ RUN groupadd -f docker \
     && usermod -aG docker appuser
 
 WORKDIR /appdata/www
->>>>>>> 64ae9559a13762a869a27e0d6f201a5913a8f67c
