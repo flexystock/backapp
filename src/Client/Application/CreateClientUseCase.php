@@ -47,8 +47,8 @@ class CreateClientUseCase implements CreateClientInputPort
         $client = new Client();
         $uuid = Uuid::v4()->toRfc4122();
         $client->setUuid($uuid);
-        $client->setName($data['name']);
-        $scheme = $data['name']."_DATABASE_URL";
+        $client->setName($data['clientName']);
+        $scheme = $data['clientName']."_DATABASE_URL";
         $scheme = strtoupper($scheme);
         $client->setScheme($scheme);
 
@@ -57,9 +57,48 @@ class CreateClientUseCase implements CreateClientInputPort
             throw new \Exception((string)$errors);
         }
 
-        //guardamos en BBDD
+        // Guardar en la base de datos
         $this->clientRepository->save($client);
 
+        // Determinar el puerto para el nuevo contenedor
+        $port = $this->findAvailablePort(40010); // Ejemplo, puedes cambiar el rango de puertos
+
+        // Verificar la ruta de trabajo actual y si el script existe
+        $currentDir = getcwd();
+        $scriptPath = '/appdata/www/bin/create_client_container.sh';
+        if (!file_exists($scriptPath)) {
+            throw new \Exception("Script not found: " . $scriptPath);
+        }
+
+        // Llamar al script para crear el contenedor y actualizar el .env
+        $command = sprintf('bash %s %s %d 2>&1', escapeshellarg($scriptPath), escapeshellarg($data['clientName']), $port);
+        exec($command, $output, $return_var);
+
+        if ($return_var !== 0) {
+            // Registrar el error y la salida del comando
+            error_log('Error creating client container: ' . implode("\n", $output));
+            throw new \Exception('Error creating client container: ' . implode("\n", $output));
+        }
+
         return $client;
+    }
+
+    private function findAvailablePort($startPort): int
+    {
+        $port = $startPort;
+        while ($this->isPortInUse($port)) {
+            $port++;
+        }
+        return $port;
+    }
+
+    private function isPortInUse($port): bool
+    {
+        $connection = @fsockopen('localhost', $port);
+        if (is_resource($connection)) {
+            fclose($connection);
+            return true;
+        }
+        return false;
     }
 }

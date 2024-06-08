@@ -28,4 +28,16 @@ RUN mv php-cs-fixer /usr/local/bin/php-cs-fixer
 
 RUN mkdir -p /appdata/www
 
+# Instalar Docker
+RUN apt-get update && \
+    apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
+    echo "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && \
+    apt-get install -y docker-ce-cli
+
+# Crear grupo docker y añadir appuser al grupo
+RUN groupadd -f docker \
+    && usermod -aG docker appuser
+
 WORKDIR /appdata/www
