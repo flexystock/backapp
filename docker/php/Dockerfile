@@ -36,8 +36,24 @@ RUN wget https://cs.symfony.com/download/php-cs-fixer-v2.phar -O php-cs-fixer \
 RUN mkdir -p /appdata/www \
     && chown -R appuser:appuser /appdata/www
 
+<<<<<<< HEAD
 # Establecer el directorio de trabajo
 WORKDIR /appdata/www
 
 # Cambiar al usuario creado
 USER appuser
+=======
+# Instalar Docker
+RUN apt-get update && \
+    apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
+    echo "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && \
+    apt-get install -y docker-ce-cli
+
+# Crear grupo docker y añadir appuser al grupo
+RUN groupadd -f docker \
+    && usermod -aG docker appuser
+
+WORKDIR /appdata/www
+>>>>>>> 64ae9559a13762a869a27e0d6f201a5913a8f67c

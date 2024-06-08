@@ -2,6 +2,7 @@
 namespace App\User\Application;
 
 use App\Entity\Main\User;
+use App\Entity\Main\Client;
 use App\User\Infrastructure\InputPorts\RegisterUserInputPort;
 use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
