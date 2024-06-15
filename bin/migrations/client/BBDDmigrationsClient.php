@@ -51,9 +51,14 @@ $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 foreach ($clients as $client) {
     $clientIdentifier = $client['scheme'];
+    echo "Identificador del Cliente: $clientIdentifier\n";
     $databaseUrl = $_ENV[strtoupper($clientIdentifier) . '_DATABASE_URL'];
+    echo "DataBase URL: \n";
+    var_dump($databaseUrl);
     // Elimina la parte de query string si existe
     $urlComponents = parse_url(explode('?', $databaseUrl)[0]);
+    echo "componentes URL:\n";
+    var_dump($urlComponents);
     if (!$urlComponents || !isset($urlComponents['host'], $urlComponents['user'])) {
         echo "Error: URL de base de datos mal formado para $clientIdentifier\n";
         continue;

@@ -27,4 +27,10 @@ class ClientRepository extends ServiceEntityRepository implements ClientReposito
     {
         // Todo
     }
+
+    public function findOneByPort(int $port): ?Client
+    {
+        return $this->findOneBy(['port' => $port]);
+    }
+
 }

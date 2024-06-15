@@ -1,20 +1,4 @@
 services:
-
-  docker-symfony-dbPruebascript:
-    container_name: docker-symfony-dbPruebascript
-    image: mysql:8.0
-    ports:
-      - "40010:3306"
-    environment:
-      MYSQL_DATABASE: docker_symfony_databasePruebascript
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-      MYSQL_ROOT_PASSWORD: root
-    command: mysqld --sql_mode="STRICT_ALL_TABLES,NO_ENGINE_SUBSTITUTION"
-    volumes:
-      - docker-symfony-databasePruebascript-data:/var/lib/mysql
-    networks:
-      - docker-symfony-network
   docker-symfony-web:
     container_name: docker-symfony-web
     build:
@@ -113,7 +97,6 @@ services:
     networks:
       - docker-symfony-network
 volumes:
-  docker-symfony-databasePruebascript-data:
   docker-symfony-database-data:
   docker-symfony-databaseCarrefour-data:
   docker-symfony-databaseFosforo-data:

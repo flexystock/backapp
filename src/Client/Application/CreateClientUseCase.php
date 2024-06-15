@@ -48,9 +48,12 @@ class CreateClientUseCase implements CreateClientInputPort
         $uuid = Uuid::v4()->toRfc4122();
         $client->setUuid($uuid);
         $client->setName($data['clientName']);
-        $scheme = $data['clientName']."_DATABASE_URL";
-        $scheme = strtoupper($scheme);
+        $scheme = strtoupper($data['clientName']);
         $client->setScheme($scheme);
+
+        // Determinar el puerto para el nuevo contenedor
+        $port = $this->findAvailablePort(40010);
+        $client->setPort($port);
 
         $errors = $this->validator->validate($client);
         if (count($errors) > 0) {
@@ -59,9 +62,6 @@ class CreateClientUseCase implements CreateClientInputPort
 
         // Guardar en la base de datos
         $this->clientRepository->save($client);
-
-        // Determinar el puerto para el nuevo contenedor
-        $port = $this->findAvailablePort(40010); // Ejemplo, puedes cambiar el rango de puertos
 
         // Verificar la ruta de trabajo actual y si el script existe
         $currentDir = getcwd();
@@ -88,12 +88,22 @@ class CreateClientUseCase implements CreateClientInputPort
         $port = $startPort;
         while ($this->isPortInUse($port)) {
             $port++;
+            if ($port > 65535) { // Evitar ciclos infinitos
+                $port = 40010; // Reiniciar el ciclo si se superan los puertos disponibles
+            }
         }
         return $port;
     }
 
     private function isPortInUse($port): bool
     {
+        // Consultar la base de datos para ver si el puerto está en uso
+        $client = $this->clientRepository->findOneBy(['port' => $port]);
+        if ($client !== null) {
+            return true;
+        }
+
+        // Verificar si el puerto está en uso en el sistema
         $connection = @fsockopen('localhost', $port);
         if (is_resource($connection)) {
             fclose($connection);

@@ -37,6 +37,9 @@ class Client
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $ttnSecureByIp = false;
 
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private string $port;
+
     public function __construct()
     {
         $this->uuid = Uuid::v4()->toRfc4122();
@@ -138,6 +141,18 @@ class Client
     public function setTtnSecureByIp(bool $ttnSecureByIp): self
     {
         $this->ttnSecureByIp = $ttnSecureByIp;
+        return $this;
+    }
+
+    public function getPort(): ?int
+    {
+        return $this->port;
+    }
+
+    public function setPort(int $port): self
+    {
+        $this->port = $port;
+
         return $this;
     }
 }
