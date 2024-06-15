@@ -1,0 +1,1 @@
+STRING_DATABASE_URL="mysql://user:password@docker-symfony-dbString:40010/docker_symfony_databaseString?serverVersion=8.0"

@@ -8,7 +8,7 @@ help: ## Show this help message
 
 run: ## Start the containers
 	docker network create docker-symfony-network || true
-	docker-compose up -d
+	docker compose up -d
 	@echo "Fixing permissions for var/log"
 	docker exec -it --user root docker-symfony-be bash -c "chown -R www-data:www-data /appdata/www/var/log && chmod -R 775 /appdata/www/var/log"
 
@@ -16,17 +16,17 @@ fix-permissions: ## Fix permissions for var/log
 	docker exec -it --user root docker-symfony-be bash -c "chown -R www-data:www-data /appdata/www/var/cache /appdata/www/var/log && chmod -R 775 /appdata/www/var/cache /appdata/www/var/log && ls -l /appdata/www/var && ls -l /appdata/www/var/cache && ls -l /appdata/www/var/log"
 
 stop: ## Stop the containers
-	docker-compose stop
+	docker compose stop
 
 clean: stop ## Clean up containers, volumes, and networks
-	docker-compose down --remove-orphans
+	docker compose down --remove-orphans
 	docker volume prune -f
 	docker network prune -f
 
 restart: clean run ## Restart the containers cleanly
 
 build: ## Rebuild all the containers
-	docker-compose build
+	docker compose build
 
 prepare: composer-install ## Prepare environment by running necessary backend commands
 
