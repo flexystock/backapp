@@ -1,0 +1,77 @@
+doctrine:
+  dbal:
+    default_connection: main
+    connections:
+      main:
+        url: '%env(resolve:DATABASE_URL)%'
+      carrefour:
+        url: '%env(resolve:CARREFOUR_DATABASE_URL)%'
+      fosforo:
+        url: '%env(resolve:FOSFORO_DATABASE_URL)%'
+      barrilon:
+        url: '%env(resolve:BARRILON_DATABASE_URL)%'
+  orm:
+    default_entity_manager: main
+    entity_managers:
+      main:
+        connection: main
+        mappings:
+          Main:
+            is_bundle: false
+            type: attribute
+            dir: '%kernel.project_dir%/src/Entity/Main'
+            prefix: 'App\Entity\Main'
+            alias: Main
+      carrefour:
+        connection: carrefour
+        mappings:
+          Carrefour:
+            is_bundle: false
+            type: attribute
+            dir: '%kernel.project_dir%/src/Entity/Client'
+            prefix: 'App\Entity\Client'
+            alias: Client
+      fosforo:
+        connection: fosforo
+        mappings:
+          Fosforo:
+            is_bundle: false
+            type: attribute
+            dir: '%kernel.project_dir%/src/Entity/Client'
+            prefix: 'App\Entity\Client'
+            alias: Client
+      barrilon:
+        connection: barrilon
+        mappings:
+          Barrilon:
+            is_bundle: false
+            type: attribute
+            dir: '%kernel.project_dir%/src/Entity/Client'
+            prefix: 'App\Entity\Client'
+            alias: Client
+
+
+  # Configuraciones específicas de entorno
+when@test:
+  doctrine:
+    dbal:
+      dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+
+when@prod:
+  doctrine:
+    orm:
+      auto_generate_proxy_classes: false
+      proxy_dir: '%kernel.build_dir%/doctrine/orm/Proxies'
+      query_cache_driver:
+        type: pool
+        pool: doctrine.system_cache_pool
+      result_cache_driver:
+        type: pool
+        pool: doctrine.result_cache_pool
+  framework:
+    cache:
+      pools:
+        doctrine.result_cache_pool:
+          adapter: cache.app
+        doctrine.system_cache_pool:
+          adapter: cache.system
