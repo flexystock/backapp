@@ -8,8 +8,6 @@ doctrine:
         url: '%env(resolve:CARREFOUR_DATABASE_URL)%'
       fosforo:
         url: '%env(resolve:FOSFORO_DATABASE_URL)%'
-      barrilon:
-        url: '%env(resolve:BARRILON_DATABASE_URL)%'
   orm:
     default_entity_manager: main
     entity_managers:
@@ -35,15 +33,6 @@ doctrine:
         connection: fosforo
         mappings:
           Fosforo:
-            is_bundle: false
-            type: attribute
-            dir: '%kernel.project_dir%/src/Entity/Client'
-            prefix: 'App\Entity\Client'
-            alias: Client
-      barrilon:
-        connection: barrilon
-        mappings:
-          Barrilon:
             is_bundle: false
             type: attribute
             dir: '%kernel.project_dir%/src/Entity/Client'
