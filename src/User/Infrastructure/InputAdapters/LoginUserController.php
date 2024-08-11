@@ -72,12 +72,13 @@ class LoginUserController {
 
         $mail = $data['username'] ?? null;
         $password = $data['password'] ?? null;
+        $ipAddress = $request->getClientIp();
 
         if (!$mail || !filter_var($mail, FILTER_VALIDATE_EMAIL) || !$password) {
             return new JsonResponse(['error' => 'Invalid email or password'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $user = $this->loginInputPort->login($mail, $password);
+        $user = $this->loginInputPort->login($mail, $password,$ipAddress);
         if (!$user) {
             return new JsonResponse(['error' => 'Invalid credentials'], JsonResponse::HTTP_UNAUTHORIZED);
         }
