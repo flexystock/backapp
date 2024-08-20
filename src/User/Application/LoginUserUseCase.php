@@ -26,6 +26,7 @@ class LoginUserUseCase implements LoginUserInputPort
     public function login(string $mail, string $password, string $ipAddress): ?User
     {
         $user = $this->userRepository->findByEmail($mail);
+
         if (!$user) {
             return null;
         }
@@ -33,11 +34,11 @@ class LoginUserUseCase implements LoginUserInputPort
         $user->setLastAccess(new \DateTimeImmutable());
         // Verificar si la cuenta está bloqueada
         if ($user->getLockedUntil() && $user->getLockedUntil() > new \DateTimeImmutable()) {
-            return null; // La cuenta está bloqueada
+            return $user; // La cuenta está bloqueada
         }
         if (!$this->passwordHasher->isPasswordValid($user, $password)) {
             $this->incrementFailedAttempts($user);
-            return null; // Credenciales incorrectas
+            return $user; // Credenciales incorrectas
         }
         // Si el login es exitoso
         $this->resetFailedAttempts($user);
@@ -67,6 +68,18 @@ class LoginUserUseCase implements LoginUserInputPort
         $this->entityManager->flush();
     }
 
+    public function handleFailedLogin(User $user): ?string
+    {
+
+        // Si el usuario ha sido bloqueado, devolver el mensaje de bloqueo
+        if ($user->getLockedUntil()) {
+            $lockedUntil = $user->getLockedUntil()->format('Y-m-d H:i:s');
+            return "Intentos máximos alcanzados. Usuario bloqueado hasta: $lockedUntil.";
+        }
+
+        return null;
+    }
+
     /**
      * Incrementa el contador de intentos fallidos de login para un usuario.
      *
@@ -83,12 +96,14 @@ class LoginUserUseCase implements LoginUserInputPort
 
         if ($failedAttempts > 3) {
             // Si es la primera vez que supera los 3 intentos fallidos
-            if ($failedAttempts <= 6) {
-                // Bloquear por 15 minutos si es la primera vez que falla 3 intentos
+            if ($failedAttempts == 4) {
                 $user->setLockedUntil((new \DateTimeImmutable())->modify('+15 minutes'));
-            } else {
-                // Bloquear por 1 hora si ha fallado 3 veces adicionales después del primer desbloqueo
+            } else if ($failedAttempts == 7){
                 $user->setLockedUntil((new \DateTimeImmutable())->modify('+1 hour'));
+            }else if($failedAttempts == 10){
+                $user->setLockedUntil((new \DateTimeImmutable())->modify('+2 hour'));
+            }else if($failedAttempts == 13){
+                $user->setLockedUntil((new \DateTimeImmutable())->modify('+5 hour'));
             }
         }
 

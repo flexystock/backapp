@@ -78,9 +78,13 @@ class LoginUserController {
             return new JsonResponse(['error' => 'Invalid email or password'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $user = $this->loginInputPort->login($mail, $password,$ipAddress);
-        if (!$user) {
-            return new JsonResponse(['error' => 'Invalid credentials'], JsonResponse::HTTP_UNAUTHORIZED);
+        $user = $this->loginInputPort->login($mail, $password, $ipAddress);
+        // Define un array con los intentos críticos que requieren bloqueo
+        $criticalAttempts = [4, 7, 10, 13];
+        // Verifica si el número de intentos fallidos del usuario está en el array de intentos críticos
+        if (in_array($user->getFailedAttempts(), $criticalAttempts, true)) {
+            $lockMessage = $this->loginInputPort->handleFailedLogin($user);
+            return new JsonResponse(['error' => $lockMessage ?: 'Invalid credentials'], JsonResponse::HTTP_UNAUTHORIZED);
         }
 
         $token = $this->jwtManager->create($user);
