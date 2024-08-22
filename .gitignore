@@ -14,7 +14,3 @@
 
 ###> lexik/jwt-authentication-bundle ###
 /config/jwt/*.pem
-composer.json
-composer.lock
-docker-compose.yml
-config/packages/lexik_jwt_authentication.yaml
