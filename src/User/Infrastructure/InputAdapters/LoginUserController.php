@@ -87,7 +87,12 @@ class LoginUserController {
             return new JsonResponse(['error' => $lockMessage ?: 'Invalid credentials'], JsonResponse::HTTP_UNAUTHORIZED);
         }
 
-        $token = $this->jwtManager->create($user);
-        return new JsonResponse(['token' => $token]);
+        try {
+            $token = $this->jwtManager->create($user);
+            return new JsonResponse(['token' => $token]);
+        } catch (\Exception $e) {
+            // Maneja la excepción y muestra un mensaje de error detallado
+            return new JsonResponse(['error' => $e->getMessage()], 500);
+        }
     }
 }
