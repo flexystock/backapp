@@ -9,6 +9,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use OpenApi\Attributes as OA;
+use App\Entity\Main\User;
 
 class LoginUserController {
 
@@ -62,37 +63,50 @@ class LoginUserController {
     )]
     public function login(Request $request): JsonResponse
     {
-
-        $response = new JsonResponse(['data' => 'your data']);
-        $response->headers->set('Cache-Control', 'no-cache, private');
-        $response->headers->remove('X-Powered-By');
-        $response->headers->remove('Server');
-
         $data = json_decode($request->getContent(), true);
 
         $mail = $data['username'] ?? null;
         $password = $data['password'] ?? null;
-        $ipAddress = $request->getClientIp();
 
-        if (!$mail || !filter_var($mail, FILTER_VALIDATE_EMAIL) || !$password) {
-            return new JsonResponse(['error' => 'Invalid email or password'], JsonResponse::HTTP_BAD_REQUEST);
+        if (!$this->isValidLoginRequest($mail, $password)) {
+            return $this->jsonResponse(['error' => 'Invalid email or password'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $user = $this->loginInputPort->login($mail, $password, $ipAddress);
-        // Define un array con los intentos críticos que requieren bloqueo
-        $criticalAttempts = [4, 7, 10, 13];
-        // Verifica si el número de intentos fallidos del usuario está en el array de intentos críticos
-        if (in_array($user->getFailedAttempts(), $criticalAttempts, true)) {
-            $lockMessage = $this->loginInputPort->handleFailedLogin($user);
-            return new JsonResponse(['error' => $lockMessage ?: 'Invalid credentials'], JsonResponse::HTTP_UNAUTHORIZED);
+        $user = $this->loginInputPort->login($mail, $password, $request->getClientIp());
+
+        if (!$user || $this->isAccountLocked($user)) {
+            return $this->jsonResponse(['error' => 'Invalid credentials'], JsonResponse::HTTP_UNAUTHORIZED);
         }
 
         try {
             $token = $this->jwtManager->create($user);
-            return new JsonResponse(['token' => $token]);
+            return $this->jsonResponse(['token' => $token]);
         } catch (\Exception $e) {
-            // Maneja la excepción y muestra un mensaje de error detallado
-            return new JsonResponse(['error' => $e->getMessage()], 500);
+            return $this->jsonResponse(['error' => $e->getMessage()], 500);
         }
+    }
+
+    private function isValidLoginRequest(?string $mail, ?string $password): bool
+    {
+        return $mail && filter_var($mail, FILTER_VALIDATE_EMAIL) && $password;
+    }
+
+    private function isAccountLocked(User $user): bool
+    {
+        $criticalAttempts = [4, 7, 10, 13];
+        if (in_array($user->getFailedAttempts(), $criticalAttempts, true)) {
+            $this->loginInputPort->handleFailedLogin($user);
+            return true;
+        }
+        return false;
+    }
+
+    private function jsonResponse(array $data, int $status = 200): JsonResponse
+    {
+        $response = new JsonResponse($data, $status);
+        $response->headers->set('Cache-Control', 'no-cache, private');
+        $response->headers->remove('X-Powered-By');
+        $response->headers->remove('Server');
+        return $response;
     }
 }

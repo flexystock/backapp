@@ -30,16 +30,17 @@ class LoginUserUseCase implements LoginUserInputPort
         if (!$user) {
             return null;
         }
-        // Actualizar el último acceso
-        $user->setLastAccess(new \DateTimeImmutable());
+
         // Verificar si la cuenta está bloqueada
         if ($user->getLockedUntil() && $user->getLockedUntil() > new \DateTimeImmutable()) {
-            return $user; // La cuenta está bloqueada
+            return null; // La cuenta está bloqueada, no debería permitir el acceso
         }
         if (!$this->passwordHasher->isPasswordValid($user, $password)) {
             $this->incrementFailedAttempts($user);
-            return $user; // Credenciales incorrectas
+            return null; // Credenciales incorrectas, devolver null
         }
+        // Actualizar el último acceso
+        $user->setLastAccess(new \DateTimeImmutable());
         // Si el login es exitoso
         $this->resetFailedAttempts($user);
         // Registrar el login en la tabla 'login'
