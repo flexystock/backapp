@@ -1,0 +1,2 @@
+ALTER TABLE `login`
+    ADD COLUMN `login_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora del login';

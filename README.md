@@ -10,5 +10,5 @@ repositorio para la parte de back de la Aplicación
 7. Una vez que esén levantados los contenedores, comprobar que se puede acceder desde el Workbench a las BBDD tanto la BBDD main como las Bases de Datos de los clientes.
 8. Ejecutar las migraciones tanto en Main como en los clientes:
     - Accedemos al contenedor desde la terminal con el comando 'make ssh-be'
-    - Situarse en /bin/migrations/main y ejecutar 'php BBDDmigratioinsMain.php'
-    - Situarse en /bin/migrations/client y ejecutar 'php BBDDmigratioinsClient.php'
+    - Situarse en /migrations/main y ejecutar 'php migrate_main.php'
+    - Situarse en /migrations/client y ejecutar 'php migrate_client.php'
