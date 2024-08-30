@@ -6,8 +6,9 @@ namespace App\Entity\Main;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use App\User\Repository\UserRepository;
 
-#[ORM\Entity(repositoryClass: App\Repository\UserRepository::class)]
+#[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
 #[ORM\UniqueConstraint(name: 'mail_UNIQUE', columns: ['mail'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
@@ -92,9 +93,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         return $this->mail;
     }
-    public function setEmail(string $email): self
+    public function setEmail(string $mail): self
     {
-        $this->mail = $email;
+        $this->mail = $mail;
         return $this;
     }
     public function getPassword(): string

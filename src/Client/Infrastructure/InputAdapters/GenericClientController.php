@@ -7,6 +7,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
 use App\Client\Infrastructure\InputPorts\GetAllClientsInputPort;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 class GenericClientController
 {
     private GetAllClientsInputPort $getAllClientsInputPort;
@@ -16,6 +18,7 @@ class GenericClientController
     }
 
     #[Route('/api/clients', name: 'get_all_clients', methods: ['GET'])]
+    #[IsGranted("IS_AUTHENTICATED_FULLY")]
     #[OA\Get(
         path: '/api/clients',
         summary: 'Get All Clients',
