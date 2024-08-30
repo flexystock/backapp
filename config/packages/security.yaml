@@ -5,28 +5,24 @@ security:
         App\Entity\Main\User:
             algorithm: bcrypt
             cost: 12
-            # O usar Argon2id si está disponible
-            # algorithm: argon2id
 
     providers:
-        # Define tu proveedor de usuarios con la nueva ubicación de la entidad User
         users_in_memory: { memory: null }
         app_user_provider:
             entity:
                 class: App\Entity\Main\User
-                property: email
+                property: mail
 
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
 
-        # Firewall para la API que usará JWT
         api:
             pattern: ^/api
             stateless: true
-            jwt:
-                provider: app_user_provider
+            provider: app_user_provider
+            jwt: ~
 
         login:
             pattern: ^/api/login
@@ -35,23 +31,18 @@ security:
                 check_path: /api/login
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
-                provider: app_user_provider  # Especifica el proveedor aquí
-
+                provider: app_user_provider
 
         main:
             lazy: true
             provider: app_user_provider
-            json_login:  # Este método proporciona una manera de autenticar mediante JSON
-                check_path: /api/login
-                success_handler: lexik_jwt_authentication.handler.authentication_success
-                failure_handler: lexik_jwt_authentication.handler.authentication_failure
             logout:
                 path: /logout
             # Otras configuraciones de seguridad pueden ser añadidas aquí según sea necesario
 
     access_control:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
-        - { path: ^/api, roles: PUBLIC_ACCESS }
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:
