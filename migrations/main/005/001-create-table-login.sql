@@ -10,5 +10,5 @@ CREATE TABLE `login` (
                          PRIMARY KEY (`id`),
                          KEY `fk_login_users_idx` (`uuidUser`),
                          CONSTRAINT `fk_login_users` FOREIGN KEY (`uuidUser`) REFERENCES `users` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=88 DEFAULT CHARSET=utf8 COMMENT='Control de logins';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='Tabla de control de logins';
 /*!40101 SET character_set_client = @saved_cs_client */;

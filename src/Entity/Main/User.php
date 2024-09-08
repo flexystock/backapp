@@ -15,7 +15,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\Column(type: 'string', length: 36, unique: true)]
-    private string $uuid;
+    private string $uuid_user;
 
     #[ORM\Column(type: 'string', length: 50)]
     private string $name;
@@ -63,12 +63,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?\DateTimeInterface $datehourModification = null;
     public function getUuid(): ?string
     {
-        return $this->uuid;
+        return $this->uuid_user;
     }
 
     public function setUuid(string $uuid): self
     {
-        $this->uuid = $uuid;
+        $this->uuid_user = $uuid;
         return $this;
     }
     public function getName(): string

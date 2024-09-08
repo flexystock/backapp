@@ -41,6 +41,7 @@ security:
             # Otras configuraciones de seguridad pueden ser añadidas aquí según sea necesario
 
     access_control:
+        - { path: ^/api/doc, roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 

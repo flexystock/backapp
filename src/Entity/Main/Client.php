@@ -11,7 +11,7 @@ class Client
 {
     #[ORM\Id]
     #[ORM\Column(type: 'string', length: 36, unique: true, options: ['fixed' => true])]
-    private string $uuid;
+    private string $uuid_client;
 
     #[ORM\Column(type: 'string', length: 50, unique: true, nullable: false)]
     private string $clientName;
@@ -22,21 +22,21 @@ class Client
 
     public function __construct()
     {
-        $this->uuid = Uuid::v4()->toRfc4122();
+        $this->uuid_client = Uuid::v4()->toRfc4122();
     }
 
-    public function getUuid(): ?string
+    public function getUuidClient(): ?string
     {
-        return $this->uuid;
+        return $this->uuid_client;
     }
 
     public function setUuid(string $uuid): self
     {
-        $this->uuid = $uuid;
+        $this->uuid_client = $uuid;
         return $this;
     }
 
-    public function getName(): ?string
+    public function getClientName(): ?string
     {
         return $this->clientName;
     }
