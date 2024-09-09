@@ -4,14 +4,14 @@ on:
   push:
     branches:
       - main
-      - 21-generación-automatica-de-documentacion  # Puedes agregar más ramas aquí si lo deseas
+      - 21-generación-automatica-de-documentacion
 
 jobs:
   generate-docs:
     runs-on: ubuntu-latest
 
     env:
-      APP_ENV: 'doc'  # Establece el entorno en modo documentación
+      APP_ENV: 'doc'  # Usamos un entorno específico para la documentación
 
     steps:
       - name: Check out repository
@@ -20,7 +20,7 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'  # Usa la versión de PHP que requiera tu proyecto
+          php-version: '8.2'
           extensions: mbstring, json
 
       - name: Install dependencies
