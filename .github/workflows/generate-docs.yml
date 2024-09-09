@@ -1,0 +1,38 @@
+name: Generate and Publish Documentation
+
+on:
+  push:
+    branches:
+      - main
+      - 21-generación-automatica-de-documentacion  # Puedes agregar más ramas aquí si lo deseas
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'  # Usa la versión de PHP que requiera tu proyecto
+          extensions: mbstring, json
+
+      - name: Install dependencies
+        run: composer install --no-progress --no-suggest --prefer-dist --no-interaction
+
+      - name: Generate documentation with Doctum
+        run: vendor/bin/doctum.php update doctum.php --force
+
+      - name: Push to Wiki
+        run: |
+          git clone https://github.com/${{ github.repository }}.wiki.git wiki
+          cp -r docs/api/* wiki/
+          cd wiki
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git add .
+          git commit -m "Auto-update wiki documentation"
+          git push

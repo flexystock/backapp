@@ -1,0 +1,29 @@
+{
+    "name": "App\\Kernel",
+    "line": 8,
+    "short_desc": null,
+    "long_desc": null,
+    "hint": null,
+    "tags": [],
+    "namespace": "App",
+    "file": "\/home\/santi\/backapp\/src\/Kernel.php",
+    "relative_file": "\/Kernel.php",
+    "hash": "bee38488089a3614485de86c5eb58ed05f12499f",
+    "parent": "Symfony\\Component\\HttpKernel\\Kernel",
+    "modifiers": 0,
+    "is_trait": false,
+    "is_interface": false,
+    "is_read_only": false,
+    "aliases": {
+        "MicroKernelTrait": "Symfony\\Bundle\\FrameworkBundle\\Kernel\\MicroKernelTrait",
+        "BaseKernel": "Symfony\\Component\\HttpKernel\\Kernel"
+    },
+    "errors": [],
+    "interfaces": [],
+    "traits": {
+        "Symfony\\Bundle\\FrameworkBundle\\Kernel\\MicroKernelTrait": "Symfony\\Bundle\\FrameworkBundle\\Kernel\\MicroKernelTrait"
+    },
+    "properties": [],
+    "methods": [],
+    "constants": []
+}

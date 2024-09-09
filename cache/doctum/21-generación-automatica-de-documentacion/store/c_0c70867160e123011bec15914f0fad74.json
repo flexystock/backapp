@@ -1,0 +1,150 @@
+{
+    "name": "App\\User\\Application\\RegisterUserUseCase",
+    "line": 11,
+    "short_desc": null,
+    "long_desc": null,
+    "hint": null,
+    "tags": [],
+    "namespace": "App\\User\\Application",
+    "file": "\/home\/santi\/backapp\/src\/User\/Application\/RegisterUserUseCase.php",
+    "relative_file": "\/User\/Application\/RegisterUserUseCase.php",
+    "hash": "57e796babeff90727a3d39a350b490cb3cdd8d05",
+    "parent": null,
+    "modifiers": 0,
+    "is_trait": false,
+    "is_interface": false,
+    "is_read_only": false,
+    "aliases": {
+        "User": "App\\Entity\\Main\\User",
+        "Client": "App\\Entity\\Main\\Client",
+        "RegisterUserInputPort": "App\\User\\Infrastructure\\InputPorts\\RegisterUserInputPort",
+        "UserRepositoryInterface": "App\\User\\Infrastructure\\OutputPorts\\UserRepositoryInterface",
+        "UserPasswordHasherInterface": "Symfony\\Component\\PasswordHasher\\Hasher\\UserPasswordHasherInterface",
+        "ValidatorInterface": "Symfony\\Component\\Validator\\Validator\\ValidatorInterface",
+        "Uuid": "Symfony\\Component\\Uid\\Uuid"
+    },
+    "errors": [],
+    "interfaces": {
+        "App\\User\\Infrastructure\\InputPorts\\RegisterUserInputPort": "App\\User\\Infrastructure\\InputPorts\\RegisterUserInputPort"
+    },
+    "traits": [],
+    "properties": [],
+    "methods": {
+        "__construct": {
+            "name": "__construct",
+            "line": 17,
+            "short_desc": null,
+            "long_desc": null,
+            "hint": null,
+            "hint_desc": null,
+            "tags": [],
+            "see": [],
+            "modifiers": 1,
+            "is_by_ref": "",
+            "is_intersection_type": false,
+            "exceptions": [],
+            "errors": [],
+            "parameters": {
+                "userRepository": {
+                    "name": "userRepository",
+                    "line": 17,
+                    "short_desc": null,
+                    "long_desc": null,
+                    "hint": [
+                        [
+                            "\\App\\User\\Infrastructure\\OutputPorts\\UserRepositoryInterface",
+                            false
+                        ]
+                    ],
+                    "tags": [],
+                    "modifiers": 0,
+                    "default": null,
+                    "variadic": false,
+                    "is_by_ref": false,
+                    "is_read_only": false,
+                    "is_intersection_type": false
+                },
+                "passwordHasher": {
+                    "name": "passwordHasher",
+                    "line": 17,
+                    "short_desc": null,
+                    "long_desc": null,
+                    "hint": [
+                        [
+                            "\\Symfony\\Component\\PasswordHasher\\Hasher\\UserPasswordHasherInterface",
+                            false
+                        ]
+                    ],
+                    "tags": [],
+                    "modifiers": 0,
+                    "default": null,
+                    "variadic": false,
+                    "is_by_ref": false,
+                    "is_read_only": false,
+                    "is_intersection_type": false
+                },
+                "validator": {
+                    "name": "validator",
+                    "line": 17,
+                    "short_desc": null,
+                    "long_desc": null,
+                    "hint": [
+                        [
+                            "\\Symfony\\Component\\Validator\\Validator\\ValidatorInterface",
+                            false
+                        ]
+                    ],
+                    "tags": [],
+                    "modifiers": 0,
+                    "default": null,
+                    "variadic": false,
+                    "is_by_ref": false,
+                    "is_read_only": false,
+                    "is_intersection_type": false
+                }
+            }
+        },
+        "register": {
+            "name": "register",
+            "line": 24,
+            "short_desc": null,
+            "long_desc": null,
+            "hint": [
+                [
+                    "\\App\\Entity\\Main\\User",
+                    false
+                ]
+            ],
+            "hint_desc": null,
+            "tags": [],
+            "see": [],
+            "modifiers": 1,
+            "is_by_ref": "",
+            "is_intersection_type": false,
+            "exceptions": [],
+            "errors": [],
+            "parameters": {
+                "data": {
+                    "name": "data",
+                    "line": 24,
+                    "short_desc": null,
+                    "long_desc": null,
+                    "hint": [
+                        [
+                            "array",
+                            false
+                        ]
+                    ],
+                    "tags": [],
+                    "modifiers": 0,
+                    "default": null,
+                    "variadic": false,
+                    "is_by_ref": false,
+                    "is_read_only": false,
+                    "is_intersection_type": false
+                }
+            }
+        }
+    },
+    "constants": []
+}

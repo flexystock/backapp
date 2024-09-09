@@ -1,0 +1,107 @@
+{
+    "name": "App\\User\\Infrastructure\\OutputAdapters\\JWTTokenManager",
+    "line": 8,
+    "short_desc": null,
+    "long_desc": null,
+    "hint": null,
+    "tags": [],
+    "namespace": "App\\User\\Infrastructure\\OutputAdapters",
+    "file": "\/home\/santi\/backapp\/src\/User\/Infrastructure\/OutputAdapters\/JWTTokenManager.php",
+    "relative_file": "\/User\/Infrastructure\/OutputAdapters\/JWTTokenManager.php",
+    "hash": "53b910d2bb77fe2f934ab49f649337c9037dd1eb",
+    "parent": null,
+    "modifiers": 0,
+    "is_trait": false,
+    "is_interface": false,
+    "is_read_only": false,
+    "aliases": {
+        "TokenManagerInterface": "App\\User\\Infrastructure\\OutputPorts\\TokenManagerInterface",
+        "JWT": "Firebase\\JWT\\JWT"
+    },
+    "errors": [],
+    "interfaces": {
+        "App\\User\\Infrastructure\\OutputPorts\\TokenManagerInterface": "App\\User\\Infrastructure\\OutputPorts\\TokenManagerInterface"
+    },
+    "traits": [],
+    "properties": [],
+    "methods": {
+        "create": {
+            "name": "create",
+            "line": 10,
+            "short_desc": null,
+            "long_desc": null,
+            "hint": [
+                [
+                    "string",
+                    false
+                ]
+            ],
+            "hint_desc": null,
+            "tags": [],
+            "see": [],
+            "modifiers": 1,
+            "is_by_ref": "",
+            "is_intersection_type": false,
+            "exceptions": [],
+            "errors": [],
+            "parameters": {
+                "user": {
+                    "name": "user",
+                    "line": 10,
+                    "short_desc": null,
+                    "long_desc": null,
+                    "hint": null,
+                    "tags": [],
+                    "modifiers": 0,
+                    "default": null,
+                    "variadic": false,
+                    "is_by_ref": false,
+                    "is_read_only": false,
+                    "is_intersection_type": false
+                }
+            }
+        },
+        "validateToken": {
+            "name": "validateToken",
+            "line": 15,
+            "short_desc": null,
+            "long_desc": null,
+            "hint": [
+                [
+                    "bool",
+                    false
+                ]
+            ],
+            "hint_desc": null,
+            "tags": [],
+            "see": [],
+            "modifiers": 1,
+            "is_by_ref": "",
+            "is_intersection_type": false,
+            "exceptions": [],
+            "errors": [],
+            "parameters": {
+                "token": {
+                    "name": "token",
+                    "line": 15,
+                    "short_desc": null,
+                    "long_desc": null,
+                    "hint": [
+                        [
+                            "string",
+                            false
+                        ]
+                    ],
+                    "tags": [],
+                    "modifiers": 0,
+                    "default": null,
+                    "variadic": false,
+                    "is_by_ref": false,
+                    "is_read_only": false,
+                    "is_intersection_type": false
+                }
+            }
+        }
+    },
+    "constants": []
+}

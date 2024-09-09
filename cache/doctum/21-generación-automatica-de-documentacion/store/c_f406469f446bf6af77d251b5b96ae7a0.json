@@ -1,0 +1,50 @@
+{
+    "name": "App\\Client\\Infrastructure\\InputPorts\\GetAllClientsInputPort",
+    "line": 5,
+    "short_desc": null,
+    "long_desc": null,
+    "hint": null,
+    "tags": [],
+    "namespace": "App\\Client\\Infrastructure\\InputPorts",
+    "file": "\/home\/santi\/backapp\/src\/Client\/Infrastructure\/InputPorts\/GetAllClientsInputPort.php",
+    "relative_file": "\/Client\/Infrastructure\/InputPorts\/GetAllClientsInputPort.php",
+    "hash": "075f9758ce4f1825df4eb611389d8017f1e67161",
+    "parent": null,
+    "modifiers": 0,
+    "is_trait": false,
+    "is_interface": true,
+    "is_read_only": false,
+    "aliases": [],
+    "errors": [],
+    "interfaces": [],
+    "traits": [],
+    "properties": [],
+    "methods": {
+        "getAll": {
+            "name": "getAll",
+            "line": 7,
+            "short_desc": null,
+            "long_desc": null,
+            "hint": [
+                [
+                    "array",
+                    false
+                ],
+                [
+                    "null",
+                    false
+                ]
+            ],
+            "hint_desc": null,
+            "tags": [],
+            "see": [],
+            "modifiers": 1,
+            "is_by_ref": "",
+            "is_intersection_type": false,
+            "exceptions": [],
+            "errors": [],
+            "parameters": []
+        }
+    },
+    "constants": []
+}

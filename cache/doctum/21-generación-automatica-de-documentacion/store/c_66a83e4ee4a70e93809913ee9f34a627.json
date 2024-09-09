@@ -1,0 +1,90 @@
+{
+    "name": "App\\Client\\Infrastructure\\InputAdapters\\GenericClientController",
+    "line": 12,
+    "short_desc": null,
+    "long_desc": null,
+    "hint": null,
+    "tags": [],
+    "namespace": "App\\Client\\Infrastructure\\InputAdapters",
+    "file": "\/home\/santi\/backapp\/src\/Client\/Infrastructure\/InputAdapters\/GenericClientController.php",
+    "relative_file": "\/Client\/Infrastructure\/InputAdapters\/GenericClientController.php",
+    "hash": "7f0d1399420b084fdee27cea386cb43f085c8dc1",
+    "parent": null,
+    "modifiers": 0,
+    "is_trait": false,
+    "is_interface": false,
+    "is_read_only": false,
+    "aliases": {
+        "GetAllClientsUseCase": "App\\Client\\Application\\GetAllClientsUseCase",
+        "JsonResponse": "Symfony\\Component\\HttpFoundation\\JsonResponse",
+        "Route": "Symfony\\Component\\Routing\\Annotation\\Route",
+        "OA": "OpenApi\\Attributes",
+        "GetAllClientsInputPort": "App\\Client\\Infrastructure\\InputPorts\\GetAllClientsInputPort",
+        "AbstractController": "Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController",
+        "IsGranted": "Sensio\\Bundle\\FrameworkExtraBundle\\Configuration\\IsGranted"
+    },
+    "errors": [],
+    "interfaces": [],
+    "traits": [],
+    "properties": [],
+    "methods": {
+        "__construct": {
+            "name": "__construct",
+            "line": 16,
+            "short_desc": null,
+            "long_desc": null,
+            "hint": null,
+            "hint_desc": null,
+            "tags": [],
+            "see": [],
+            "modifiers": 1,
+            "is_by_ref": "",
+            "is_intersection_type": false,
+            "exceptions": [],
+            "errors": [],
+            "parameters": {
+                "getAllClientsInputPort": {
+                    "name": "getAllClientsInputPort",
+                    "line": 16,
+                    "short_desc": null,
+                    "long_desc": null,
+                    "hint": [
+                        [
+                            "\\App\\Client\\Infrastructure\\InputPorts\\GetAllClientsInputPort",
+                            false
+                        ]
+                    ],
+                    "tags": [],
+                    "modifiers": 0,
+                    "default": null,
+                    "variadic": false,
+                    "is_by_ref": false,
+                    "is_read_only": false,
+                    "is_intersection_type": false
+                }
+            }
+        },
+        "getAllClients": {
+            "name": "getAllClients",
+            "line": 20,
+            "short_desc": null,
+            "long_desc": null,
+            "hint": [
+                [
+                    "\\Symfony\\Component\\HttpFoundation\\JsonResponse",
+                    false
+                ]
+            ],
+            "hint_desc": null,
+            "tags": [],
+            "see": [],
+            "modifiers": 1,
+            "is_by_ref": "",
+            "is_intersection_type": false,
+            "exceptions": [],
+            "errors": [],
+            "parameters": []
+        }
+    },
+    "constants": []
+}
