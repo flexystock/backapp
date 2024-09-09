@@ -9,13 +9,13 @@
     "ext-iconv": "*",
     "doctrine/annotations": "*",
     "doctrine/dbal": "^3",
-    "doctrine/doctrine-bundle": "^2.12",
+    "doctrine/doctrine-bundle": "^2.13",
     "doctrine/doctrine-migrations-bundle": "^3.3",
-    "doctrine/orm": "^3.1",
+    "doctrine/orm": "^3.2",
     "firebase/php-jwt": "^6.10",
     "lexik/jwt-authentication-bundle": "^3.1",
-    "nelmio/api-doc-bundle": "^4.23",
-    "nelmio/cors-bundle": "^2.4",
+    "nelmio/api-doc-bundle": "^4.29",
+    "nelmio/cors-bundle": "^2.5",
     "symfony/asset": "6.4.*",
     "symfony/console": "6.4.*",
     "symfony/dotenv": "6.4.*",
@@ -60,7 +60,7 @@
   },
   "scripts": {
     "cache:clear": "if [ \"$APP_ENV\" != \"doc\" ]; then php bin/console cache:clear; fi",
-    "@auto-scripts": {
+    "auto-scripts": {
       "cache:clear": "if [ \"$APP_ENV\" != \"doc\" ]; then php bin/console cache:clear; fi"
     },
     "post-install-cmd": [
@@ -81,6 +81,6 @@
   },
   "require-dev": {
     "code-lts/doctum": "^5.5",
-    "symfony/maker-bundle": "^1.59"
+    "symfony/maker-bundle": "^1.61"
   }
 }
