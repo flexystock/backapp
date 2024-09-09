@@ -6,9 +6,9 @@ use Doctum\Version\GitVersionCollection;
 
 $dir = __DIR__.'/src';
 
+// Cambia la rama por la que estás usando actualmente
 $versions = GitVersionCollection::create($dir)
-    ->addFromTags('v1.*')
-    ->add('master', 'Development branch');
+    ->add('21-generación-automatica-de-documentacion', 'Current documentation branch');
 
 $repo = new GitHubRemoteRepository('flexystock/backapp', $dir);
 
@@ -19,4 +19,3 @@ return new Doctum($dir, [
     'cache_dir'           => __DIR__.'/cache/doctum/%version%',
     'remote_repository'   => $repo,
 ]);
-
