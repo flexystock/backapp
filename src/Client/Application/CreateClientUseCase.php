@@ -42,14 +42,14 @@ class CreateClientUseCase implements CreateClientInputPort
      * @return Client El cliente creado.
      * @throws \Exception Si hay errores de validación.
      */
-    public function create(array $data): Client
+    public function create(string $name): Client
     {
         $client = new Client();
         $uuid = Uuid::v4()->toRfc4122();
         $client->setUuid($uuid);
-        $client->setName($data['clientName']);
-        $scheme = strtoupper($data['clientName']);
-        $client->setScheme($scheme);
+        $client->setName($name);
+        $databaseName = 'database_'.strtoupper($name);
+        $client->setDatabaseName($databaseName);
 
         // Determinar el puerto para el nuevo contenedor
         $port = $this->findAvailablePort(40010);

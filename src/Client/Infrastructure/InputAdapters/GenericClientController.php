@@ -11,6 +11,7 @@ use OpenApi\Attributes as OA;
 use App\Client\Infrastructure\InputPorts\GetAllClientsInputPort;
 use App\Client\Infrastructure\InputPorts\GetClientByUuidInputPort;
 use App\Client\Infrastructure\InputPorts\GetClientByNameInputPort;
+use App\Client\Infrastructure\InputPorts\CreateClientInputPort;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 class GenericClientController
@@ -18,13 +19,16 @@ class GenericClientController
     private GetAllClientsInputPort $getAllClientsInputPort;
     private GetClientByUuidInputPort $getClientByUuidInputPort;
     private GetClientByNameInputPort $getClientByNameInputPort;
+    private CreateClientInputPort $createClientInputPort;
 
-    public function __construct(GetAllClientsInputPort $getAllClientsInputPort,
+    public function __construct(GetAllClientsInputPort   $getAllClientsInputPort,
                                 GetClientByUuidInputPort $getClientByUuidInputPort,
-                                GetClientByNameInputPort $getClientByNameInputPort){
+                                GetClientByNameInputPort $getClientByNameInputPort,
+                                CreateClientInputPort    $createClientInputPort){
         $this->getAllClientsInputPort = $getAllClientsInputPort;
         $this->getClientByUuidInputPort = $getClientByUuidInputPort;
         $this->getClientByNameInputPort = $getClientByNameInputPort;
+        $this->createClientInputPort = $createClientInputPort;
     }
 
     #[Route('/api/clients', name: 'get_clients', methods: ['GET'])]
@@ -141,62 +145,83 @@ class GenericClientController
         return $this->jsonResponse($clientsArray, 200);
     }
 
-
-    #[Route('/api/clients/{uuid}', name: 'get_client_by_uuid', methods: ['GET'])]
+    #[Route('/api/clients', name: 'create_client', methods: ['POST'])]
     #[IsGranted("IS_AUTHENTICATED_FULLY")]
-    #[OA\Get(
-        path: '/api/clients/{uuid}',
-        summary: 'Get Client By Uuid',
+    #[OA\Post(
+        path: '/api/clients',
+        summary: 'Create a new client',
         tags: ['Client'],
-        parameters: [
-            new OA\Parameter(
-                name: 'Uuid',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string'),
-                description: 'Uuid del cliente a obtener'
+        requestBody: new OA\RequestBody(
+            description: 'Client name is required',
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', example: 'Restaurante Pepe'),
+                ]
             )
-        ],
+        ),
         responses: [
             new OA\Response(
-                response: 200,
-                description: 'Get Client successfully',
+                response: 201,
+                description: 'Client created successfully',
                 content: new OA\JsonContent(
                     type: 'object',
                     properties: [
-                        new OA\Property(property: 'clientName', type: 'string', example: 'cliente 1'),
-                    ]
-                )
-            ),
-            new OA\Response(
-                response: 404,
-                description: 'Client Not Found',
-                content: new OA\JsonContent(
-                    type: 'object',
-                    properties: [
-                        new OA\Property(property: 'error', type: 'string', example: 'Client Not Found'),
+                        new OA\Property(property: 'uuid_client', type: 'string', example: '492e5a45-9ad9-4876-87f7-0788d842f17d'),
+                        new OA\Property(property: 'clientName', type: 'string', example: 'Restaurante Pepe'),
                     ]
                 )
             ),
             new OA\Response(
                 response: 400,
-                description: 'Invalid input'
+                description: 'Client name is required',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'error', type: 'string', example: 'Client name is required'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 500,
+                description: 'Error creating client',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'error', type: 'string', example: 'Error creating client: ...'),
+                    ]
+                )
             )
         ]
     )]
-//    public function getClientByUuid(string $uuid): JsonResponse
-//    {
-//        $client = $this->getClientByUuidInputPort->getByUuid($uuid);
-//
-//        if (!$client) {
-//            return $this->jsonResponse(['error' => 'Client Not Found'], JsonResponse::HTTP_NOT_FOUND);
-//        }
-//
-//        return $this->jsonResponse([
-//            'clientName' => $client->getName()
-//        ], JsonResponse::HTTP_OK);
-//    }
+    public function createClient(Request $request): JsonResponse
+    {
+        // Obtener el nombre del cliente del cuerpo de la solicitud (JSON)
+        $data = json_decode($request->getContent(), true);
+        $name = $data['name'] ?? null;
 
+        // Validar que el nombre es proporcionado
+        if (!$name) {
+            return $this->jsonResponse(['error' => 'Client name is required'], 400);
+        }
+
+        // Crear el cliente utilizando el caso de uso correspondiente
+        try {
+            $newClient = $this->createClientInputPort->create($name);
+
+            return $this->jsonResponse([
+                'message' => 'Client created successfully',
+                'client' => [
+                    'uuid_client' => $newClient->getUuidClient(),
+                    'clientName' => $newClient->getClientName()
+                ]
+            ], 201); // 201 indica que un recurso fue creado
+        } catch (\Exception $e) {
+            // Manejar cualquier error que ocurra durante la creación
+            return $this->jsonResponse(['error' => 'Error creating client: ' . $e->getMessage()], 500);
+        }
+    }
     private function jsonResponse(array $data, int $status = 200): JsonResponse
     {
         $response = new JsonResponse($data, $status);

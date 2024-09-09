@@ -6,5 +6,5 @@ use App\Entity\Main\Client;
 
 interface CreateClientInputPort
 {
-    public function create(array $data): Client;
+    public function create(string $name): Client;
 }

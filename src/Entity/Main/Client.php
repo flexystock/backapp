@@ -19,7 +19,6 @@ class Client
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private ?string $databaseName= null;
 
-
     public function __construct()
     {
         $this->uuid_client = Uuid::v4()->toRfc4122();
@@ -44,6 +43,16 @@ class Client
     public function setName(string $name): self
     {
         $this->clientName = $name;
+        return $this;
+    }
+
+    public function getDatabaseName(): ?string
+    {
+        return $this->databaseName;
+    }
+    public function setDatabaseName(string $databaseName): self
+    {
+        $this->databaseName = $databaseName;
         return $this;
     }
 }
