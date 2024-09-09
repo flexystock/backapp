@@ -59,9 +59,9 @@
     "symfony/polyfill-php81": "*"
   },
   "scripts": {
-    "cache:clear": "if [ \"$APP_ENV\" != \"doc\" ]; then php bin/console cache:clear; fi",
+    "cache:clear": "php bin/console cache:clear",
     "auto-scripts": {
-      "cache:clear": "if [ \"$APP_ENV\" != \"doc\" ]; then php bin/console cache:clear; fi"
+      "cache:clear": "php bin/console cache:clear"
     },
     "post-install-cmd": [
       "@auto-scripts"
