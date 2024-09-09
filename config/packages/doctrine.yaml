@@ -20,24 +20,24 @@ doctrine:
             dir: '%kernel.project_dir%/src/Entity/Main'
             prefix: 'App\Entity\Main'
             alias: Main
-      carrefour:
-        connection: carrefour
-        mappings:
-          Carrefour:
-            is_bundle: false
-            type: attribute
-            dir: '%kernel.project_dir%/src/Entity/Client'
-            prefix: 'App\Entity\Client'
-            alias: Client
-      fosforo:
-        connection: fosforo
-        mappings:
-          Fosforo:
-            is_bundle: false
-            type: attribute
-            dir: '%kernel.project_dir%/src/Entity/Client'
-            prefix: 'App\Entity\Client'
-            alias: Client
+#      carrefour:
+#        connection: carrefour
+#        mappings:
+#          Carrefour:
+#            is_bundle: false
+#            type: attribute
+#            dir: '%kernel.project_dir%/src/Entity/Client'
+#            prefix: 'App\Entity\Client'
+#            alias: Client
+#      fosforo:
+#        connection: fosforo
+#        mappings:
+#          Fosforo:
+#            is_bundle: false
+#            type: attribute
+#            dir: '%kernel.project_dir%/src/Entity/Client'
+#            prefix: 'App\Entity\Client'
+#            alias: Client
 
 
   # Configuraciones específicas de entorno
