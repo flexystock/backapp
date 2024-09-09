@@ -10,6 +10,9 @@ jobs:
   generate-docs:
     runs-on: ubuntu-latest
 
+    env:
+      APP_ENV: 'doc'  # Establece el entorno en modo documentación
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v2
@@ -21,7 +24,7 @@ jobs:
           extensions: mbstring, json
 
       - name: Install dependencies
-        run: composer install --no-progress --no-suggest --prefer-dist --no-interaction
+        run: composer install --no-progress --prefer-dist --no-interaction
 
       - name: Generate documentation with Doctum
         run: vendor/bin/doctum.php update doctum.php --force
