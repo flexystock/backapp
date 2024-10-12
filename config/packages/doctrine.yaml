@@ -4,10 +4,6 @@ doctrine:
     connections:
       main:
         url: '%env(resolve:DATABASE_URL)%'
-      carrefour:
-        url: '%env(resolve:CARREFOUR_DATABASE_URL)%'
-      fosforo:
-        url: '%env(resolve:FOSFORO_DATABASE_URL)%'
   orm:
     default_entity_manager: main
     entity_managers:
@@ -20,24 +16,6 @@ doctrine:
             dir: '%kernel.project_dir%/src/Entity/Main'
             prefix: 'App\Entity\Main'
             alias: Main
-      carrefour:
-        connection: carrefour
-        mappings:
-          Carrefour:
-            is_bundle: false
-            type: attribute
-            dir: '%kernel.project_dir%/src/Entity/Client'
-            prefix: 'App\Entity\Client'
-            alias: Client
-      fosforo:
-        connection: fosforo
-        mappings:
-          Fosforo:
-            is_bundle: false
-            type: attribute
-            dir: '%kernel.project_dir%/src/Entity/Client'
-            prefix: 'App\Entity\Client'
-            alias: Client
 
 
   # Configuraciones específicas de entorno

@@ -25,6 +25,11 @@ class UserRepository extends ServiceEntityRepository implements UserRepositoryIn
         return $this->findOneBy(['mail' => $mail]);
     }
 
+    public function findOneByVerificationToken(string $token): ?User
+    {
+        return $this->findOneBy(['verification_token' => $token]);
+    }
+
     public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
     {
         if (!$user instanceof User) {

@@ -3,10 +3,15 @@ declare(strict_types=1);
 
 namespace App\Entity\Main;
 
+use App\User\Application\DTO\CreateUserRequest;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use App\User\Repository\UserRepository;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
@@ -23,44 +28,106 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'string', length: 50)]
     private string $surnames;
 
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private ?int $phone = 60;
+
     #[ORM\Column(type: 'string', length: 255, unique: true)]
-    private string $mail;
+    private string $email;
 
-    #[ORM\Column(type: 'string', length: 200)]
-    private string $pass;
-
-    #[ORM\Column(type: 'boolean')]
-    private bool $isRoot = false;
+    #[ORM\Column(type: 'string', length: 255)]
+    private string $password;
 
     #[ORM\Column(type: 'boolean')]
-    private bool $isGhost = false;
+    private bool $is_root = false;
+
+    #[ORM\Column(type: 'boolean')]
+    private bool $is_ghost = false;
 
     #[ORM\Column(type: 'integer', nullable: true)]
-    private ?int $minutesSessionExpiration = 60;
+    private ?int $minutes_session_expiration = 60;
 
     #[ORM\Column(type: 'boolean')]
     private bool $active = true;
 
     #[ORM\Column(type: 'smallint')]
-    private int $failedAttempts = 0;
+    private int $failed_attempts = 0;
 
     #[ORM\Column(type: 'datetime', nullable: true)]
-    private ?\DateTimeInterface $lockedUntil = null;
+    private ?\DateTimeInterface $locked_until = null;
 
     #[ORM\Column(type: 'datetime', nullable: true)]
-    private ?\DateTimeInterface $lastAccess = null;
+    private ?\DateTimeInterface $last_access = null;
 
     #[ORM\Column(type: 'string', length: 36)]
-    private string $uuidUserCreation;
+    private string $uuid_user_creation;
 
     #[ORM\Column(type: 'datetime')]
-    private \DateTimeInterface $datehourCreation;
+    private \DateTimeInterface $date_hour_creation;
 
     #[ORM\Column(type: 'string', length: 36, nullable: true)]
-    private ?string $uuidUserModification = null;
+    private ?string $uuid_user_modification = null;
 
     #[ORM\Column(type: 'datetime', nullable: true)]
-    private ?\DateTimeInterface $datehourModification = null;
+    private ?\DateTimeInterface $date_hour_modification = null;
+
+    #[ORM\Column(type: 'string', length: 36, nullable: true)]
+    private ?string $document_type = null;
+
+    #[ORM\Column(type: 'string', length: 36, nullable: true)]
+    private ?string $document_number = null;
+
+    #[ORM\Column(type: 'string', length: 36, nullable: false)]
+    private ?string $timezone;
+
+    #[ORM\Column(type: 'string', length: 36, nullable: false)]
+    private ?string $language;
+
+    #[ORM\Column(type: 'string', length: 36, nullable: true)]
+    private ?string $preferred_contact_method = null;
+
+    #[ORM\Column(type: 'boolean')]
+    private bool $two_factor_enabled = false;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $security_question = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $security_answer = null;
+
+    #[ORM\Column(name: 'verification_token', type: 'string', length: 255, nullable: true)]
+    private ?string $verification_token = null;
+
+    #[ORM\Column(name: 'verification_token_expires_at', type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $verification_token_expires_at = null;
+
+    #[ORM\Column(name: 'is_verified', type: 'boolean')]
+    private bool $is_verified = false;
+
+    #[ORM\ManyToMany(targetEntity: Role::class, inversedBy: 'users')]
+    #[ORM\JoinTable(name: 'user_role',
+        joinColumns: [new ORM\JoinColumn(name: 'uuid_user', referencedColumnName: 'uuid_user')],
+        inverseJoinColumns: [new ORM\JoinColumn(name: 'role_id', referencedColumnName: 'id')]
+    )]
+    private Collection $roles;
+
+    #[ORM\ManyToMany(targetEntity: Client::class, mappedBy: 'users')]
+    private Collection $clients;
+
+    #[ORM\ManyToMany(targetEntity: BusinessGroup::class, inversedBy: 'users')]
+    #[ORM\JoinTable(name: 'user_business_group')]
+    private Collection $businessGroups;
+
+    #[ORM\ManyToOne(targetEntity: Profile::class, inversedBy: 'users')]
+    #[ORM\JoinColumn(name: 'profile_id', referencedColumnName: 'id')]
+    private ?Profile $profile = null;
+
+    public function __construct()
+    {
+        $this->uuid_user= Uuid::v4()->toRfc4122();
+        $this->roles = new ArrayCollection();
+        $this->clients = new ArrayCollection();
+        $this->businessGroups = new ArrayCollection();
+    }
     public function getUuid(): ?string
     {
         return $this->uuid_user;
@@ -89,27 +156,37 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->surnames = $surnames;
         return $this;
     }
+
+    public function getPhone(): int
+    {
+        return $this->phone;
+    }
+    public function setPhone(int $phone): self
+    {
+        $this->phone = $phone;
+        return $this;
+    }
     public function getEmail(): string
     {
-        return $this->mail;
+        return $this->email;
     }
-    public function setEmail(string $mail): self
+    public function setEmail(string $email): self
     {
-        $this->mail = $mail;
+        $this->email = $email;
         return $this;
     }
     public function getPassword(): string
     {
-        return $this->pass;
+        return $this->password;
     }
     public function setPassword(string $password): self
     {
-        $this->pass = $password;
+        $this->password = $password;
         return $this;
     }
     public function getUserIdentifier(): string
     {
-        return $this->mail;
+        return $this->email;
     }
     public function getRoles(): array
     {
@@ -122,29 +199,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
     public function isRoot(): bool
     {
-        return $this->isRoot;
+        return $this->is_root;
     }
     public function setIsRoot(bool $isRoot): self
     {
-        $this->isRoot = $isRoot;
+        $this->is_root = $isRoot;
         return $this;
     }
     public function isGhost(): bool
     {
-        return $this->isGhost;
+        return $this->is_ghost;
     }
     public function setIsGhost(bool $isGhost): self
     {
-        $this->isGhost = $isGhost;
+        $this->is_ghost = $isGhost;
         return $this;
     }
     public function getMinutesSessionExpiration(): ?int
     {
-        return $this->minutesSessionExpiration;
+        return $this->minutes_session_expiration;
     }
     public function setMinutesSessionExpiration(?int $minutesSessionExpiration): self
     {
-        $this->minutesSessionExpiration = $minutesSessionExpiration;
+        $this->minutes_session_expiration = $minutesSessionExpiration;
         return $this;
     }
     public function isActive(): bool
@@ -158,65 +235,235 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
     public function getFailedAttempts(): int
     {
-        return $this->failedAttempts;
+        return $this->failed_attempts;
     }
     public function setFailedAttempts(int $failedAttempts): self
     {
-        $this->failedAttempts = $failedAttempts;
+        $this->failed_attempts = $failedAttempts;
         return $this;
     }
     public function getLockedUntil(): ?\DateTimeInterface
     {
-        return $this->lockedUntil;
+        return $this->locked_until;
     }
     public function setLockedUntil(?\DateTimeInterface $lockedUntil): self
     {
-        $this->lockedUntil = $lockedUntil;
+        $this->locked_until = $lockedUntil;
         return $this;
     }
     public function getLastAccess(): ?\DateTimeInterface
     {
-        return $this->lastAccess;
+        return $this->last_access;
     }
     public function setLastAccess(?\DateTimeInterface $lastAccess): self
     {
-        $this->lastAccess = $lastAccess;
+        $this->last_access = $lastAccess;
         return $this;
     }
     public function getUuidUserCreation(): string
     {
-        return $this->uuidUserCreation;
+        return $this->uuid_user_creation;
     }
     public function setUuidUserCreation(string $uuidUserCreation): self
     {
-        $this->uuidUserCreation = $uuidUserCreation;
+        $this->uuid_user_creation = $uuidUserCreation;
         return $this;
     }
     public function getDatehourCreation(): \DateTimeInterface
     {
-        return $this->datehourCreation;
+        return $this->date_hour_creation;
     }
     public function setDatehourCreation(\DateTimeInterface $datehourCreation): self
     {
-        $this->datehourCreation = $datehourCreation;
+        $this->date_hour_creation = $datehourCreation;
         return $this;
     }
     public function getUuidUserModification(): ?string
     {
-        return $this->uuidUserModification;
+        return $this->uuid_user_modification;
     }
     public function setUuidUserModification(?string $uuidUserModification): self
     {
-        $this->uuidUserModification = $uuidUserModification;
+        $this->uuid_user_modification = $uuidUserModification;
         return $this;
     }
     public function getDatehourModification(): ?\DateTimeInterface
     {
-        return $this->datehourModification;
+        return $this->date_hour_modification;
     }
     public function setDatehourModification(?\DateTimeInterface $datehourModification): self
     {
-        $this->datehourModification = $datehourModification;
+        $this->date_hour_modification = $datehourModification;
         return $this;
+    }
+
+    public function getDocumentType(): ?string
+    {
+        return $this->document_type;
+    }
+
+    public function setDocumentType(string $document_type): self
+    {
+        $this->document_type = $document_type;
+        return $this;
+    }
+
+    public function getDocumentNumber(): string
+    {
+        return $this->document_number;
+
+    }
+
+    public function setDocumentNumber(string $document_number): self
+    {
+        $this->document_number = $document_number;
+        return $this;
+    }
+
+    public function getTimeZone(): string
+    {
+        return $this->timezone;
+    }
+
+    public function setTimeZone(string $timezone): self
+    {
+        $this->timezone = $timezone;
+        return $this;
+    }
+
+    public function getLanguage():string
+    {
+        return $this->language;
+    }
+
+    public function setLanguage(string $language): self
+    {
+        $this->language = $language;
+        return $this;
+    }
+
+    public function getPreferredContactMethod():string
+    {
+        return $this->preferred_contact_method;
+    }
+
+    public function setPreferredContactMethod(string $preferred_contact_method): self
+    {
+        $this->preferred_contact_method = $preferred_contact_method;
+        return $this;
+    }
+
+    public function getTwoFactorEnabled():bool
+    {
+        return $this->two_factor_enabled;
+    }
+
+    public function setTwoFactorEnabled(bool $two_factor_enabled): self
+    {
+        $this->two_factor_enabled = $two_factor_enabled;
+        return $this;
+    }
+
+    public function getSecurityQuestion():string
+    {
+        return $this->security_question;
+    }
+
+    public function setSecurityQuestion(string $security_question): self
+    {
+        $this->security_question = $security_question;
+        return $this;
+    }
+    public function getSecurityAnswer():string
+    {
+        return $this->security_answer;
+    }
+    public function setSecurityAnswer(string $security_answer): self
+    {
+        $this->security_answer = $security_answer;
+        return $this;
+    }
+
+    public function getVerificationToken(): ?string
+    {
+        return $this->verification_token;
+    }
+
+    public function setVerificationToken(?string $verificationToken): self
+    {
+        $this->verification_token = $verificationToken;
+        return $this;
+    }
+
+    public function getVerificationTokenExpiresAt(): ?\DateTimeInterface
+    {
+        return $this->verification_token_expires_at;
+    }
+
+    public function setVerificationTokenExpiresAt(?\DateTimeInterface $expiresAt): self
+    {
+        $this->verification_token_expires_at = $expiresAt;
+        return $this;
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->is_verified;
+    }
+
+    public function setIsVerified(bool $isVerified): self
+    {
+        $this->is_verified = $isVerified;
+        return $this;
+    }
+
+    // En la entidad User
+    public static function fromCreateUserRequest(CreateUserRequest $request, UserPasswordHasherInterface $passwordHasher): self
+    {
+        $user = new self();
+        $user->setEmail($request->getEmail());
+        $user->setName($request->getName());
+        $user->setSurnames($request->getSurnames());
+        $user->setPassword(
+            $passwordHasher->hashPassword($user, $request->getPass())
+        );
+        $user->setPhone((int)$request->getPhone());
+        $user->setDocumentType($request->getDocumentType());
+        $user->setDocumentNumber($request->getDocumentNumber());
+        $user->setTimeZone($request->getTimezone());
+        $user->setLanguage($request->getLanguage());
+        $user->setPreferredContactMethod($request->getPreferredContactMethod());
+        $user->setTwoFactorEnabled($request->isTwoFactorEnabled());
+        $user->setSecurityQuestion($request->getSecurityQuestion());
+        $user->setSecurityAnswer($request->getSecurityAnswer());
+        $user->setUuidUserCreation($user->getUuid());
+        $user->setDatehourCreation(new \DateTime());
+
+        return $user;
+    }
+    // Método para agregar un cliente a la colección
+    public function addClient(Client $client): self
+    {
+        if (!$this->clients->contains($client)) {
+            $this->clients[] = $client;
+            $client->addUser($this); // Si deseas mantener la sincronización bidireccional
+        }
+
+        return $this;
+    }
+
+    // Método para eliminar un cliente de la colección
+    public function removeClient(Client $client): self
+    {
+        if ($this->clients->removeElement($client)) {
+            $client->removeUser($this);
+        }
+
+        return $this;
+    }
+
+    public function getClients(): Collection
+    {
+        return $this->clients;
     }
 }

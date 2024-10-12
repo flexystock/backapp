@@ -3,24 +3,40 @@ declare(strict_types=1);
 
 namespace App\Client\Infrastructure\InputAdapters;
 
+use App\Client\Application\CreateClientUseCase;
 use App\Client\Infrastructure\InputPorts\CreateClientInputPort;
+use App\User\Application\DTO\CreateUserRequest;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use App\Client\Application\DTO\CreateClientRequest;
 use OpenApi\Attributes as OA;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class CreateClientController
 {
     private CreateClientInputPort $createInputPort;
+    private CreateClientUseCase $createClientUseCase;
+    private SerializerInterface $serializer;
+    private ValidatorInterface $validator;
 
-    public function __construct(CreateClientInputPort $createInputPort)
+    public function __construct(CreateClientInputPort $createInputPort,
+                                CreateClientUseCase $createClientUseCase,
+                                SerializerInterface $serializer,
+                                ValidatorInterface $validator)
     {
         $this->createInputPort = $createInputPort;
+        $this->createClientUseCase = $createClientUseCase;
+        $this->serializer = $serializer;
+        $this->validator = $validator;
     }
-    #[Route('/api/client/create', name: 'create_client', methods: ['POST'])]
+
+    #[Route('/api/client_create', name: 'client_create', methods: ['POST'])]
     #[OA\Post(
-        path: '/api/client/create',
+        path: '/api/client_register',
         summary: 'Create a new Client',
         tags: ['Client'],
         requestBody: new OA\RequestBody(
@@ -56,14 +72,66 @@ class CreateClientController
             )
         ]
     )]
-    public function create(Request $request): Response
+    public function __invoke(Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
         try {
-            $client = $this->createInputPort->create($data);
-            return new Response('Client registered successfully', Response::HTTP_CREATED);
+            // Deserializar el contenido JSON en una instancia del DTO
+            $clientRequest = $this->serializer->deserialize(
+                $request->getContent(),
+                CreateClientRequest::class,
+                'json'
+            );
+
+            $errors = $this->validator->validate($clientRequest);
+
+            if (count($errors) > 0) {
+                $errorMessages = $this->formatValidationErrors($errors);
+
+                return new JsonResponse([
+                    'message' => 'Datos inválidos',
+                    'errors' => $errorMessages
+                ], Response::HTTP_BAD_REQUEST);
+            }
+            // Ejecutar el caso de uso
+            //die("antes del create");
+            $this->createInputPort->create($clientRequest);
+
+            return new JsonResponse(['success' => true], 201);
         } catch (\Exception $e) {
-            return new Response($e->getMessage(), Response::HTTP_BAD_REQUEST);
+            // Manejar excepciones y devolver una respuesta adecuada
+            return new JsonResponse(['error' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Formatea una lista de errores de validación en un array asociativo.
+     *
+     * Este métoodo toma una lista de violaciones de restricciones (errores de validación)
+     * y las convierte en un array donde cada clave es el nombre del campo que contiene
+     * el error y cada valor es el mensaje de error correspondiente. Esto facilita la
+     * preparación de respuestas JSON claras y estructuradas para informar al cliente
+     * sobre los errores de validación ocurridos.
+     *
+     * @param ConstraintViolationListInterface $errors Lista de violaciones de restricciones obtenida tras la validación.
+     *
+     * @return array Arreglo asociativo con los errores formateados. La estructura es:
+     *               [
+     *                   'nombreDelCampo' => 'Mensaje de error',
+     *                   // ...
+     *               ]
+     */
+    private function formatValidationErrors(ConstraintViolationListInterface $errors): array
+    {
+        $errorMessages = [];
+
+        foreach ($errors as $error) {
+            $field = $error->getPropertyPath();
+            $message = $error->getMessage();
+
+            // Agregar el error al arreglo
+            $errorMessages[$field] = $message;
+        }
+
+        return $errorMessages;
     }
 }

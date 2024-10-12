@@ -2,11 +2,9 @@
 
 namespace App\User\Application;
 
-use App\Entity\Main\User;
+
 use App\User\Infrastructure\InputPorts\GetAllUsersInputPort;
 use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Doctrine\ORM\EntityManagerInterface;
 class GetAllUserUseCase implements GetAllUsersInputPort
 {
     private UserRepositoryInterface $userRepository;
@@ -17,9 +15,6 @@ class GetAllUserUseCase implements GetAllUsersInputPort
 
     public function getAll(): ?array
     {
-        //$users = $this->userRepository->findAll();
-        //var_dump($users);
-        //die("llegamos al useCase");
         return $this->userRepository->findAll();
     }
 }

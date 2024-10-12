@@ -1,4 +1,5 @@
 DOCKER_BE = docker-symfony-be
+DOCKER_MESSENGER = docker-symfony-messenger
 
 help: ## Show this help message
 	@echo 'usage: make [target]'
@@ -11,6 +12,12 @@ run: ## Start the containers
 	docker compose up -d
 	@echo "Fixing permissions for var/log"
 	docker exec -it --user root docker-symfony-be bash -c "chown -R www-data:www-data /appdata/www/var/log && chmod -R 775 /appdata/www/var/log"
+	@CONTAINERS=$$(docker ps -a -q); \
+		if [ -n "$$CONTAINERS" ]; then \
+			docker start $$CONTAINERS; \
+		else \
+			echo "No stopped containers to start"; \
+		fi
 
 fix-permissions: ## Fix permissions for var/log
 	docker exec -it --user root docker-symfony-be bash -c "chown -R www-data:www-data /appdata/www/var/cache /appdata/www/var/log && chmod -R 775 /appdata/www/var/cache /appdata/www/var/log && ls -l /appdata/www/var && ls -l /appdata/www/var/cache && ls -l /appdata/www/var/log"
@@ -38,6 +45,9 @@ be-logs: ## Tail the Symfony development log
 
 ssh-be: ## SSH into the backend container
 	docker exec -it ${DOCKER_BE} bash
+
+ssh-messenger: ## SSH into the messenger container
+	docker exec -it ${DOCKER_MESSENGER} bash
 
 code-style: ## Fix code style according to Symfony rules
 	docker exec -it ${DOCKER_BE} php-cs-fixer fix src --rules=@Symfony

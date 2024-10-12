@@ -5,13 +5,14 @@ namespace App\Entity\Main;
 
 use Doctrine\ORM\Mapping as ORM;
 use App\Profile\Repository\ProfileRepository;
-
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 #[ORM\Entity(repositoryClass: ProfileRepository::class)]
 #[ORM\Table(name: 'profiles')]
 class Profile
 {
     #[ORM\Id]
-    #[ORM\Column(type: 'int')]
+    #[ORM\Column(type: 'integer')]
     private int $id;
 
     #[ORM\Column(type: 'string', length: 100)]
@@ -20,6 +21,13 @@ class Profile
     #[ORM\Column(type: 'string', length: 50)]
     private string $description;
 
+    #[ORM\OneToMany(targetEntity: User::class, mappedBy: 'profile')]
+    private Collection $users;
+
+    public function __construct()
+    {
+        $this->users = new ArrayCollection();
+    }
     public function getId(): ?int
     {
         return $this->id;

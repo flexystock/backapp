@@ -70,3 +70,14 @@ services:
     App\Client\Infrastructure\OutputPorts\ClientRepositoryInterface:
         alias: App\Client\Infrastructure\OutputAdapters\ClientRepository
 
+    App\MessageHandler\CreateDockerContainerHandler:
+        tags: [ 'messenger.message_handler']
+
+    App\Service\DockerService:
+        arguments:
+            $logger: '@logger'
+            $clientRepository: '@App\Client\Infrastructure\OutputPorts\ClientRepositoryInterface'
+
+    App\User\Infrastructure\OutputPorts\NotificationServiceInterface:
+        alias: App\User\Infrastructure\OutputAdapters\EmailNotificationService
+
