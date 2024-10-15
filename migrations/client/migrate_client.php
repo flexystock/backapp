@@ -6,10 +6,10 @@ $clientIdentifier = $argv[1] ?? null;
 $mainPdo = new PDO('mysql:host=docker-symfony-dbMain;dbname=docker_symfony_databaseMain', 'user', 'password');
 
 // Construir la consulta para obtener los clientes
-$sql = "SELECT databaseName, host, port_bbdd, database_user_name, database_password FROM client";
+$sql = "SELECT database_name, host, port_bbdd, database_user_name, database_password FROM client";
 
 if ($clientIdentifier !== null) {
-    $sql .= " WHERE uuid_Client = :identifier OR databaseName = :identifier";
+    $sql .= " WHERE uuid_Client = :identifier OR database_name = :identifier";
 }
 
 $stmt = $mainPdo->prepare($sql);
@@ -105,7 +105,7 @@ $basePath = '/appdata/www/migrations/client';
 echo "Base Path for client migrations: $basePath\n";
 
 foreach ($clients as $client) {
-    $dbName = $client['databaseName'];
+    $dbName = $client['database_name'];
     $host = $client['host'];
     $port = $client['port_bbdd'];
     $username = $client['database_user_name'];

@@ -441,7 +441,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $user;
     }
-    // Método para agregar un cliente a la colección
+    // Funcion para agregar un cliente a la colección
     public function addClient(Client $client): self
     {
         if (!$this->clients->contains($client)) {
@@ -452,7 +452,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    // Método para eliminar un cliente de la colección
+    // Funcion para eliminar un cliente de la colección
     public function removeClient(Client $client): self
     {
         if ($this->clients->removeElement($client)) {

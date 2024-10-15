@@ -72,6 +72,8 @@ class LoginUserController {
             return $this->jsonResponse(['error' => 'Invalid email or password'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
+
+
         $user = $this->loginInputPort->login($mail, $password, $request->getClientIp());
 
         if (!$user || $this->isAccountLocked($user)) {

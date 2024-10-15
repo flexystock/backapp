@@ -92,20 +92,14 @@ class RegisterClientUseCase implements RegisterClientInputPort
             // Manejar el caso donde el usuario no existe
             throw new \Exception('Usuario no encontrado');
         }
-
         // Guardar el cliente en la base de datos
         $this->clientRepository->save($client);
-
         // Generar el token de verificación
         $this->generateVerificationToken($user);
-
         // Validar el usuario
         $this->validateUser($user);
-
         // Guardar el usuario y enviar notificaciones
         $this->saveUserAndSendNotifications($user);
-        // Enviar el mensaje al bus de Messenger
-        //$this->bus->dispatch(new CreateDockerContainerMessage($client->getUuidClient()));
 
         return $client;
     }

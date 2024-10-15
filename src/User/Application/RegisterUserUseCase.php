@@ -5,8 +5,6 @@ use App\Entity\Main\User;
 use App\User\Infrastructure\InputPorts\RegisterUserInputPort;
 use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
 use Cassandra\Exception\ValidationException;
-//use Random\RandomException;
-//use Random\RandomException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\User\Application\DTO\CreateUserRequest;
@@ -15,7 +13,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use App\User\Infrastructure\OutputPorts\NotificationServiceInterface;
 class RegisterUserUseCase implements RegisterUserInputPort
 {
-    private UserRepositoryInterface $userRepository;
+    private UserRepositoryInterface $userRepositoryInterface;
     private UserPasswordHasherInterface $passwordHasher;
     private ValidatorInterface $validator;
     private MailerInterface $mailer;
@@ -23,14 +21,14 @@ class RegisterUserUseCase implements RegisterUserInputPort
     private NotificationServiceInterface $notificationService;
     private $entityManager;
 
-    public function __construct(UserRepositoryInterface $userRepository,
+    public function __construct(UserRepositoryInterface $userRepositoryInterface,
                                 UserPasswordHasherInterface $passwordHasher,
                                 ValidatorInterface $validator,
                                 MailerInterface $mailer,
                                 UrlGeneratorInterface $urlGenerator,
                                 NotificationServiceInterface $notificationService)
     {
-        $this->userRepository = $userRepository;
+        $this->userRepositoryInterface = $userRepositoryInterface;
         $this->passwordHasher = $passwordHasher;
         $this->validator = $validator;
         $this->mailer = $mailer;
@@ -46,16 +44,7 @@ class RegisterUserUseCase implements RegisterUserInputPort
     public function register(CreateUserRequest $data): User
     {
         $user = User::fromCreateUserRequest($data, $this->passwordHasher);
-
-        // Generar el token de verificación
-        //$this->generateVerificationToken($user);
-
-        // Validar el usuario
-        //$this->validateUser($user);
-
-        // Guardar el usuario y enviar notificaciones
-        //$this->saveUserAndSendNotifications($user);
-        $this->userRepository->save($user);
+        $this->userRepositoryInterface->save($user);
         return $user;
     }
 
@@ -84,7 +73,7 @@ class RegisterUserUseCase implements RegisterUserInputPort
     private function saveUserAndSendNotifications(User $user): void
     {
         try {
-            $this->userRepository->save($user);
+            $this->userRepositoryInterface->save($user);
 
             //$this->notificationService->sendEmailVerificationToUser($user);
             //$this->notificationService->sendEmailToBack($user);

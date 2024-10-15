@@ -132,6 +132,12 @@ class Client
         return $this->uuid_client;
     }
 
+    public function setUuidClient(string $uuid_client): self
+    {
+        $this->uuid_client = $uuid_client;
+        return $this;
+    }
+
     public function getName(): string
     {
         return $this->name;
@@ -489,6 +495,11 @@ class Client
         }
 
         return $this;
+    }
+
+    public function setDockVolumeName(string $volumeName): void
+    {
+        $this->docker_volume_name = $volumeName;
     }
 
 

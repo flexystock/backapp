@@ -87,19 +87,14 @@ class RegisterClientController
 
             if (count($errors) > 0) {
                 $errorMessages = $this->formatValidationErrors($errors);
-
                 return new JsonResponse([
                     'message' => 'Datos inválidos',
                     'errors' => $errorMessages
                 ], Response::HTTP_BAD_REQUEST);
             }
-            // Ejecutar el caso de uso
-            //die("antes del create");
             $this->registerInputPort->register($clientRequest);
-
             return new JsonResponse(['success' => true], 201);
         } catch (\Exception $e) {
-            // Manejar excepciones y devolver una respuesta adecuada
             return new JsonResponse(['error' => $e->getMessage()], 500);
         }
     }

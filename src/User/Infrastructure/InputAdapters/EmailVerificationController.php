@@ -27,16 +27,12 @@ class EmailVerificationController
     public function verifyUserEmail(string $token): Response
     {
         $user = $this->userRepository->findOneByVerificationToken($token);
-
-
         if (!$user) {
             return new Response('El enlace de verificación no es válido.', Response::HTTP_BAD_REQUEST);
         }
-
         if ($user->isVerified()) {
             return new Response('Tu cuenta ya ha sido verificada.', Response::HTTP_OK);
         }
-
         if ($user->getVerificationTokenExpiresAt() < new \DateTime()) {
             return new Response('El enlace de verificación ha expirado.', Response::HTTP_BAD_REQUEST);
         }
@@ -52,11 +48,7 @@ class EmailVerificationController
         if (!$client) {
             return new Response('No se pudo obtener el cliente asociado.', Response::HTTP_BAD_REQUEST);
         }
-        // levantar el contenedor de BBDD
-        //var_dump($client);
-        //die("client");
-        //var_dump($client->getUuidClient());
-        //die("client");
+
         $this->bus->dispatch(new CreateDockerContainerMessage($client->getUuidClient()));
         $user->setIsVerified(true);
         $user->setVerificationToken(null);

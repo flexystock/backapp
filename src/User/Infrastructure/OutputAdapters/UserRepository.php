@@ -20,9 +20,9 @@ class UserRepository extends ServiceEntityRepository implements UserRepositoryIn
         parent::__construct($registry, User::class);
     }
 
-    public function findByEmail(string $mail): ?User
+    public function findByEmail(string $email): ?User
     {
-        return $this->findOneBy(['mail' => $mail]);
+        return $this->findOneBy(['email' => $email]);
     }
 
     public function findOneByVerificationToken(string $token): ?User

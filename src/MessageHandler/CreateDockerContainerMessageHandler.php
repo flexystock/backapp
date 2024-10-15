@@ -14,8 +14,8 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 use Psr\Log\LoggerInterface;
 
 
-#[AsMessageHandler]
-class CreateDockerContainerHandler
+#[AsMessageHandler(handles: CreateDockerContainerMessage::class)]
+class CreateDockerContainerMessageHandler
 {
     private ClientRepositoryInterface $clientRepository;
     private DockerService $dockerService;
@@ -36,13 +36,21 @@ class CreateDockerContainerHandler
     public function __invoke(CreateDockerContainerMessage $message): void
     {
         try {
-            die("llegamos al messageHandler");
+            $this->logger->info('Iniciando procesamiento de CreateDockerContainerMessage');
+            //die("llegamos al messageHandler");
             $clientUuid = $message->getClientId();
-            $client = $this->clientRepository->findOneBy(['uuidClient' => $clientUuid]);
+            $this->logger->info("Obteniendo cliente con UUID: {$clientUuid}");
+            $client = $this->clientRepository->findOneBy(['uuid_client' => $clientUuid]);
+
             if (!$client) {
                 $this->logger->warning("CLIENT WHITH UUID {$clientUuid} not found. Discarding message.");
                 return;
             }
+            $this->logger->info('Propiedades del cliente:', [
+                'uuid_client' => $client->getUuidClient(),
+                'name' => $client->getName(),
+            ]);
+
             $client= $this->dockerService->createClientDatabase($client);
             $this->clientRepository->save($client);
 
@@ -60,7 +68,7 @@ class CreateDockerContainerHandler
                 $clientIdentifier = $client->getUuidClient();
                 $this->logger->debug("IDENTIFICADOR DEL CLIENTE: ".$clientIdentifier);
                 $command = "php {$scriptPath} {$clientIdentifier}";
-                $this->logger->debug("Ejecutando comando: {$command}");
+                $this->logger->info("Ejecutando comando: {$command}");
 
                 exec($command, $output, $returnVar);
 
