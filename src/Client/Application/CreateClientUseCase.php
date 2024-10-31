@@ -5,110 +5,163 @@ namespace App\Client\Application;
 use App\Entity\Main\Client;
 use App\Client\Infrastructure\InputPorts\CreateClientInputPort;
 use App\Client\Infrastructure\OutputPorts\ClientRepositoryInterface;
+use Cassandra\Exception\ValidationException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Component\Uid\Uuid;
+use App\Client\Application\DTO\CreateClientRequest;
+use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
+use App\Entity\Main\User;
+use App\Service\DockerService;
+use App\Message\CreateDockerContainerMessage;
+use Symfony\Component\Messenger\MessageBusInterface;
+use App\User\Application\DTO\CreateUserRequest;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use App\User\Infrastructure\OutputPorts\NotificationServiceInterface;
 
 /**
  * Caso de uso para la creación de clientes.
  */
 class CreateClientUseCase implements CreateClientInputPort
 {
-    /**
-     * Repositorio de clientes.
-     * @var ClientRepositoryInterface
-     */
+
     private ClientRepositoryInterface $clientRepository;
-
-    /**
-     * Servicio de validación.
-     * @var ValidatorInterface
-     */
+    private UserRepositoryInterface $userRepository;
     private ValidatorInterface $validator;
-
-    /**
-     * Constructor.
-     * @param ClientRepositoryInterface $clientRepository El repositorio de clientes.
-     * @param ValidatorInterface $validator El servicio de validación.
-     */
-    public function __construct(ClientRepositoryInterface $clientRepository, ValidatorInterface $validator)
+    private DockerService $dockerService;
+    private MessageBusInterface $bus;
+    private MailerInterface $mailer;
+    private UrlGeneratorInterface $urlGenerator;
+    private NotificationServiceInterface $notificationService;
+    public function __construct(ClientRepositoryInterface $clientRepository,
+                                ValidatorInterface $validator,
+                                UserRepositoryInterface $userRepository,
+                                DockerService $dockerService,
+                                MessageBusInterface $bus,
+                                MailerInterface $mailer,
+                                UrlGeneratorInterface $urlGenerator,
+                                NotificationServiceInterface $notificationService)
     {
         $this->clientRepository = $clientRepository;
+        $this->userRepository = $userRepository;
         $this->validator = $validator;
+        $this->dockerService = $dockerService;
+        $this->bus = $bus;
+        $this->mailer = $mailer;
+        $this->urlGenerator = $urlGenerator;
+        $this->notificationService = $notificationService;
     }
 
-    /**
-     * Crea un nuevo cliente.
-     * @param array $data Los datos del cliente.
-     * @return Client El cliente creado.
-     * @throws \Exception Si hay errores de validación.
-     */
-    public function create(array $data): Client
+    public function create(CreateClientRequest $request): Client
     {
-        $client = new Client();
-        $uuid = Uuid::v4()->toRfc4122();
-        $client->setUuid($uuid);
-        $client->setName($data['clientName']);
-        $scheme = strtoupper($data['clientName']);
-        $client->setScheme($scheme);
+        $client = new Client();//uuiCLient y User_id
 
-        // Determinar el puerto para el nuevo contenedor
-        $port = $this->findAvailablePort(40010);
-        $client->setPort($port);
+        $client->setName($request->getName());
+        $client->setClientName($request->getName());
+        $client->setBusinessType($request->getBusinessType());
+        $client->setFiscalAddress($request->getFiscalAddress());
+        $client->setCity($request->getCity());
+        $client->setCountry($request->getCountry());
+        $client->setPostalCode($request->getPostalCode());
+        $client->setCompanyPhone($request->getCompanyPhone());
 
-        $errors = $this->validator->validate($client);
-        if (count($errors) > 0) {
-            throw new \Exception((string)$errors);
+        // Establecer los demás campos opcionales
+        $client->setNifCif($request->getNifCif());
+        if ($request->getFoundationDate()) {
+            $client->setFoundationDate(new \DateTime($request->getFoundationDate()));
+        }
+        $client->setPhysicalAddress($request->getPhysicalAddress());
+        $client->setCompanyEmail($request->getCompanyEmail());
+        $client->setNumberOfEmployees($request->getNumberOfEmployees());
+        $client->setIndustrySector($request->getIndustrySector());
+        $client->setAverageInventoryVolume($request->getAverageInventoryVolume());
+        $client->setCurrency($request->getCurrency());
+        $client->setPreferredPaymentMethods($request->getPreferredPaymentMethods());
+        $client->setOperationHours($request->getOperationHours());
+        $client->setHasMultipleWarehouses($request->getHasMultipleWarehouses() === 'si');
+        $client->setAnnualSalesVolume($request->getAnnualSalesVolume());
+
+        // Asociar el cliente con el usuario si es necesario
+        $user = $this->userRepository->findOneBy(['uuid_user' => $request->getUuidUser()]);
+        if ($user) {
+            $client->addUser($user);
+        } else {
+            // Manejar el caso donde el usuario no existe
+            throw new \Exception('Usuario no encontrado');
         }
 
-        // Guardar en la base de datos
+        // Guardar el cliente en la base de datos
         $this->clientRepository->save($client);
 
-        // Verificar la ruta de trabajo actual y si el script existe
-        $currentDir = getcwd();
-        $scriptPath = '/appdata/www/bin/create_client_container.sh';
-        if (!file_exists($scriptPath)) {
-            throw new \Exception("Script not found: " . $scriptPath);
-        }
+        // Generar el token de verificación
+        $this->generateVerificationToken($user);
 
-        // Llamar al script para crear el contenedor y actualizar el .env
-        $command = sprintf('bash %s %s %d 2>&1', escapeshellarg($scriptPath), escapeshellarg($data['clientName']), $port);
-        exec($command, $output, $return_var);
+        // Validar el usuario
+        $this->validateUser($user);
 
-        if ($return_var !== 0) {
-            // Registrar el error y la salida del comando
-            error_log('Error creating client container: ' . implode("\n", $output));
-            throw new \Exception('Error creating client container: ' . implode("\n", $output));
-        }
+        // Guardar el usuario y enviar notificaciones
+        $this->saveUserAndSendNotifications($user);
+        // Enviar el mensaje al bus de Messenger
+        //$this->bus->dispatch(new CreateDockerContainerMessage($client->getUuidClient()));
 
         return $client;
     }
 
-    private function findAvailablePort($startPort): int
+
+
+//    private function createClientContainer(Client $client, string $clientName, int $port): void
+//    {
+//        $scriptPath = '/appdata/www/bin/create_client_container.sh';
+//        if (!file_exists($scriptPath)) {
+//            throw new \Exception("Script not found: " . $scriptPath);
+//        }
+//
+//        $command = sprintf(
+//            'bash %s %s %d 2>&1',
+//            escapeshellarg($scriptPath),
+//            escapeshellarg($clientName),
+//            $port
+//        );
+//        exec($command, $output, $return_var);
+//
+//        if ($return_var !== 0) {
+//            error_log('Error creating client container: ' . implode("\n", $output));
+//            throw new \Exception('Error creating client container: ' . implode("\n", $output));
+//        }
+//    }
+
+    /**
+     * @throws \DateMalformedStringException
+     * @throws RandomException
+     */
+    private function generateVerificationToken(User $user): void
     {
-        $port = $startPort;
-        while ($this->isPortInUse($port)) {
-            $port++;
-            if ($port > 65535) { // Evitar ciclos infinitos
-                $port = 40010; // Reiniciar el ciclo si se superan los puertos disponibles
-            }
-        }
-        return $port;
+        $verificationToken = bin2hex(random_bytes(32));
+        $user->setVerificationToken($verificationToken);
+        $user->setVerificationTokenExpiresAt((new \DateTime())->modify('+1 day'));
     }
 
-    private function isPortInUse($port): bool
+    private function validateUser(User $user): void
     {
-        // Consultar la base de datos para ver si el puerto está en uso
-        $client = $this->clientRepository->findOneBy(['port' => $port]);
-        if ($client !== null) {
-            return true;
+        $errors = $this->validator->validate($user);
+        if (count($errors) > 0) {
+            throw new ValidationException((string) $errors);
         }
+    }
 
-        // Verificar si el puerto está en uso en el sistema
-        $connection = @fsockopen('localhost', $port);
-        if (is_resource($connection)) {
-            fclose($connection);
-            return true;
+    /**
+     * @throws \Exception
+     */
+    private function saveUserAndSendNotifications(User $user): void
+    {
+        try {
+            $this->userRepository->save($user);
+
+            $this->notificationService->sendEmailVerificationToUser($user);
+            $this->notificationService->sendEmailToBack($user);
+
+            //$this->entityManager->commit();
+        } catch (\Exception $e) {
+            throw $e;
         }
-        return false;
     }
 }

@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD COLUMN `profile_id` INT(11) DEFAULT NULL;

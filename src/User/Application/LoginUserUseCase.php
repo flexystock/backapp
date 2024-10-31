@@ -25,6 +25,7 @@ class LoginUserUseCase implements LoginUserInputPort
 
     public function login(string $mail, string $password, string $ipAddress): ?User
     {
+
         $user = $this->userRepository->findByEmail($mail);
 
         if (!$user) {

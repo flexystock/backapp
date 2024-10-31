@@ -12,4 +12,6 @@ interface UserRepositoryInterface
 
     public function findAll(): array;
 
+    public function findOneByVerificationToken(string $token): ?User;
+
 }

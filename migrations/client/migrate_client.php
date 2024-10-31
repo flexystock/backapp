@@ -1,8 +1,35 @@
 <?php
+// Obtener el argumento opcional del cliente
+$clientIdentifier = $argv[1] ?? null;
+
+// Conectar a la base de datos principal
 $mainPdo = new PDO('mysql:host=docker-symfony-dbMain;dbname=docker_symfony_databaseMain', 'user', 'password');
 
-// Obtener lista de clientes con sus bases de datos, hosts, usuarios y contraseñas
-$clients = $mainPdo->query("SELECT databaseName, host, username, password FROM client")->fetchAll(PDO::FETCH_ASSOC);
+// Construir la consulta para obtener los clientes
+$sql = "SELECT database_name, host, port_bbdd, database_user_name, database_password FROM client";
+
+if ($clientIdentifier !== null) {
+    $sql .= " WHERE uuid_Client = :identifier OR database_name = :identifier";
+}
+
+$stmt = $mainPdo->prepare($sql);
+
+if ($clientIdentifier !== null) {
+    $stmt->bindValue(':identifier', $clientIdentifier);
+}
+
+$stmt->execute();
+
+$clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Verificar si se encontró al menos un cliente
+if (empty($clients)) {
+    echo "No se encontraron clientes para aplicar las migraciones.\n";
+    exit;
+}
+
+// Obtener la IP del host desde el contenedor
+$hostIp = '127.0.0.1'; // O la IP que corresponda en tu entorno
 
 function applyMigrations($pdo, $basePath) {
     if ($basePath === false || !is_dir($basePath)) {
@@ -58,6 +85,7 @@ function applyMigrations($pdo, $basePath) {
                 $pdo->commit();
                 echo "Registered migration: $file in database.\n";
             } catch (PDOException $e) {
+                file_put_contents('/var/log/migrations.log', "Error en la migración: " . $e->getMessage() . "\n", FILE_APPEND);
                 echo "Migration error: " . $e->getMessage() . "\n";
                 if ($pdo->inTransaction()) {
                     $pdo->rollBack();
@@ -77,11 +105,27 @@ $basePath = '/appdata/www/migrations/client';
 echo "Base Path for client migrations: $basePath\n";
 
 foreach ($clients as $client) {
-    $dbName = $client['databaseName'];
+    $dbName = $client['database_name'];
     $host = $client['host'];
-    $username = $client['username'];
-    $password = $client['password'];
+    $port = $client['port_bbdd'];
+    $username = $client['database_user_name'];
+    $password = $client['database_password'];
+
+    // Si el host es 'localhost', lo reemplazamos por la IP del host
+    if ($host === 'localhost') {
+        $host = '127.0.0.1';
+
+    }
+
     echo "Migrando base de datos del cliente: $dbName en el host: $host\n";
-    $pdo = new PDO("mysql:host=$host;dbname=$dbName", $username, $password);
-    applyMigrations($pdo, $basePath);
+
+    //$dsn = "mysql:host=$host;port=$port;dbname=$dbName;charset=utf8mb4";
+
+    try {
+        //$pdo = new PDO($dsn, $username, $password);
+        $pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbName;charset=utf8mb4", "$username", "$password");
+        applyMigrations($pdo, $basePath);
+    } catch (PDOException $e) {
+        echo "Error al conectar con la base de datos: " . $e->getMessage() . "\n";
+    }
 }

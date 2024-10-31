@@ -1,7 +1,22 @@
 <?php
 $pdo = new PDO('mysql:host=docker-symfony-dbMain;dbname=docker_symfony_databaseMain', 'user', 'password');
 
-function applyMigrations($pdo, $basePath) {
+// Crear la tabla migrations_version si no existe
+function createMigrationsTable($pdo)
+{
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS migrations_version (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            version VARCHAR(255) NOT NULL,
+            script VARCHAR(255) NOT NULL,
+            executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    ");
+    echo "Table 'migrations_version' checked/created.\n";
+}
+
+function applyMigrations($pdo, $basePath)
+{
     if ($basePath === false || !is_dir($basePath)) {
         echo "Invalid migrations path: $basePath\n";
         return;
@@ -9,6 +24,9 @@ function applyMigrations($pdo, $basePath) {
 
     // Verificar que la ruta base exista
     echo "Base Path for migrations: $basePath\n";
+
+    // Crear la tabla de versiones de migración si no existe
+    createMigrationsTable($pdo);
 
     // Obtener la última versión ejecutada
     $lastVersion = $pdo->query("SELECT MAX(version) FROM migrations_version")->fetchColumn();
@@ -21,16 +39,18 @@ function applyMigrations($pdo, $basePath) {
     foreach (scandir($basePath) as $versionDir) {
         if ($versionDir === '.' || $versionDir === '..') continue;
 
-        echo "Checking directory: $versionDir\n";
-
-        // Comparar con la última versión ejecutada
-        if ($versionDir <= $lastVersion) {
-            echo "Skipping already applied migration version: $versionDir\n";
-            continue;
-        }
-
         $fullPath = realpath($basePath . '/' . $versionDir);
+
+        // Verificar si es un directorio
         if (is_dir($fullPath)) {
+            echo "Checking directory: $versionDir\n";
+
+            // Comparar con la última versión ejecutada
+            if ($versionDir <= $lastVersion) {
+                echo "Skipping already applied migration version: $versionDir\n";
+                continue;
+            }
+
             echo "Processing directory: $fullPath\n";
             $files = scandir($fullPath);
             $files = array_filter($files, function ($file) use ($fullPath) {
@@ -61,12 +81,13 @@ function applyMigrations($pdo, $basePath) {
                 }
             }
         } else {
-            echo "Directory $fullPath is not valid.\n";
+            echo "Ignoring non-directory: $fullPath\n";
         }
     }
 }
 
-function isSQLorPHPFile($fileName) {
+function isSQLorPHPFile($fileName)
+{
     $ext = pathinfo($fileName, PATHINFO_EXTENSION);
     return $ext === 'sql' || $ext === 'php';
 }

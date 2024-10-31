@@ -25,9 +25,13 @@ class ClientRepository extends ServiceEntityRepository implements ClientReposito
 
     public function findByUuid(string $uuid): ?Client
     {
-        // Todo
+        return $this->findOneBy(['uuid_client' => $uuid]);
     }
 
+    public function findByName(string $name): ?Client
+    {
+        return $this->findOneBy(['clientName' => $name]);
+    }
     public function findOneByPort(int $port): ?Client
     {
         return $this->findOneBy(['port' => $port]);

@@ -23,7 +23,7 @@ services:
 
     App\User\Application\RegisterUserUseCase:
         arguments:
-            $userRepository: '@App\User\Infrastructure\OutputAdapters\UserRepository'
+            $userRepositoryInterface: '@App\User\Infrastructure\OutputAdapters\UserRepository'
             $passwordHasher: '@security.password_hasher'
             $validator: '@validator'
 
@@ -69,4 +69,16 @@ services:
 
     App\Client\Infrastructure\OutputPorts\ClientRepositoryInterface:
         alias: App\Client\Infrastructure\OutputAdapters\ClientRepository
+
+    App\MessageHandler\CreateDockerContainerMessageHandler:
+        tags: [ 'messenger.message_handler']
+
+    App\Service\DockerService:
+        arguments:
+            $logger: '@logger'
+            $clientRepository: '@App\Client\Infrastructure\OutputPorts\ClientRepositoryInterface'
+            $projectDir: '%kernel.project_dir%'
+
+    App\User\Infrastructure\OutputPorts\NotificationServiceInterface:
+        alias: App\User\Infrastructure\OutputAdapters\EmailNotificationService
 

@@ -8,5 +8,5 @@ interface ClientRepositoryInterface
 {
     public function save(Client $client): void;
     public function findByUuid(string $uuid): ?Client;
-    // Añade otros métodos que necesites
+    public function findByName(string $name): ?Client;
 }
