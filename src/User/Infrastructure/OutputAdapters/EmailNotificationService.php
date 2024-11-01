@@ -62,4 +62,22 @@ class EmailNotificationService implements NotificationServiceInterface
 
         $this->mailer->send($email);
     }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function sendPasswordResetEmail(User $user, $token):void
+    {
+        $userName = $user->getName();
+        $email = (new Email())
+            ->from('flexystock@gmail.com')
+            ->to($user->getEmail())
+            ->subject('Restablecimiento de la contraseña')
+            ->html(
+                '<p>Generacioin de nueva password </p>' .
+                '<p>Por favor,' . htmlspecialchars($userName) . '</p>' .
+                "<p>Su código de restablecimiento es: <strong>{$token}</strong></p>");
+
+        $this->mailer->send($email);
+    }
 }
