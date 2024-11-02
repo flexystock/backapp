@@ -31,7 +31,7 @@ class PasswordResetController
     public function forgotPassword(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        //die("llegamos");
+
         $forgotPasswordRequest = new ForgotPasswordRequest();
         $forgotPasswordRequest->email = $data['email'] ?? '';
 
@@ -50,7 +50,7 @@ class PasswordResetController
     public function resetPassword(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        //die("llegamos al reset");
+
         $resetPasswordRequest = new ResetPasswordRequest();
         $resetPasswordRequest->email = $data['email'] ?? '';
         $resetPasswordRequest->token = $data['token'] ?? '';
