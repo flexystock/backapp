@@ -4,8 +4,8 @@ namespace App\Entity\Main;
 
 use Doctrine\ORM\Mapping as ORM;
 
+#[ORM\Entity]
 #[ORM\Table(name: 'password_reset')]
-#[ORM\UniqueConstraint(name: 'mail_UNIQUE', columns: ['email'])]
 class PasswordReset
 {
     #[ORM\Id]
@@ -14,21 +14,21 @@ class PasswordReset
     #[ORM\Column(type: 'string', length: 255)]
     private string $email;
     #[ORM\Column(type: 'string', length: 255)]
-    private string $tokenHash;
+    private string $token_hash;
     #[ORM\Column(type: 'datetime_immutable')]
-    private \DateTimeImmutable $expiresAt;
+    private \DateTimeImmutable $expires_at;
 
     public function __construct(string $email, string $token, \DateTimeImmutable $expiresAt)
     {
         $this->id = uuid_create();
         $this->email = $email;
-        $this->tokenHash = password_hash($token, PASSWORD_DEFAULT);
-        $this->expiresAt = $expiresAt;
+        $this->token_hash = password_hash($token, PASSWORD_DEFAULT);
+        $this->expires_at = $expiresAt;
     }
 
     public function verifyToken(string $token): bool
     {
-        return password_verify($token, $this->tokenHash) && $this->expiresAt > new \DateTimeImmutable();
+        return password_verify($token, $this->token_hash) && $this->expires_at > new \DateTimeImmutable();
     }
 
     public function getId(): string
@@ -53,22 +53,22 @@ class PasswordReset
 
     public function getTokenHash(): string
     {
-        return $this->tokenHash;
+        return $this->token_hash;
     }
 
     public function setTokenHash(string $tokenHash): void
     {
-        $this->tokenHash = $tokenHash;
+        $this->token_hash = $tokenHash;
     }
 
     public function getExpiresAt(): \DateTimeImmutable
     {
-        return $this->expiresAt;
+        return $this->expires_at;
     }
 
     public function setExpiresAt(\DateTimeImmutable $expiresAt): void
     {
-        $this->expiresAt = $expiresAt;
+        $this->expires_at = $expiresAt;
     }
 
 }

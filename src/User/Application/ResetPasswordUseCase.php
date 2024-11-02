@@ -3,11 +3,12 @@
 namespace App\User\Application;
 
 use App\User\Application\DTO\ResetPasswordRequest;
-use App\User\Domain\Repository\UserRepositoryInterface;
-use App\User\Domain\Repository\PasswordResetRepositoryInterface;
+use App\User\Application\InputPorts\ResetPasswordInterface;
+use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
+use App\User\Application\OutputPorts\PasswordResetRepositoryInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-class ResetPasswordUseCase
+class ResetPasswordUseCase implements ResetPasswordInterface
 {
     public function __construct(
         private UserRepositoryInterface $userRepository,
@@ -15,7 +16,7 @@ class ResetPasswordUseCase
         private UserPasswordHasherInterface $passwordHasher
     ) {}
 
-    public function handle(ResetPasswordRequest $request): void
+    public function resetPassword(ResetPasswordRequest $request): void
     {
         $passwordReset = $this->passwordResetRepository->findByEmail($request->email);
 

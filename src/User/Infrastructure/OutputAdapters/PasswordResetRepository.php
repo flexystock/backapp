@@ -3,12 +3,12 @@
 namespace App\User\Infrastructure\OutputAdapters;
 
 use App\Entity\Main\PasswordReset;
-use App\User\Infrastructure\OutputPorts\PasswordResetRepositoryInterface;
+use App\User\Application\OutputPorts\PasswordResetRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
 class PasswordResetRepository implements PasswordResetRepositoryInterface
 {
-    public function __construct(private EntityManagerInterface $entityManager) {}
+    public function __construct(private readonly EntityManagerInterface $entityManager) {}
 
     public function save(PasswordReset $passwordReset): void
     {

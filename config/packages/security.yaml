@@ -47,7 +47,7 @@ security:
         - { path: ^/api/client_register, roles: PUBLIC_ACCESS }
         - { path: ^/api/forgot-password, roles: PUBLIC_ACCESS}
         - { path: ^/api/forgot-password, roles: PUBLIC_ACCESS}
-        - { path: ^/api/reset-password, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/reset-password, roles: PUBLIC_ACCESS }
 
 when@test:
     security:

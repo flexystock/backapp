@@ -76,7 +76,8 @@ class EmailNotificationService implements NotificationServiceInterface
             ->html(
                 '<p>Generacioin de nueva password </p>' .
                 '<p>Por favor,' . htmlspecialchars($userName) . '</p>' .
-                "<p>Su código de restablecimiento es: <strong>{$token}</strong></p>");
+                "<p>Su código de restablecimiento es: <strong>{$token}</strong></p>".
+                '<p>Este código expirará en 15 minutos</p>');
 
         $this->mailer->send($email);
     }
