@@ -17,6 +17,8 @@ class PasswordReset
     private string $token_hash;
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $expires_at;
+    #[ORM\Column(type: 'integer')]
+    private int $attempts = 0;
 
     public function __construct(string $email, string $token, \DateTimeImmutable $expiresAt)
     {
@@ -71,4 +73,24 @@ class PasswordReset
         $this->expires_at = $expiresAt;
     }
 
+    public function getAttempts(): int
+    {
+        return $this->attempts;
+    }
+
+    public function setAttempts(int $attempts): void
+    {
+        $this->attempts = $attempts;
+    }
+    // Métod para incrementar los intentos
+    public function incrementAttempts(): void
+    {
+        $this->attempts++;
+    }
+
+    // Métod para verificar si se ha alcanzado el límite de intentos
+    public function hasExceededMaxAttempts(int $maxAttempts): bool
+    {
+        return $this->attempts >= $maxAttempts;
+    }
 }

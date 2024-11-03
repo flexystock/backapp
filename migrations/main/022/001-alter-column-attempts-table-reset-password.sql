@@ -1,0 +1,1 @@
+ALTER TABLE `password_reset` MODIFY COLUMN `attempts` INT(11) NOT NULL DEFAULT 0;

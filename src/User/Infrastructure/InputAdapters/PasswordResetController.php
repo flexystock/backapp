@@ -12,19 +12,23 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use OpenApi\Attributes as OA;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 class PasswordResetController
 {
     private RequestPasswordResetInterface $requestPasswordReset;
     private ResetPasswordInterface $passwordReset;
     private ValidatorInterface $validator;
+    private RateLimiterFactory $passwordResetLimiter;
     public function __construct(RequestPasswordResetInterface $requestPasswordReset,
                                 ResetPasswordInterface $passwordReset,
                                 ValidatorInterface $validator,
+                                RateLimiterFactory $passwordResetLimiter
                                 ){
         $this->requestPasswordReset= $requestPasswordReset;
         $this->passwordReset = $passwordReset;
-
+        $this->passwordResetLimiter = $passwordResetLimiter;
         $this->validator = $validator;
     }
 
@@ -125,6 +129,17 @@ class PasswordResetController
     )]
     public function resetPassword(Request $request): JsonResponse
     {
+        // Obtener el limitador basado en la IP del cliente o en otro identificador
+        $limiter = $this->passwordResetLimiter->create($request->getClientIp());
+        // Intentar consumir un token del limitador
+        $limit = $limiter->consume(1);
+
+        if (!$limit->isAccepted()) {
+            // Si no hay tokens disponibles, lanzar una excepción o manejar el error
+            $retryAfter = $limit->getRetryAfter()->getTimestamp() - time();
+            throw new TooManyRequestsHttpException($retryAfter, 'Demasiados intentos. Por favor, inténtelo de nuevo en 15 minutos.');
+        }
+
         $data = json_decode($request->getContent(), true);
 
         $resetPasswordRequest = new ResetPasswordRequest();
