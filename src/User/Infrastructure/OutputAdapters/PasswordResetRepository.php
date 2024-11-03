@@ -26,4 +26,14 @@ class PasswordResetRepository implements PasswordResetRepositoryInterface
         $this->entityManager->remove($passwordReset);
         $this->entityManager->flush();
     }
+
+    public function removeAllByEmail(string $email): void
+    {
+        $this->entityManager->createQueryBuilder()
+            ->delete(PasswordReset::class, 'pr')
+            ->where('pr.email = :email')
+            ->setParameter('email', $email)
+            ->getQuery()
+            ->execute();
+    }
 }

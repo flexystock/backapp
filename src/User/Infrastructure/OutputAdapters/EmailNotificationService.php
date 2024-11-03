@@ -2,12 +2,13 @@
 
 namespace App\User\Infrastructure\OutputAdapters;
 
+use App\Entity\Main\User;
+use App\User\Application\OutputPorts\NotificationServiceInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use App\Entity\Main\User;
-use App\User\Infrastructure\OutputPorts\NotificationServiceInterface;
+
 class EmailNotificationService implements NotificationServiceInterface
 {
     private MailerInterface $mailer;

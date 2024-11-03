@@ -2,12 +2,12 @@
 
 namespace App\User\Application;
 
+use App\Entity\Main\PasswordReset;
 use App\User\Application\DTO\ForgotPasswordRequest;
 use App\User\Application\InputPorts\RequestPasswordResetInterface;
-use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
+use App\User\Application\OutputPorts\NotificationServiceInterface;
 use App\User\Application\OutputPorts\PasswordResetRepositoryInterface;
-use App\User\Infrastructure\OutputPorts\NotificationServiceInterface;
-use App\Entity\Main\PasswordReset;
+use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
 
 class RequestPasswordResetUseCase implements RequestPasswordResetInterface
 {
@@ -20,11 +20,14 @@ class RequestPasswordResetUseCase implements RequestPasswordResetInterface
     public function requestPasswordReset(ForgotPasswordRequest $request): void
     {
         $user = $this->userRepository->findByEmail($request->email);
-        //die("email encotrado");
+
         if (!$user) {
             // No revelar si el email no existe
             return;
         }
+
+        // **Eliminar registros existentes de PasswordReset para este email**
+        $this->passwordResetRepository->removeAllByEmail($user->getEmail());
 
         // Generar token
         $token = bin2hex(random_bytes(3)); // 6 caracteres hexadecimales
@@ -32,7 +35,7 @@ class RequestPasswordResetUseCase implements RequestPasswordResetInterface
         $expiresAt = new \DateTimeImmutable('+15 minutes');
 
         $passwordReset = new PasswordReset($user->getEmail(), $token, $expiresAt);
-        //die("llegamos hasta aqui");
+
         $this->passwordResetRepository->save($passwordReset);
 
         $this->emailService->sendPasswordResetEmail($user, $token);
