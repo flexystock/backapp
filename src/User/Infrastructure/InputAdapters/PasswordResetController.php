@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use OpenApi\Attributes as OA;
 
 class PasswordResetController
 {
@@ -27,7 +28,44 @@ class PasswordResetController
         $this->validator = $validator;
     }
 
+
     #[Route('/api/forgot-password', name: 'api_forgot_password', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/forgot-password',
+        summary: 'Solicitar restablecimiento de contraseña',
+        tags: ['User'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'usuario@example.com'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Si el email existe, se ha enviado un código de restablecimiento.',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Si el email existe, se ha enviado un código de restablecimiento.'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Errores de validación',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'errors', type: 'string', example: 'El email es obligatorio.'),
+                    ]
+                )
+            )
+        ]
+    )]
     public function forgotPassword(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -47,6 +85,44 @@ class PasswordResetController
     }
 
     #[Route('/api/reset-password', name: 'api_reset_password', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/reset-password',
+        summary: 'Restablecer contraseña',
+        tags: ['User'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email', 'token', 'newPassword'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'usuario@example.com'),
+                    new OA\Property(property: 'token', type: 'string', example: 'abc123'),
+                    new OA\Property(property: 'newPassword', type: 'string', format: 'password', example: 'nuevaContraseña123'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Contraseña actualizada correctamente.',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Contraseña actualizada correctamente.'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Errores de validación o código inválido.',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'error', type: 'string', example: 'Código inválido o expirado.'),
+                    ]
+                )
+            )
+        ]
+    )]
     public function resetPassword(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
