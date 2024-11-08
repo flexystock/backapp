@@ -10,4 +10,5 @@ interface NotificationServiceInterface
     public function sendEmailToBack(User $user): void;
 
     public function sendPasswordResetEmail(User $user, $token):void;
+    public function sendSuccesfullPasswordResetEmail(User $user ):void;
 }

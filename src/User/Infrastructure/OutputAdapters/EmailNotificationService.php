@@ -73,12 +73,28 @@ class EmailNotificationService implements NotificationServiceInterface
         $email = (new Email())
             ->from('flexystock@gmail.com')
             ->to($user->getEmail())
-            ->subject('Restablecimiento de la contraseña')
+            ->subject('Codigo restablecimiento de la contraseña')
             ->html(
                 '<p>Generacioin de nueva password </p>' .
                 '<p>Por favor,' . htmlspecialchars($userName) . '</p>' .
                 "<p>Su código de restablecimiento es: <strong>{$token}</strong></p>".
                 '<p>Este código expirará en 15 minutos</p>');
+
+        $this->mailer->send($email);
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function sendSuccesfullPasswordResetEmail(User $user): void
+    {
+        $userName = $user->getName();
+        $email = (new Email())
+            ->from('flexystock@gmail.com')
+            ->to($user->getEmail())
+            ->subject('Nuevo password')
+            ->html(
+                '<p>Se ha restablecido su password correctamente </p>');
 
         $this->mailer->send($email);
     }

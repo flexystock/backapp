@@ -7,17 +7,26 @@ use App\User\Application\InputPorts\ResetPasswordInterface;
 use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
 use App\User\Application\OutputPorts\PasswordResetRepositoryInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use App\User\Application\OutputPorts\NotificationServiceInterface;
 
 /**
  * Caso de uso para restablecer la contraseña de un usuario.
  */
 class ResetPasswordUseCase implements ResetPasswordInterface
 {
-    public function __construct(
-        private UserRepositoryInterface $userRepository,
-        private PasswordResetRepositoryInterface $passwordResetRepository,
-        private UserPasswordHasherInterface $passwordHasher
-    ) {}
+    private UserRepositoryInterface $userRepository;
+    private PasswordResetRepositoryInterface $passwordResetRepository;
+    private UserPasswordHasherInterface $passwordHasher;
+    private NotificationServiceInterface $email;
+    public function __construct(UserRepositoryInterface $userRepository,
+                                PasswordResetRepositoryInterface $passwordResetRepository,
+                                UserPasswordHasherInterface $passwordHasher,
+                                NotificationServiceInterface $email)
+    {
+        $this->userRepository = $userRepository;
+        $this->passwordResetRepository = $passwordResetRepository;
+        $this->email = $email;
+    }
 
     /**
      * Restablece la contraseña de un usuario utilizando un token de verificación.
@@ -73,5 +82,7 @@ class ResetPasswordUseCase implements ResetPasswordInterface
 
         // Eliminar el registro de restablecimiento de contraseña
         $this->passwordResetRepository->remove($passwordReset);
+        //Enviamos email email de confirmacion de reseteo de password
+        $this->email->sendSuccesfullPasswordResetEmail($user);
     }
 }
