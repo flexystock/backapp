@@ -2,15 +2,16 @@
 namespace App\User\Application;
 
 use App\Entity\Main\User;
+use App\User\Application\DTO\CreateUserRequest;
+use App\User\Application\OutputPorts\NotificationServiceInterface;
 use App\User\Infrastructure\InputPorts\RegisterUserInputPort;
 use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
 use Cassandra\Exception\ValidationException;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
-use App\User\Application\DTO\CreateUserRequest;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use App\User\Infrastructure\OutputPorts\NotificationServiceInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+
 class RegisterUserUseCase implements RegisterUserInputPort
 {
     private UserRepositoryInterface $userRepositoryInterface;

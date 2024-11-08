@@ -82,3 +82,20 @@ services:
     App\User\Infrastructure\OutputPorts\NotificationServiceInterface:
         alias: App\User\Infrastructure\OutputAdapters\EmailNotificationService
 
+    App\User\Application\InputPorts\RequestPasswordResetInterface:
+        alias: App\User\Application\RequestPasswordResetUseCase
+
+    App\User\Application\InputPorts\ResetPasswordInterface:
+        alias: App\User\Application\ResetPasswordUseCase
+
+    # OutputPorts Implementations
+    App\User\Application\OutputPorts\PasswordResetRepositoryInterface:
+        alias: App\User\Infrastructure\OutputAdapters\PasswordResetRepository
+
+    App\User\Infrastructure\OutputPorts\UserRepositoryInterface:
+        alias: App\User\Infrastructure\OutputAdapters\UserRepository
+
+    # Controladores
+    App\User\Infrastructure\InputAdapters\PasswordResetController:
+        tags: [ 'controller.service_arguments' ]
+
