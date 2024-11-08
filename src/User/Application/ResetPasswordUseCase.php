@@ -26,6 +26,7 @@ class ResetPasswordUseCase implements ResetPasswordInterface
         $this->userRepository = $userRepository;
         $this->passwordResetRepository = $passwordResetRepository;
         $this->email = $email;
+        $this->passwordHasher = $passwordHasher;
     }
 
     /**
