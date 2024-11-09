@@ -32,20 +32,17 @@ class LoginUserUseCase implements LoginUserInputPort
             return null;
         }
 
-        // Verificar si la cuenta está bloqueada
         if ($user->getLockedUntil() && $user->getLockedUntil() > new \DateTimeImmutable()) {
-            return null; // La cuenta está bloqueada, no debería permitir el acceso
+            return null;
         }
+
         if (!$this->passwordHasher->isPasswordValid($user, $password)) {
             $this->incrementFailedAttempts($user);
-            return null; // Credenciales incorrectas, devolver null
+            return null;
         }
-        // Actualizar el último acceso
-        $user->setLastAccess(new \DateTimeImmutable());
-        // Si el login es exitoso
+
         $this->resetFailedAttempts($user);
-        // Registrar el login en la tabla 'login'
-        $this->registerLogin($user,$ipAddress);
+        $this->registerLogin($user, $ipAddress);
         return $user;
     }
 
@@ -72,14 +69,29 @@ class LoginUserUseCase implements LoginUserInputPort
 
     public function handleFailedLogin(User $user): ?string
     {
-
-        // Si el usuario ha sido bloqueado, devolver el mensaje de bloqueo
-        if ($user->getLockedUntil()) {
+        if ($user->getLockedUntil() && $user->getLockedUntil() > new \DateTimeImmutable()) {
             $lockedUntil = $user->getLockedUntil()->format('Y-m-d H:i:s');
-            return "Intentos máximos alcanzados. Usuario bloqueado hasta: $lockedUntil.";
+            return "Se ha superado el número máximo de intentos. Su cuenta está bloqueada hasta: $lockedUntil.";
+        }
+
+        $remainingAttempts = $this->getRemainingAttempts($user->getFailedAttempts());
+
+        if ($remainingAttempts > 0) {
+            return "Credenciales incorrectas. Le quedan $remainingAttempts intentos antes de que su cuenta sea bloqueada.";
         }
 
         return null;
+    }
+
+    private function getRemainingAttempts(int $failedAttempts): int
+    {
+        $criticalAttempts = [4, 7, 10, 13];
+        foreach ($criticalAttempts as $threshold) {
+            if ($failedAttempts < $threshold) {
+                return $threshold - $failedAttempts;
+            }
+        }
+        return 0;
     }
 
     /**

@@ -99,3 +99,6 @@ services:
     App\User\Infrastructure\InputAdapters\PasswordResetController:
         tags: [ 'controller.service_arguments' ]
 
+    App\EventSubscriber\MailSentSubscriber:
+        tags: [ 'kernel.event_subscriber' ]
+

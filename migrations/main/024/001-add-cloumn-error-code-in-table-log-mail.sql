@@ -1,0 +1,1 @@
+ALTER TABLE `log_mail` ADD COLUMN `error_code` INT(11) DEFAULT NULL COMMENT 'codigo error_code error';

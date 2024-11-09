@@ -4,20 +4,28 @@ namespace App\User\Infrastructure\OutputAdapters;
 
 use App\Entity\Main\User;
 use App\User\Application\OutputPorts\NotificationServiceInterface;
-use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use App\Event\MailSentEvent;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Mailer\Exception\TransportException;
+use Symfony\Component\Mailer\Exception\HttpTransportException;
 
 class EmailNotificationService implements NotificationServiceInterface
 {
     private MailerInterface $mailer;
     private UrlGeneratorInterface $urlGenerator;
+    private EventDispatcherInterface $eventDispatcher;
 
-    public function __construct(MailerInterface $mailer, UrlGeneratorInterface $urlGenerator)
+    public function __construct(MailerInterface $mailer,
+                                UrlGeneratorInterface $urlGenerator,
+                                EventDispatcherInterface $eventDispatcher)
     {
         $this->mailer = $mailer;
         $this->urlGenerator = $urlGenerator;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
@@ -72,7 +80,8 @@ class EmailNotificationService implements NotificationServiceInterface
         $userName = $user->getName();
         $email = (new Email())
             ->from('flexystock@gmail.com')
-            ->to($user->getEmail())
+            //->to($user->getEmail())
+            ->to('khvhih756uyvdhobyg88@gmail.com')
             ->subject('Codigo restablecimiento de la contraseña')
             ->html(
                 '<p>Generacioin de nueva password </p>' .
@@ -80,7 +89,49 @@ class EmailNotificationService implements NotificationServiceInterface
                 "<p>Su código de restablecimiento es: <strong>{$token}</strong></p>".
                 '<p>Este código expirará en 15 minutos</p>');
 
-        $this->mailer->send($email);
+        $status = 'success';
+        $errorMessage = null;
+        $errorCode = null;
+        $errorType = null;
+
+        try {
+            $this->mailer->send($email);
+
+        } catch (HttpTransportException $e) {
+            $status = 'failure';
+            $errorMessage = $e->getMessage();
+            $errorCode = $e->getCode();
+            $errorType = 'HttpTransportException';
+        } catch (TransportException $e) {
+            // Error relacionado con HTTP (por ejemplo, fallo al conectar con un servicio API)
+            $status = 'failure';
+            $errorMessage = $e->getMessage();
+            $errorType = 'TransportException';
+        } catch (TransportExceptionInterface$e) {
+            // Otros errores de transporte
+            $status = 'failure';
+            $errorMessage = $e->getMessage();
+            $errorType = 'TransportExceptionInterface';
+        }
+
+        // Despachar el evento
+        $event = new MailSentEvent(
+            $user->getEmail(),
+            $email->getSubject(),
+            $email->getHtmlBody(),
+            $status,
+            $errorMessage,
+            $errorCode,
+            new \DateTimeImmutable(),
+            [
+                'type' => 'password_reset',
+                'token' => $token,
+            ],
+            $errorType,
+            $user
+        );
+
+        $this->eventDispatcher->dispatch($event);
     }
 
     /**
@@ -88,7 +139,6 @@ class EmailNotificationService implements NotificationServiceInterface
      */
     public function sendSuccesfullPasswordResetEmail(User $user): void
     {
-        $userName = $user->getName();
         $email = (new Email())
             ->from('flexystock@gmail.com')
             ->to($user->getEmail())
@@ -96,6 +146,48 @@ class EmailNotificationService implements NotificationServiceInterface
             ->html(
                 '<p>Se ha restablecido su password correctamente </p>');
 
-        $this->mailer->send($email);
+        $status = 'success';
+        $errorMessage = null;
+        $errorCode = null;
+        $errorType = null;
+
+        try {
+            $this->mailer->send($email);
+        } catch (HttpTransportException $e) {
+            $status = 'failure';
+            $errorMessage = $e->getMessage();
+            $errorCode = $e->getCode();
+            $errorType = 'HttpTransportException';
+        } catch (TransportException $e) {
+            // Error relacionado con HTTP (por ejemplo, fallo al conectar con un servicio API)
+            $status = 'failure';
+            $errorMessage = $e->getMessage();
+            $errorType = 'TransportException';
+        } catch (TransportExceptionInterface$e) {
+            // Otros errores de transporte
+            $status = 'failure';
+            $errorMessage = $e->getMessage();
+            $errorType = 'TransportExceptionInterface';
+        }
+
+        // Despachar el evento
+        $event = new MailSentEvent(
+            $user->getEmail(),
+            $email->getSubject(),
+            $email->getHtmlBody(),
+            $status,
+            $errorMessage,
+            $errorCode,
+
+            new \DateTimeImmutable(),
+            [
+                'type' => '',
+                'token' => ''
+            ],
+            $errorType ,
+            $user
+        );
+
+        $this->eventDispatcher->dispatch($event);
     }
 }
