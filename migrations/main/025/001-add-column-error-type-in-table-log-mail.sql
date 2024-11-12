@@ -1,0 +1,1 @@
+ALTER TABLE `log_mail` ADD COLUMN `error_type` VARCHAR(255) DEFAULT NULL COMMENT 'tipo de error';

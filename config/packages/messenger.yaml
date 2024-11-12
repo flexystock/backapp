@@ -12,6 +12,7 @@ framework:
                     table_name: messenger_failed_messages
         routing:
             'App\Message\CreateDockerContainerMessage': async
+            'App\Event\MailSentEvent': async
 # when@test:
 #    framework:
 #        messenger:
