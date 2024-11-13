@@ -3,7 +3,7 @@ declare(strict_types=1);
 namespace App\User\Infrastructure\OutputAdapters;
 
 use App\Entity\Main\User;
-use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
+use App\User\Application\OutputPorts\UserRepositoryInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;

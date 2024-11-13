@@ -10,7 +10,7 @@ use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use OpenApi\Attributes as OA;
 use App\Entity\Main\User;
-use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
+use App\User\Application\OutputPorts\UserRepositoryInterface;
 
 class LoginUserController {
 

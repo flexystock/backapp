@@ -7,7 +7,7 @@ use App\User\Application\DTO\ForgotPasswordRequest;
 use App\User\Application\InputPorts\RequestPasswordResetInterface;
 use App\User\Application\OutputPorts\NotificationServiceInterface;
 use App\User\Application\OutputPorts\PasswordResetRepositoryInterface;
-use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
+use App\User\Application\OutputPorts\UserRepositoryInterface;
 
 /**
  * Caso de uso para solicitar el restablecimiento de contraseña.

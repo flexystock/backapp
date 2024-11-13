@@ -4,7 +4,7 @@ namespace App\User\Application;
 
 use App\User\Application\DTO\ResetPasswordRequest;
 use App\User\Application\InputPorts\ResetPasswordInterface;
-use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
+use App\User\Application\OutputPorts\UserRepositoryInterface;
 use App\User\Application\OutputPorts\PasswordResetRepositoryInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\User\Application\OutputPorts\NotificationServiceInterface;

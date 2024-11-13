@@ -1,7 +1,7 @@
 <?php
 namespace App\User\Infrastructure\InputAdapters;
 
-use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
+use App\User\Application\OutputPorts\UserRepositoryInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Service\DockerService;

@@ -4,7 +4,7 @@ namespace App\User\Application;
 
 
 use App\User\Infrastructure\InputPorts\GetAllUsersInputPort;
-use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
+use App\User\Application\OutputPorts\UserRepositoryInterface;
 class GetAllUserUseCase implements GetAllUsersInputPort
 {
     private UserRepositoryInterface $userRepository;

@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-namespace App\User\Infrastructure\OutputPorts;
+namespace App\User\Application\OutputPorts;
 
 use App\Entity\Main\User;
 

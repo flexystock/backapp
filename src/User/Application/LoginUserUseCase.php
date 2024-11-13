@@ -5,7 +5,7 @@ namespace App\User\Application;
 use App\Entity\Main\User;
 use App\Entity\Main\Login;
 use App\User\Infrastructure\InputPorts\LoginUserInputPort;
-use App\User\Infrastructure\OutputPorts\UserRepositoryInterface;
+use App\User\Application\OutputPorts\UserRepositoryInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
