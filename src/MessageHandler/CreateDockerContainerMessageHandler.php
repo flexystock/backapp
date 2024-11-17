@@ -2,16 +2,16 @@
 
 namespace App\MessageHandler;
 
+use App\Client\Application\OutputPorts\ClientRepositoryInterface;
 use App\Message\CreateDockerContainerMessage;
-//use App\Repository\ClientRepositoryInterface;
-use App\Client\Infrastructure\OutputPorts\ClientRepositoryInterface;
 use App\Service\DockerService;
-use Doctrine\DBAL\Driver\PDO\PDOException;
 use PDO;
-//use PDOException as PDOExceptionAlias;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Process\Exception\ProcessFailedException;
-use Psr\Log\LoggerInterface;
+
+//use App\Repository\ClientRepositoryInterface;
+//use PDOException as PDOExceptionAlias;
 
 
 #[AsMessageHandler(handles: CreateDockerContainerMessage::class)]

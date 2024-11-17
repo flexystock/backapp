@@ -2,18 +2,16 @@
 declare(strict_types=1);
 namespace App\Client\Infrastructure\InputAdapters;
 
-use App\Entity\Main\Client;
-use App\Client\Application\GetAllClientsUseCase;
+use App\Client\Application\InputPorts\CreateClientInputPort;
+use App\Client\Application\InputPorts\GetAllClientsInputPort;
+use App\Client\Application\InputPorts\GetClientByNameInputPort;
+use App\Client\Application\InputPorts\GetClientByUuidInputPort;
+use OpenApi\Attributes as OA;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use OpenApi\Attributes as OA;
-use App\Client\Infrastructure\InputPorts\GetAllClientsInputPort;
-use App\Client\Infrastructure\InputPorts\GetClientByUuidInputPort;
-use App\Client\Infrastructure\InputPorts\GetClientByNameInputPort;
-use App\Client\Infrastructure\InputPorts\CreateClientInputPort;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
+
 class GenericClientController
 {
     private GetAllClientsInputPort $getAllClientsInputPort;

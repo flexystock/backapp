@@ -2,14 +2,11 @@
 declare(strict_types=1);
 namespace App\User\Infrastructure\InputAdapters;
 
-use App\User\Application\GetAllUserUseCase;
-use App\User\Infrastructure\InputPorts\GetAllUsersInputPort;
-use Symfony\Component\HttpFoundation\Request;
+use App\User\Application\InputPorts\GetAllUsersInputPort;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
-use OpenApi\Attributes as OA;
+
 class GenericUserController
 {
     private GetAllUsersInputPort $getAllUsersInputPort;

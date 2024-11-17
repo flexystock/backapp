@@ -2,8 +2,7 @@
 
 namespace App\User\Infrastructure\OutputAdapters;
 
-use App\User\Infrastructure\OutputPorts\TokenManagerInterface;
-use Firebase\JWT\JWT;
+use App\User\Application\OutputPorts\TokenManagerInterface;
 
 class JWTTokenManager implements TokenManagerInterface {
     // implementación de los métodos...
