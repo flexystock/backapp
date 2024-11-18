@@ -3,14 +3,14 @@ declare(strict_types=1);
 
 namespace App\Entity\Main;
 
-use App\User\Application\DTO\CreateUserRequest;
-use Doctrine\ORM\Mapping as ORM;
+use App\User\Application\DTO\Auth\CreateUserRequest;
+use App\User\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use App\User\Repository\UserRepository;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]

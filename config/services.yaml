@@ -15,21 +15,21 @@ services:
         exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
 
     # Configuración del LoginUserUseCase
-    App\User\Application\LoginUserUseCase:
+    App\User\Application\UseCases\Auth\LoginUserUseCase:
         arguments:
-            $userRepository: '@App\User\Infrastructure\OutputPorts\UserRepositoryInterface'
+            $userRepository: '@App\User\Application\OutputPorts\UserRepositoryInterface'
             # Esta línea asegura que el password hasher sea inyectado automáticamente
             $passwordHasher: '@Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface'
 
-    App\User\Application\RegisterUserUseCase:
+    App\User\Application\UseCases\Auth\RegisterUserUseCase:
         arguments:
-            $userRepositoryInterface: '@App\User\Infrastructure\OutputAdapters\UserRepository'
+            $userRepositoryInterface: '@App\User\Infrastructure\OutputAdapters\Repositories\UserRepository'
             $passwordHasher: '@security.password_hasher'
             $validator: '@validator'
 
-    App\User\Infrastructure\InputAdapters\RegisterUserController:
-        arguments:
-            $registerUseCase: '@App\User\Application\RegisterUserUseCase'
+#    App\User\Infrastructure\InputAdapters\RegisterUserController:
+#        arguments:
+#            $registerUseCase: '@App\User\Application\RegisterUserUseCase'
 
     # Configura controladores para que sean públicos y tengan las etiquetas adecuadas
     App\User\Infrastructure\InputAdapters\:
@@ -38,7 +38,7 @@ services:
         public: true
 
     # Configura los servicios para el manejo de repositorios y tokens
-    App\User\Infrastructure\OutputAdapters\UserRepository:
+    App\User\Infrastructure\OutputAdapters\Repositories\UserRepository:
         arguments:
             $registry: '@doctrine' # Este debe ser un alias para ManagerRegistry si es que está configurado así
         tags:
@@ -48,27 +48,27 @@ services:
         arguments:
             - '%env(APP_SECRET)%'
     # Configuración de servicios para la sección de Client
-    App\Client\Application\CreateClientUseCase:
+    App\Client\Application\UseCases\CreateClientUseCase:
         arguments:
-            $clientRepository: '@App\Client\Infrastructure\OutputPorts\ClientRepositoryInterface'
+            $clientRepository: '@App\Client\Application\OutputPorts\ClientRepositoryInterface'
 
     App\Client\Infrastructure\InputAdapters\CreateClientController:
         arguments:
-            $createClientUseCase: '@App\Client\Application\CreateClientUseCase'
+            $createClientUseCase: '@App\Client\Application\UseCases\CreateClientUseCase'
 
     App\Client\Infrastructure\InputAdapters\:
         resource: '../src/Client/Infrastructure/InputAdapters'
         tags: [ 'controller.service_arguments' ]
         public: true
 
-    App\Client\Infrastructure\OutputAdapters\ClientRepository:
+    App\Client\Infrastructure\OutputAdapters\Repositories\ClientRepository:
         arguments:
             $registry: '@doctrine'
         tags:
             - { name: 'doctrine.repository_service' }
 
-    App\Client\Infrastructure\OutputPorts\ClientRepositoryInterface:
-        alias: App\Client\Infrastructure\OutputAdapters\ClientRepository
+    App\Client\Application\OutputPorts\ClientRepositoryInterface:
+        alias: App\Client\Infrastructure\OutputAdapters\Repositories\ClientRepository
 
     App\MessageHandler\CreateDockerContainerMessageHandler:
         tags: [ 'messenger.message_handler']
@@ -76,24 +76,24 @@ services:
     App\Service\DockerService:
         arguments:
             $logger: '@logger'
-            $clientRepository: '@App\Client\Infrastructure\OutputPorts\ClientRepositoryInterface'
+            $clientRepository: '@App\Client\Application\OutputPorts\ClientRepositoryInterface'
             $projectDir: '%kernel.project_dir%'
 
-    App\User\Infrastructure\OutputPorts\NotificationServiceInterface:
-        alias: App\User\Infrastructure\OutputAdapters\EmailNotificationService
+    App\User\Application\OutputPorts\NotificationServiceInterface:
+        alias: App\User\Infrastructure\OutputAdapters\Services\EmailNotificationService
 
     App\User\Application\InputPorts\RequestPasswordResetInterface:
-        alias: App\User\Application\RequestPasswordResetUseCase
+        alias: App\User\Application\UseCases\Password\RequestPasswordResetUseCase
 
     App\User\Application\InputPorts\ResetPasswordInterface:
-        alias: App\User\Application\ResetPasswordUseCase
+        alias: App\User\Application\UseCases\Password\ResetPasswordUseCase
 
     # OutputPorts Implementations
     App\User\Application\OutputPorts\PasswordResetRepositoryInterface:
-        alias: App\User\Infrastructure\OutputAdapters\PasswordResetRepository
+        alias: App\User\Infrastructure\OutputAdapters\Repositories\PasswordResetRepository
 
-    App\User\Infrastructure\OutputPorts\UserRepositoryInterface:
-        alias: App\User\Infrastructure\OutputAdapters\UserRepository
+    App\User\Application\OutputPorts\UserRepositoryInterface:
+        alias: App\User\Infrastructure\OutputAdapters\Repositories\UserRepository
 
     # Controladores
     App\User\Infrastructure\InputAdapters\PasswordResetController:

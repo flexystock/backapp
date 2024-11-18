@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace App\Client\Infrastructure\InputAdapters;
 
-use App\Client\Application\RegisterClientUseCase;
-use App\Client\Infrastructure\InputPorts\RegisterClientInputPort;
-use App\User\Application\DTO\CreateUserRequest;
+use App\Client\Application\DTO\RegisterClientRequest;
+use App\Client\Application\InputPorts\RegisterClientInputPort;
+use App\Client\Application\UseCases\RegisterClientUseCase;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use App\Client\Application\DTO\RegisterClientRequest;
-use OpenApi\Attributes as OA;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class RegisterClientController
 {

@@ -3,17 +3,17 @@
 
 namespace App\User\Infrastructure\InputAdapters;
 
-use App\User\Application\DTO\ForgotPasswordRequest;
-use App\User\Application\DTO\ResetPasswordRequest;
-use App\User\Application\InputPorts\ResetPasswordInterface;
+use App\User\Application\DTO\Password\ForgotPasswordRequest;
+use App\User\Application\DTO\Password\ResetPasswordRequest;
 use App\User\Application\InputPorts\RequestPasswordResetInterface;
+use App\User\Application\InputPorts\ResetPasswordInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use OpenApi\Attributes as OA;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
-use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 class PasswordResetController
 {
