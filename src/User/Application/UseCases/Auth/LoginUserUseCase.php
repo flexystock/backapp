@@ -4,8 +4,8 @@ namespace App\User\Application\UseCases\Auth;
 
 use App\Entity\Main\Login;
 use App\Entity\Main\User;
-use App\User\Application\OutputPorts\UserRepositoryInterface;
 use App\User\Application\InputPorts\Auth\LoginUserInputPort;
+use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
@@ -23,10 +23,10 @@ class LoginUserUseCase implements LoginUserInputPort
         $this->entityManager = $entityManager;
     }
 
-    public function login(string $mail, string $password, string $ipAddress): ?User
+    public function login(string $email, string $password, string $ipAddress): ?User
     {
 
-        $user = $this->userRepository->findByEmail($mail);
+        $user = $this->userRepository->findByEmail($email);
 
         if (!$user) {
             return null;

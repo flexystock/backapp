@@ -2,7 +2,7 @@
 
 namespace App\MessageHandler;
 
-use App\Client\Application\OutputPorts\ClientRepositoryInterface;
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Message\CreateDockerContainerMessage;
 use App\Service\DockerService;
 use PDO;

@@ -3,7 +3,7 @@ declare(strict_types=1);
 namespace App\User\Infrastructure\OutputAdapters\Repositories;
 
 use App\Entity\Main\User;
-use App\User\Application\OutputPorts\UserRepositoryInterface;
+use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
@@ -45,5 +45,15 @@ class UserRepository extends ServiceEntityRepository implements UserRepositoryIn
     {
         $this->entityManager->persist($user);
         $this->entityManager->flush();
+    }
+    public function findByUuid(string $uuid): ?User
+    {
+        return $this->createQueryBuilder('u')
+            ->leftJoin('u.clients', 'c')
+            ->addSelect('c')
+            ->where('u.uuid_user = :uuid')
+            ->setParameter('uuid', $uuid)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 }

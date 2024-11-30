@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class PasswordResetController
@@ -37,7 +37,6 @@ class PasswordResetController
     #[OA\Post(
         path: '/api/forgot-password',
         summary: 'Solicitar restablecimiento de contraseña',
-        tags: ['User'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -47,25 +46,26 @@ class PasswordResetController
                 ]
             )
         ),
+        tags: ['User'],
         responses: [
             new OA\Response(
                 response: 200,
                 description: 'Si el email existe, se ha enviado un código de restablecimiento.',
                 content: new OA\JsonContent(
-                    type: 'object',
                     properties: [
                         new OA\Property(property: 'message', type: 'string', example: 'Si el email existe, se ha enviado un código de restablecimiento.'),
-                    ]
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(
                 response: 400,
                 description: 'Errores de validación',
                 content: new OA\JsonContent(
-                    type: 'object',
                     properties: [
                         new OA\Property(property: 'errors', type: 'string', example: 'El email es obligatorio.'),
-                    ]
+                    ],
+                    type: 'object'
                 )
             )
         ]
@@ -92,7 +92,6 @@ class PasswordResetController
     #[OA\Post(
         path: '/api/reset-password',
         summary: 'Restablecer contraseña',
-        tags: ['User'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -104,25 +103,26 @@ class PasswordResetController
                 ]
             )
         ),
+        tags: ['User'],
         responses: [
             new OA\Response(
                 response: 200,
                 description: 'Contraseña actualizada correctamente.',
                 content: new OA\JsonContent(
-                    type: 'object',
                     properties: [
                         new OA\Property(property: 'message', type: 'string', example: 'Contraseña actualizada correctamente.'),
-                    ]
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(
                 response: 400,
                 description: 'Errores de validación o código inválido.',
                 content: new OA\JsonContent(
-                    type: 'object',
                     properties: [
                         new OA\Property(property: 'error', type: 'string', example: 'Código inválido o expirado.'),
-                    ]
+                    ],
+                    type: 'object'
                 )
             )
         ]

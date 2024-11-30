@@ -2,7 +2,7 @@
 
 namespace App\Client\Application\UseCases;
 use App\Client\Application\InputPorts\GetAllClientsInputPort;
-use App\Client\Application\OutputPorts\ClientRepositoryInterface;
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 
 class GetAllClientsUseCase implements GetAllClientsInputPort
 {

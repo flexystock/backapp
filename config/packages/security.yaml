@@ -11,7 +11,7 @@ security:
         app_user_provider:
             entity:
                 class: App\Entity\Main\User
-                property: mail
+                property: email
 
     firewalls:
         dev:
@@ -38,7 +38,6 @@ security:
             provider: app_user_provider
             logout:
                 path: /logout
-            # Otras configuraciones de seguridad pueden ser añadidas aquí según sea necesario
 
     access_control:
         - { path: ^/api/doc, roles: PUBLIC_ACCESS }
@@ -48,6 +47,7 @@ security:
         - { path: ^/api/forgot-password, roles: PUBLIC_ACCESS}
         - { path: ^/api/forgot-password, roles: PUBLIC_ACCESS}
         - { path: ^/api/reset-password, roles: PUBLIC_ACCESS }
+        - { path: ^/api/user/clients, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:

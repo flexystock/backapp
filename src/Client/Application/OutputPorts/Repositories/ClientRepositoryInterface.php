@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Client\Application\OutputPorts;
+namespace App\Client\Application\OutputPorts\Repositories;
 
 use App\Entity\Main\Client;
 

@@ -6,14 +6,14 @@ namespace App\User\Infrastructure\InputAdapters;
 use App\Entity\Main\User;
 use App\User\Application\DTO\Auth\CreateUserRequest;
 use App\User\Application\InputPorts\Auth\LoginUserInputPort;
-use App\User\Application\OutputPorts\UserRepositoryInterface;
+use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
 use App\User\Application\UseCases\Auth\RegisterUserUseCase;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -47,33 +47,33 @@ class AuthController
     #[OA\Post(
         path: '/api/login',
         summary: 'Login User',
-        tags: ['User'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                type: 'object',
                 properties: [
                     new OA\Property(property: 'email', type: 'string'),
                     new OA\Property(property: 'password', type: 'string'),
-                ]
+                ],
+                type: 'object'
             )
         ),
+        tags: ['User'],
         responses: [
             new OA\Response(
                 response: 200,
                 description: 'User login successfully',
                 content: new OA\JsonContent(
-                    type: 'object',
                     properties: [
                         new OA\Property(property: 'status', type: 'string'),
                         new OA\Property(
                             property: 'user',
-                            type: 'object',
                             properties: [
                                 new OA\Property(property: 'token', type: 'string'),
-                            ]
+                            ],
+                            type: 'object'
                         )
-                    ]
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(
@@ -90,7 +90,7 @@ class AuthController
         $password = $data['password'] ?? null;
 
         if (!$this->isValidLoginRequest($mail, $password)) {
-            return $this->jsonResponse(['error' => 'Invalid email or password'], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->jsonResponse(['error' => 'Invalid email or password'], Response::HTTP_BAD_REQUEST);
         }
 
         $user = $this->loginInputPort->login($mail, $password, $request->getClientIp());
@@ -102,17 +102,17 @@ class AuthController
                 // El usuario existe, manejar intentos fallidos
                 $lockMessage = $this->loginInputPort->handleFailedLogin($user);
                 if ($lockMessage) {
-                    return $this->jsonResponse(['error' => $lockMessage], JsonResponse::HTTP_UNAUTHORIZED);
+                    return $this->jsonResponse(['error' => $lockMessage], Response::HTTP_UNAUTHORIZED);
                 }
             }
             // No revelar si el usuario no existe
-            return $this->jsonResponse(['error' => 'Invalid credentials'], JsonResponse::HTTP_UNAUTHORIZED);
+            return $this->jsonResponse(['error' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
         }
 
         // Verificar si la cuenta está bloqueada
         if ($user->getLockedUntil() && $user->getLockedUntil() > new \DateTimeImmutable()) {
             $lockedUntil = $user->getLockedUntil()->format('Y-m-d H:i:s');
-            return $this->jsonResponse(['error' => "Su cuenta está bloqueada hasta: $lockedUntil."], JsonResponse::HTTP_UNAUTHORIZED);
+            return $this->jsonResponse(['error' => "Su cuenta está bloqueada hasta: $lockedUntil."], Response::HTTP_UNAUTHORIZED);
         }
 
         try {
@@ -151,11 +151,9 @@ class AuthController
     #[OA\Post(
         path: '/api/user_register',
         summary: 'Registrar un nuevo usuario y cliente',
-        tags: ['User'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                type: 'object',
                 required: ['full_name', 'email', 'password'],
                 properties: [
                     new OA\Property(property: 'full_name', type: 'string'),
@@ -170,39 +168,40 @@ class AuthController
                     new OA\Property(property: 'two_factor_enabled', type: 'boolean'),
                     new OA\Property(property: 'security_question', type: 'string'),
                     new OA\Property(property: 'security_answer', type: 'string'),
-                ]
+                ],
+                type: 'object'
             )
         ),
+        tags: ['User'],
         responses: [
             new OA\Response(
                 response: 201,
                 description: 'Usuario registrado exitosamente',
                 content: new OA\JsonContent(
-                    type: 'object',
                     properties: [
                         new OA\Property(property: 'message', type: 'string'),
                         new OA\Property(
                             property: 'user',
-                            type: 'object',
                             properties: [
                                 new OA\Property(property: 'id', type: 'integer'),
                                 new OA\Property(property: 'email', type: 'string'),
                                 new OA\Property(property: 'full_name', type: 'string'),
-                                // Añade otros campos que retornas en la respuesta
-                            ]
+                            ],
+                            type: 'object'
                         )
-                    ]
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(
                 response: 400,
                 description: 'Entrada inválida',
                 content: new OA\JsonContent(
-                    type: 'object',
                     properties: [
                         new OA\Property(property: 'message', type: 'string'),
                         new OA\Property(property: 'error', type: 'string')
-                    ]
+                    ],
+                    type: 'object'
                 )
             )
         ]

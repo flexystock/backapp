@@ -17,7 +17,7 @@ services:
     # Configuración del LoginUserUseCase
     App\User\Application\UseCases\Auth\LoginUserUseCase:
         arguments:
-            $userRepository: '@App\User\Application\OutputPorts\UserRepositoryInterface'
+            $userRepository: '@App\User\Application\OutputPorts\Repositories\UserRepositoryInterface'
             # Esta línea asegura que el password hasher sea inyectado automáticamente
             $passwordHasher: '@Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface'
 
@@ -50,7 +50,7 @@ services:
     # Configuración de servicios para la sección de Client
     App\Client\Application\UseCases\CreateClientUseCase:
         arguments:
-            $clientRepository: '@App\Client\Application\OutputPorts\ClientRepositoryInterface'
+            $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
 
     App\Client\Infrastructure\InputAdapters\CreateClientController:
         arguments:
@@ -67,7 +67,7 @@ services:
         tags:
             - { name: 'doctrine.repository_service' }
 
-    App\Client\Application\OutputPorts\ClientRepositoryInterface:
+    App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface:
         alias: App\Client\Infrastructure\OutputAdapters\Repositories\ClientRepository
 
     App\MessageHandler\CreateDockerContainerMessageHandler:
@@ -76,7 +76,7 @@ services:
     App\Service\DockerService:
         arguments:
             $logger: '@logger'
-            $clientRepository: '@App\Client\Application\OutputPorts\ClientRepositoryInterface'
+            $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
             $projectDir: '%kernel.project_dir%'
 
     App\User\Application\OutputPorts\NotificationServiceInterface:
@@ -92,7 +92,7 @@ services:
     App\User\Application\OutputPorts\PasswordResetRepositoryInterface:
         alias: App\User\Infrastructure\OutputAdapters\Repositories\PasswordResetRepository
 
-    App\User\Application\OutputPorts\UserRepositoryInterface:
+    App\User\Application\OutputPorts\Repositories\UserRepositoryInterface:
         alias: App\User\Infrastructure\OutputAdapters\Repositories\UserRepository
 
     # Controladores
@@ -101,4 +101,11 @@ services:
 
     App\EventSubscriber\MailSentSubscriber:
         tags: [ 'kernel.event_subscriber' ]
+
+    App\User\Application\InputPorts\GetUserClientsInterface:
+        alias: App\User\Application\UseCases\GetUserClientsUseCase
+
+    # Controlador
+    App\User\Infrastructure\InputAdapters\GenericUserController:
+        tags: [ 'controller.service_arguments' ]
 

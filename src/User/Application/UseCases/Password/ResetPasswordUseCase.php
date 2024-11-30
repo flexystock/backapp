@@ -6,7 +6,7 @@ use App\User\Application\DTO\Password\ResetPasswordRequest;
 use App\User\Application\InputPorts\ResetPasswordInterface;
 use App\User\Application\OutputPorts\NotificationServiceInterface;
 use App\User\Application\OutputPorts\PasswordResetRepositoryInterface;
-use App\User\Application\OutputPorts\UserRepositoryInterface;
+use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**

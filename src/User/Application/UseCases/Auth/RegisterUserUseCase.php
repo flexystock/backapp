@@ -5,7 +5,7 @@ use App\Entity\Main\User;
 use App\User\Application\DTO\Auth\CreateUserRequest;
 use App\User\Application\InputPorts\Auth\RegisterUserInputPort;
 use App\User\Application\OutputPorts\NotificationServiceInterface;
-use App\User\Application\OutputPorts\UserRepositoryInterface;
+use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
 use App\User\Application\RandomException;
 use Cassandra\Exception\ValidationException;
 use Symfony\Component\Mailer\MailerInterface;

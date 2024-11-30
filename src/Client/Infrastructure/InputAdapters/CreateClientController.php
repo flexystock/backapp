@@ -10,7 +10,7 @@ use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -37,32 +37,32 @@ class CreateClientController
     #[OA\Post(
         path: '/api/client_register',
         summary: 'Create a new Client',
-        tags: ['Client'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                type: 'object',
                 properties: [
                     new OA\Property(property: 'name', type: 'string'),
-                ]
+                ],
+                type: 'object'
             )
         ),
+        tags: ['Client'],
         responses: [
             new OA\Response(
                 response: 200,
                 description: 'Clientsuccessfully',
                 content: new OA\JsonContent(
-                    type: 'object',
                     properties: [
                         new OA\Property(property: 'status', type: 'string'),
                         new OA\Property(
                             property: 'client',
-                            type: 'object',
                             properties: [
                                 new OA\Property(property: 'name', type: 'string'),
-                            ]
+                            ],
+                            type: 'object'
                         )
-                    ]
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(

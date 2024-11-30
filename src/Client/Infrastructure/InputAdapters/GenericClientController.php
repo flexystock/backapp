@@ -10,7 +10,7 @@ use OpenApi\Attributes as OA;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 class GenericClientController
 {
@@ -30,7 +30,6 @@ class GenericClientController
     }
 
     #[Route('/api/clients', name: 'get_clients', methods: ['GET'])]
-    #[IsGranted("IS_AUTHENTICATED_FULLY")]
     #[OA\Get(
         path: '/api/clients',
         summary: 'Get Clients',
@@ -38,16 +37,16 @@ class GenericClientController
         parameters: [
             new OA\Parameter(
                 name: 'uuid',
+                description: 'UUID of the client to fetch',
                 in: 'query',
                 required: false,
-                description: 'UUID of the client to fetch',
                 schema: new OA\Schema(type: 'string', example: '492e5a45-9ad9-4876-87f7-0788d842f17d')
             ),
             new OA\Parameter(
                 name: 'name',
+                description: 'Name of the client to fetch',
                 in: 'query',
                 required: false,
-                description: 'Name of the client to fetch',
                 schema: new OA\Schema(type: 'string', example: 'Restaurante Pepe')
             ),
         ],
@@ -58,11 +57,11 @@ class GenericClientController
                 content: new OA\JsonContent(
                     type: 'array',
                     items: new OA\Items(
-                        type: 'object',
                         properties: [
                             new OA\Property(property: 'uuid_client', type: 'string', example: '492e5a45-9ad9-4876-87f7-0788d842f17d'),
                             new OA\Property(property: 'clientName', type: 'string', example: 'Restaurante Pepe'),
-                        ]
+                        ],
+                        type: 'object'
                     )
                 )
             ),
@@ -70,10 +69,10 @@ class GenericClientController
                 response: 404,
                 description: 'Client not found',
                 content: new OA\JsonContent(
-                    type: 'object',
                     properties: [
                         new OA\Property(property: 'error', type: 'string', example: 'Client not found'),
-                    ]
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(
@@ -144,51 +143,50 @@ class GenericClientController
     }
 
     #[Route('/api/clients', name: 'create_client', methods: ['POST'])]
-    #[IsGranted("IS_AUTHENTICATED_FULLY")]
     #[OA\Post(
         path: '/api/clients',
         summary: 'Create a new client',
-        tags: ['Client'],
         requestBody: new OA\RequestBody(
             description: 'Client name is required',
             required: true,
             content: new OA\JsonContent(
-                type: 'object',
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Restaurante Pepe'),
-                ]
+                ],
+                type: 'object'
             )
         ),
+        tags: ['Client'],
         responses: [
             new OA\Response(
                 response: 201,
                 description: 'Client created successfully',
                 content: new OA\JsonContent(
-                    type: 'object',
                     properties: [
                         new OA\Property(property: 'uuid_client', type: 'string', example: '492e5a45-9ad9-4876-87f7-0788d842f17d'),
                         new OA\Property(property: 'clientName', type: 'string', example: 'Restaurante Pepe'),
-                    ]
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(
                 response: 400,
                 description: 'Client name is required',
                 content: new OA\JsonContent(
-                    type: 'object',
                     properties: [
                         new OA\Property(property: 'error', type: 'string', example: 'Client name is required'),
-                    ]
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(
                 response: 500,
                 description: 'Error creating client',
                 content: new OA\JsonContent(
-                    type: 'object',
                     properties: [
                         new OA\Property(property: 'error', type: 'string', example: 'Error creating client: ...'),
-                    ]
+                    ],
+                    type: 'object'
                 )
             )
         ]

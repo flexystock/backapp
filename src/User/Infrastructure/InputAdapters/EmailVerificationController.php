@@ -1,12 +1,12 @@
 <?php
 namespace App\User\Infrastructure\InputAdapters;
 
-use App\User\Application\OutputPorts\UserRepositoryInterface;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
-use App\Service\DockerService;
 use App\Message\CreateDockerContainerMessage;
+use App\Service\DockerService;
+use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Routing\Attribute\Route;
 
 class EmailVerificationController
 {
