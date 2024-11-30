@@ -4,13 +4,13 @@ namespace App\Client\Application\UseCases;
 
 use App\Client\Application\DTO\RegisterClientRequest;
 use App\Client\Application\InputPorts\RegisterClientInputPort;
-use App\Client\Application\OutputPorts\ClientRepositoryInterface;
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Client\Application\RandomException;
 use App\Entity\Main\Client;
 use App\Entity\Main\User;
 use App\Service\DockerService;
 use App\User\Application\OutputPorts\NotificationServiceInterface;
-use App\User\Application\OutputPorts\UserRepositoryInterface;
+use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
 use Cassandra\Exception\ValidationException;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;

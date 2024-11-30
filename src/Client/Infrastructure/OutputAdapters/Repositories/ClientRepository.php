@@ -2,7 +2,7 @@
 declare(strict_types=1);
 namespace App\Client\Infrastructure\OutputAdapters\Repositories;
 
-use App\Client\Application\OutputPorts\ClientRepositoryInterface;
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Entity\Main\Client;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;

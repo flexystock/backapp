@@ -15,7 +15,7 @@ use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
-#[ORM\UniqueConstraint(name: 'mail_UNIQUE', columns: ['mail'])]
+#[ORM\UniqueConstraint(name: 'email_UNIQUE', columns: ['email'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -110,7 +110,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     )]
     private Collection $roles;
 
-    #[ORM\ManyToMany(targetEntity: Client::class, mappedBy: 'users')]
+    #[ORM\ManyToMany(targetEntity: Client::class, inversedBy: 'users')]
+    #[ORM\JoinTable(name: 'user_client',
+        joinColumns: [new ORM\JoinColumn(name: 'uuid_user', referencedColumnName: 'uuid_user')],
+        inverseJoinColumns: [new ORM\JoinColumn(name: 'uuid_client', referencedColumnName: 'uuid_client')]
+    )]
     private Collection $clients;
 
     #[ORM\ManyToMany(targetEntity: BusinessGroup::class, inversedBy: 'users')]

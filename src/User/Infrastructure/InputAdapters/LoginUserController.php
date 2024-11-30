@@ -3,14 +3,6 @@ declare(strict_types=1);
 namespace App\User\Infrastructure\InputAdapters;
 
 use App\User\Infrastructure\InputPorts\LoginUserInputPort;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Annotation\Route;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
-use OpenApi\Attributes as OA;
-use App\Entity\Main\User;
-use App\User\Application\OutputPorts\UserRepositoryInterface;
 
 class LoginUserController {
 

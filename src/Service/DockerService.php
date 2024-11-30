@@ -1,7 +1,7 @@
 <?php
 namespace App\Service;
 
-use App\Client\Application\OutputPorts\ClientRepositoryInterface;
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Entity\Main\Client;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Process\Exception\ProcessFailedException;

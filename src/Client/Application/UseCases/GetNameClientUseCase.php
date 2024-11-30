@@ -3,7 +3,7 @@
 namespace App\Client\Application\UseCases;
 
 use App\Client\Application\InputPorts\GetClientByNameInputPort;
-use App\Client\Application\OutputPorts\ClientRepositoryInterface;
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Entity\Main\Client;
 
 class GetNameClientUseCase implements GetClientByNameInputPort

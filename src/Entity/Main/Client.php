@@ -1,12 +1,12 @@
 <?php
 namespace App\Entity\Main;
 
+use App\Client\Infrastructure\OutputAdapters\Repositories\ClientRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\Uid\Uuid;
-
-#[ORM\Entity(repositoryClass: App\Client\Infrastructure\OutputAdapters\ClientRepository::class)]
+#[ORM\Entity(repositoryClass: ClientRepository::class)]
 #[ORM\Table(name: 'client')]
 class Client
 {
@@ -115,11 +115,7 @@ class Client
     private bool $is_verified = false;
 
     // Relaciones
-    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'clients')]
-    #[ORM\JoinTable(name: 'user_client',
-        joinColumns: [new ORM\JoinColumn(name: 'uuid_client', referencedColumnName: 'uuid_client')],
-        inverseJoinColumns: [new ORM\JoinColumn(name: 'uuid_user', referencedColumnName: 'uuid_user')]
-    )]
+    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'clients')]
     private Collection $users;
 
     // Constructor
@@ -482,7 +478,6 @@ class Client
     {
         if (!$this->users->contains($user)) {
             $this->users[] = $user;
-            $user->addClient($this); // Si deseas mantener la sincronización bidireccional
         }
 
         return $this;
