@@ -35,6 +35,7 @@ class Login
     public function setUuidUser(string $uuidUser): self
     {
         $this->uuidUser = $uuidUser;
+
         return $this;
     }
 
@@ -46,6 +47,7 @@ class Login
     public function setLoginAt(\DateTimeInterface $loginAt): self
     {
         $this->login_at = $loginAt;
+
         return $this;
     }
 
@@ -57,6 +59,7 @@ class Login
     public function setIpAddress(string $ip_address): self
     {
         $this->ip_address = $ip_address;
+
         return $this;
     }
 }

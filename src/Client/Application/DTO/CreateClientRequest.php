@@ -2,110 +2,110 @@
 
 namespace App\Client\Application\DTO;
 
-use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Annotation\SerializedName;
+use Symfony\Component\Validator\Constraints as Assert;
 
 class CreateClientRequest
 {
-    #[Assert\NotBlank(message: "El id del usuario es obligatorio.")]
+    #[Assert\NotBlank(message: 'El id del usuario es obligatorio.')]
     #[Assert\Length(
         max: 36,
     )]
     #[SerializedName('user_id')]
     private string $uuid_user;
 
-    #[Assert\NotBlank(message: "El nombre del cliente es obligatorio.")]
+    #[Assert\NotBlank(message: 'El nombre del cliente es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
     #[SerializedName('name')]
     private string $name;
 
-    #[Assert\NotBlank(message: "El nombre de la empresa es obligatorio.")]
+    #[Assert\NotBlank(message: 'El nombre de la empresa es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
     #[SerializedName('company_name')]
     private string $business_group_name;
 
-    #[Assert\NotBlank(message: "El tipo de negocio es obligatorio.")]
+    #[Assert\NotBlank(message: 'El tipo de negocio es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
     private string $business_type;
 
-    #[Assert\NotBlank(message: "El NIF es obligatorio.")]
+    #[Assert\NotBlank(message: 'El NIF es obligatorio.')]
     #[Assert\Length(
         max: 12,
     )]
     private string $nif_cif;
 
-    #[Assert\NotBlank(message: "La fecha de creación es obligatoria.")]
+    #[Assert\NotBlank(message: 'La fecha de creación es obligatoria.')]
     private string $foundation_date;
 
-    #[Assert\NotBlank(message: "La direccion fiscal es obligatorio.")]
+    #[Assert\NotBlank(message: 'La direccion fiscal es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
     private string $fiscal_address;
 
-    #[Assert\NotBlank(message: "La direccion fisica es obligatorio.")]
+    #[Assert\NotBlank(message: 'La direccion fisica es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
     private string $physical_address;
 
-    #[Assert\NotBlank(message: "La ciudad es obligatorio.")]
+    #[Assert\NotBlank(message: 'La ciudad es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
     private string $city;
 
-    #[Assert\NotBlank(message: "El pais es obligatorio.")]
+    #[Assert\NotBlank(message: 'El pais es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
     private string $country;
 
-    #[Assert\NotBlank(message: "El codigo postal es obligatorio.")]
+    #[Assert\NotBlank(message: 'El codigo postal es obligatorio.')]
     private int $postal_code;
 
     #[Assert\NotBlank]
-    #[Assert\Type(type: 'numeric', message: "El número de teléfono debe ser numérico.")]
+    #[Assert\Type(type: 'numeric', message: 'El número de teléfono debe ser numérico.')]
     #[Assert\Length(
         min: 9,
         max: 15,
-        minMessage: "El número de teléfono debe tener al menos {{ limit }} dígitos.",
-        maxMessage: "El número de teléfono no puede tener más de {{ limit }} dígitos."
+        minMessage: 'El número de teléfono debe tener al menos {{ limit }} dígitos.',
+        maxMessage: 'El número de teléfono no puede tener más de {{ limit }} dígitos.'
     )]
     private int $company_phone;
 
-    #[Assert\NotBlank(message: "El email de la compañia es obligatorio.")]
+    #[Assert\NotBlank(message: 'El email de la compañia es obligatorio.')]
     #[Assert\Email(message: "El correo electrónico '{{ value }}' no es válido.")]
     private string $company_email;
 
-    #[Assert\NotBlank(message: "El numero de empleados es obligatorio.")]
+    #[Assert\NotBlank(message: 'El numero de empleados es obligatorio.')]
     private int $number_of_employees;
 
-    #[Assert\NotBlank(message: "El sector industrial es obligatorio.")]
+    #[Assert\NotBlank(message: 'El sector industrial es obligatorio.')]
     private string $industry_sector;
 
-    #[Assert\NotBlank(message: "El volumen de inevntario es obligatorio.")]
+    #[Assert\NotBlank(message: 'El volumen de inevntario es obligatorio.')]
     private int $average_inventory_volume;
 
-    #[Assert\NotBlank(message: "El tipo de moneda es obligatorio.")]
+    #[Assert\NotBlank(message: 'El tipo de moneda es obligatorio.')]
     private string $currency;
 
-    #[Assert\NotBlank(message: "El tipo de metodo de pago es obligatorio.")]
+    #[Assert\NotBlank(message: 'El tipo de metodo de pago es obligatorio.')]
     private string $preferred_payment_methods;
 
-    #[Assert\NotBlank(message: "El horario es obligatorio.")]
+    #[Assert\NotBlank(message: 'El horario es obligatorio.')]
     private string $operation_hours;
 
-    #[Assert\NotBlank(message: "Indique si tiene mas de un alamacen.")]
+    #[Assert\NotBlank(message: 'Indique si tiene mas de un alamacen.')]
     private string $has_multiple_warehouses;
 
-    #[Assert\NotBlank(message: "El volumen anual de ventas es obligatorio.")]
+    #[Assert\NotBlank(message: 'El volumen anual de ventas es obligatorio.')]
     private string $annual_sales_volume;
 
     public function getUuidUser(): string
@@ -128,7 +128,7 @@ class CreateClientRequest
         $this->name = $name;
     }
 
-    public function setBusinessGroupName (string  $businessGroupName): void
+    public function setBusinessGroupName(string $businessGroupName): void
     {
         $this->business_group_name = $businessGroupName;
     }
@@ -162,6 +162,7 @@ class CreateClientRequest
     {
         $this->nif_cif = $nif_cif;
     }
+
     public function getFoundationDate(): string
     {
         return $this->foundation_date;
@@ -321,6 +322,4 @@ class CreateClientRequest
     {
         $this->annual_sales_volume = $annual_sales_volume;
     }
-
-
 }

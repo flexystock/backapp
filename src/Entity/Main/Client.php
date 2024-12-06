@@ -1,11 +1,13 @@
 <?php
+
 namespace App\Entity\Main;
 
 use App\Client\Infrastructure\OutputAdapters\Repositories\ClientRepository;
-use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
+
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
 #[ORM\Table(name: 'client')]
 class Client
@@ -119,10 +121,12 @@ class Client
     private Collection $users;
 
     // Constructor
-    public function __construct() {
+    public function __construct()
+    {
         $this->uuid_client = Uuid::v4()->toRfc4122();
         $this->users = new ArrayCollection();
     }
+
     public function getUuidClient(): string
     {
         return $this->uuid_client;
@@ -131,6 +135,7 @@ class Client
     public function setUuidClient(string $uuid_client): self
     {
         $this->uuid_client = $uuid_client;
+
         return $this;
     }
 
@@ -142,6 +147,7 @@ class Client
     public function setName(string $name): self
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -474,6 +480,7 @@ class Client
     {
         $this->users = $users;
     }
+
     public function addUser(User $user): self
     {
         if (!$this->users->contains($user)) {
@@ -482,6 +489,7 @@ class Client
 
         return $this;
     }
+
     // Método para eliminar un usuario de la colección
     public function removeUser(User $user): self
     {
@@ -496,6 +504,4 @@ class Client
     {
         $this->docker_volume_name = $volumeName;
     }
-
-
 }

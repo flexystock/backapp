@@ -82,10 +82,11 @@ class PasswordReset
     {
         $this->attempts = $attempts;
     }
+
     // Métod para incrementar los intentos
     public function incrementAttempts(): void
     {
-        $this->attempts++;
+        ++$this->attempts;
     }
 
     // Métod para verificar si se ha alcanzado el límite de intentos

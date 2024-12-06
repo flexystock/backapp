@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Service;
 
 use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
@@ -7,8 +8,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
-//use Random\RandomException;
-
+// use Random\RandomException;
 
 class DockerService
 {
@@ -29,7 +29,7 @@ class DockerService
      */
     public function createClientDatabase(Client $client): Client
     {
-        try{
+        try {
             // Generar nombres y credenciales
             $clientName = $client->getClientName();
             $uuid = $client->getUuidClient();
@@ -51,21 +51,20 @@ class DockerService
                 ";
 
             // Directorio donde se guardará el init.sql
-            $dockerClientsDir = $this->projectDir . '/var/DockerClients';
+            $dockerClientsDir = $this->projectDir.'/var/DockerClients';
             if (!is_dir($dockerClientsDir)) {
                 mkdir($dockerClientsDir, 0755, true);
             }
 
             // Ruta completa al archivo init.sql
-            $initSqlFileName = 'init_' . $clientName . '_' . substr($uuid, 0, 4) . '.sql';
-            $initSqlPath = $dockerClientsDir . '/' . $initSqlFileName;
-            $this->logger->info('Ruta del archivo init.sql: ' . $initSqlPath);
-
+            $initSqlFileName = 'init_'.$clientName.'_'.substr($uuid, 0, 4).'.sql';
+            $initSqlPath = $dockerClientsDir.'/'.$initSqlFileName;
+            $this->logger->info('Ruta del archivo init.sql: '.$initSqlPath);
 
             // Guardar el contenido en el archivo
             $result = file_put_contents($initSqlPath, $initSqlContent);
-            if ($result === false) {
-                $this->logger->error('Error al escribir el archivo init.sql en ' . $initSqlPath);
+            if (false === $result) {
+                $this->logger->error('Error al escribir el archivo init.sql en '.$initSqlPath);
                 throw new \Exception('No se pudo crear el archivo init.sql');
             }
             // Ejecutar comando Docker para crear el contenedor
@@ -85,33 +84,33 @@ class DockerService
             $client->setDockVolumeName($volumeName);
 
             return $client;
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             // En caso de error, eliminar contenedor y volumen si existen
             $this->removeExistingContainer($containerName);
             $this->removeVolume($volumeName);
 
             throw $e; // Re-lanzar la excepción para que sea manejada por el llamador
         }
-
     }
+
     private function generateContainerName(string $clientName, string $uuid): string
     {
-        return 'client_db_' . $clientName . '_' . substr($uuid, 0, 12);
+        return 'client_db_'.$clientName.'_'.substr($uuid, 0, 12);
     }
 
     private function generateVolumeName(string $containerName): string
     {
-        return 'volume_' . $containerName;
+        return 'volume_'.$containerName;
     }
 
     private function generateDatabaseName(string $clientName, string $uuid): string
     {
-        return 'client_db_' . $clientName . '_' . substr($uuid, 0, 4);
+        return 'client_db_'.$clientName.'_'.substr($uuid, 0, 4);
     }
 
     private function generateDatabaseUser(string $clientName, string $uuid): string
     {
-        return 'client_user_' . $clientName . '_' . substr($uuid, 0, 4);
+        return 'client_user_'.$clientName.'_'.substr($uuid, 0, 4);
     }
 
     /**
@@ -125,58 +124,56 @@ class DockerService
     private function removeExistingContainer(string $containerName): void
     {
         $checkCommand = [
-            '/usr/bin/docker', 'ps', '-a', '--filter', "name=$containerName", '--format', '{{.Names}}'
+            '/usr/bin/docker', 'ps', '-a', '--filter', "name=$containerName", '--format', '{{.Names}}',
         ];
         $process = new Process($checkCommand);
         $process->run();
 
         if ($process->isSuccessful() && trim($process->getOutput()) === $containerName) {
             $removeCommand = [
-                '/usr/bin/docker', 'rm', '-f', $containerName
+                '/usr/bin/docker', 'rm', '-f', $containerName,
             ];
             $removeProcess = new Process($removeCommand);
             $removeProcess->run();
 
             if (!$removeProcess->isSuccessful()) {
-                $this->logger->error('Error al eliminar el contenedor existente: ' . $removeProcess->getErrorOutput());
+                $this->logger->error('Error al eliminar el contenedor existente: '.$removeProcess->getErrorOutput());
                 throw new ProcessFailedException($removeProcess);
             } else {
-                $this->logger->info('Contenedor existente eliminado: ' . $containerName);
+                $this->logger->info('Contenedor existente eliminado: '.$containerName);
             }
         }
     }
 
-    private function runDockerContainer(string $containerName, string $volumeName,string $databaseName, string $user,
-                                        string $password, int $port, string $initSqlPath): void
+    private function runDockerContainer(string $containerName, string $volumeName, string $databaseName, string $user,
+        string $password, int $port, string $initSqlPath): void
     {
         $command = [
             '/usr/bin/docker', 'run', '-d',
             '--name', $containerName,
             '--network=docker-symfony-network',
             '--restart', 'always',
-            '-p', $port . ':3306',
-            '--volume', $volumeName . ':/var/lib/mysql',
-            '--volume', $initSqlPath . ':/docker-entrypoint-initdb.d/init.sql',
-            '-e', 'MYSQL_DATABASE=' . $databaseName,
-            '-e', 'MYSQL_USER=' . $user,
-            '-e', 'MYSQL_PASSWORD=' . $password,
+            '-p', $port.':3306',
+            '--volume', $volumeName.':/var/lib/mysql',
+            '--volume', $initSqlPath.':/docker-entrypoint-initdb.d/init.sql',
+            '-e', 'MYSQL_DATABASE='.$databaseName,
+            '-e', 'MYSQL_USER='.$user,
+            '-e', 'MYSQL_PASSWORD='.$password,
             '-e', 'MYSQL_ROOT_PASSWORD=UZJIvESy5x',
-            'mysql:8.0'
+            'mysql:8.0',
         ];
 
-        $this->logger->debug('Comando Docker: ' . implode(' ', $command));
+        $this->logger->debug('Comando Docker: '.implode(' ', $command));
         $process = new Process($command);
         $process->run();
 
         if (!$process->isSuccessful()) {
-            $this->logger->error('Error al crear el contenedor Docker: ' . $process->getErrorOutput());
+            $this->logger->error('Error al crear el contenedor Docker: '.$process->getErrorOutput());
             throw new ProcessFailedException($process);
         } else {
-            $this->logger->info('Contenedor Docker creado exitosamente: ' . $process->getOutput());
+            $this->logger->info('Contenedor Docker creado exitosamente: '.$process->getOutput());
         }
     }
-
-
 
     /**
      * @throws \Exception
@@ -185,7 +182,7 @@ class DockerService
     {
         $startPort = 40000;
         $endPort = 50000; // Puedes ajustar el rango según tus necesidades
-        for ($port = $startPort; $port <= $endPort; $port++) {
+        for ($port = $startPort; $port <= $endPort; ++$port) {
             if (!$this->isPortInUse($port)) {
                 return $port;
             }
@@ -193,17 +190,16 @@ class DockerService
         throw new \Exception('No hay puertos disponibles en el rango especificado.');
     }
 
-
     private function isPortInUse($port): bool
     {
         // 1. Verificar si el puerto está asignado a otro cliente en la base de datos
         $client = $this->clientRepository->findOneBy(['port_bbdd' => $port]);
-        if ($client !== null) {
+        if (null !== $client) {
             return true;
         }
 
         // 2. Verificar si el puerto está en uso por algún proceso en el sistema
-        $process = new Process(['lsof', '-i', 'tcp:' . $port]);
+        $process = new Process(['lsof', '-i', 'tcp:'.$port]);
         $process->run();
 
         if ($process->isSuccessful() && !empty(trim($process->getOutput()))) {
@@ -216,7 +212,7 @@ class DockerService
 
         if ($dockerProcess->isSuccessful()) {
             $output = $dockerProcess->getOutput();
-            if (str_contains($output, ':' . $port . '->')) {
+            if (str_contains($output, ':'.$port.'->')) {
                 return true;
             }
         }
@@ -227,16 +223,16 @@ class DockerService
     private function removeVolume(string $volumeName): void
     {
         $removeCommand = [
-            '/usr/bin/docker', 'volume', 'rm', '-f', $volumeName
+            '/usr/bin/docker', 'volume', 'rm', '-f', $volumeName,
         ];
         $removeProcess = new Process($removeCommand);
         $removeProcess->run();
 
         if (!$removeProcess->isSuccessful()) {
-            $this->logger->error('Error al eliminar el volumen existente: ' . $removeProcess->getErrorOutput());
-            // No lanzamos excepción aquí para no ocultar el error original
+            $this->logger->error('Error al eliminar el volumen existente: '.$removeProcess->getErrorOutput());
+        // No lanzamos excepción aquí para no ocultar el error original
         } else {
-            $this->logger->info('Volumen existente eliminado: ' . $volumeName);
+            $this->logger->info('Volumen existente eliminado: '.$volumeName);
         }
     }
 }

@@ -1,11 +1,13 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\User\Infrastructure\InputAdapters;
 
 use App\Entity\Main\User;
 use App\User\Application\DTO\Auth\CreateUserRequest;
 use App\User\Application\InputPorts\Auth\LoginUserInputPort;
+use App\User\Application\InputPorts\Auth\SelectClientInputPort;
 use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
 use App\User\Application\UseCases\Auth\RegisterUserUseCase;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
@@ -14,10 +16,12 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-
 
 class AuthController
 {
@@ -27,13 +31,17 @@ class AuthController
     private RegisterUserUseCase $registerUseCase;
     private ValidatorInterface $validator;
     private SerializerInterface $serializer;
+    private SelectClientInputPort $selectClientInputPort;
+    private TokenStorageInterface $tokenStorage;
 
     public function __construct(LoginUserInputPort $loginInputPort,
-                                UserRepositoryInterface $userRepository,
-                                JWTTokenManagerInterface $jwtManager,
-                                RegisterUserUseCase $registerUseCase,
-                                ValidatorInterface $validator,
-                                SerializerInterface $serializer)
+        UserRepositoryInterface $userRepository,
+        JWTTokenManagerInterface $jwtManager,
+        RegisterUserUseCase $registerUseCase,
+        ValidatorInterface $validator,
+        SerializerInterface $serializer,
+        SelectClientInputPort $selectClientInputPort,
+        TokenStorageInterface $tokenStorage)
     {
         $this->loginInputPort = $loginInputPort;
         $this->jwtManager = $jwtManager;
@@ -41,6 +49,8 @@ class AuthController
         $this->registerUseCase = $registerUseCase;
         $this->validator = $validator;
         $this->serializer = $serializer;
+        $this->selectClientInputPort = $selectClientInputPort;
+        $this->tokenStorage = $tokenStorage;
     }
 
     #[Route('/api/login', name: 'api_login', methods: ['POST'])]
@@ -71,7 +81,7 @@ class AuthController
                                 new OA\Property(property: 'token', type: 'string'),
                             ],
                             type: 'object'
-                        )
+                        ),
                     ],
                     type: 'object'
                 )
@@ -79,7 +89,7 @@ class AuthController
             new OA\Response(
                 response: 400,
                 description: 'Invalid input'
-            )
+            ),
         ]
     )]
     public function login(Request $request): JsonResponse
@@ -105,6 +115,7 @@ class AuthController
                     return $this->jsonResponse(['error' => $lockMessage], Response::HTTP_UNAUTHORIZED);
                 }
             }
+
             // No revelar si el usuario no existe
             return $this->jsonResponse(['error' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
         }
@@ -112,11 +123,13 @@ class AuthController
         // Verificar si la cuenta está bloqueada
         if ($user->getLockedUntil() && $user->getLockedUntil() > new \DateTimeImmutable()) {
             $lockedUntil = $user->getLockedUntil()->format('Y-m-d H:i:s');
+
             return $this->jsonResponse(['error' => "Su cuenta está bloqueada hasta: $lockedUntil."], Response::HTTP_UNAUTHORIZED);
         }
 
         try {
             $token = $this->jwtManager->create($user);
+
             return $this->jsonResponse(['token' => $token]);
         } catch (\Exception $e) {
             return $this->jsonResponse(['error' => $e->getMessage()], 500);
@@ -133,8 +146,10 @@ class AuthController
         $criticalAttempts = [4, 7, 10, 13];
         if (in_array($user->getFailedAttempts(), $criticalAttempts, true)) {
             $this->loginInputPort->handleFailedLogin($user);
+
             return true;
         }
+
         return false;
     }
 
@@ -144,6 +159,7 @@ class AuthController
         $response->headers->set('Cache-Control', 'no-cache, private');
         $response->headers->remove('X-Powered-By');
         $response->headers->remove('Server');
+
         return $response;
     }
 
@@ -188,7 +204,7 @@ class AuthController
                                 new OA\Property(property: 'full_name', type: 'string'),
                             ],
                             type: 'object'
-                        )
+                        ),
                     ],
                     type: 'object'
                 )
@@ -199,11 +215,11 @@ class AuthController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'message', type: 'string'),
-                        new OA\Property(property: 'error', type: 'string')
+                        new OA\Property(property: 'error', type: 'string'),
                     ],
                     type: 'object'
                 )
-            )
+            ),
         ]
     )]
     public function __invoke(Request $request): JsonResponse
@@ -224,7 +240,7 @@ class AuthController
 
                 return new JsonResponse([
                     'message' => 'Datos inválidos',
-                    'errors' => $errorMessages
+                    'errors' => $errorMessages,
                 ], Response::HTTP_BAD_REQUEST);
             }
 
@@ -243,17 +259,16 @@ class AuthController
             // Error al deserializar el JSON (formato inválido)
             return new JsonResponse([
                 'message' => 'Formato JSON inválido.',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
             // Otros errores
             return new JsonResponse([
                 'message' => 'Ocurrió un error al registrar el usuario.',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
 
     /**
      * Formatea una lista de errores de validación en un array asociativo.
@@ -264,12 +279,12 @@ class AuthController
      * preparación de respuestas JSON claras y estructuradas para informar al cliente
      * sobre los errores de validación ocurridos.
      *
-     * @param ConstraintViolationListInterface $errors Lista de violaciones de restricciones obtenida tras la validación.
+     * @param ConstraintViolationListInterface $errors lista de violaciones de restricciones obtenida tras la validación
      *
      * @return array Arreglo asociativo con los errores formateados. La estructura es:
      *               [
-     *                   'nombreDelCampo' => 'Mensaje de error',
-     *                   // ...
+     *               'nombreDelCampo' => 'Mensaje de error',
+     *               // ...
      *               ]
      */
     private function formatValidationErrors(ConstraintViolationListInterface $errors): array
@@ -285,5 +300,84 @@ class AuthController
         }
 
         return $errorMessages;
+    }
+
+    #[Route('/api/user/select_client', name: 'user_select_client', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/user/select_client',
+        summary: 'Obtencion del token JWT con uui_client añadido al usuario',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['uuid_client'],
+                properties: [
+                    new OA\Property(property: 'uuid_client', description: 'UUID del cliente', type: 'string'),
+                ],
+                type: 'object'
+            )
+        ),
+        tags: ['User'],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'token generado correctamente',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string'),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Entrada inválida',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string'),
+                        new OA\Property(property: 'error', type: 'string'),
+                    ],
+                    type: 'object'
+                )
+            ),
+        ]
+    )]
+    public function selectClient(Request $request): JsonResponse
+    {
+        $token = $this->tokenStorage->getToken();
+
+        if (null === $token || !is_object($user = $token->getUser())) {
+            // No hay usuario autenticado
+            return new JsonResponse(['error' => 'User not found or invalid'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if (!$user instanceof UserInterface) {
+            // El usuario no es una instancia válida
+            return new JsonResponse(['error' => 'User not found or invalid'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $uuidClient = $data['uuid_client'] ?? null;
+
+        if (!$uuidClient) {
+            return new JsonResponse(['error' => 'uuid_client is required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Validar el formato del UUID (opcional)
+        $constraint = new Assert\Uuid();
+        $violations = $this->validator->validate($uuidClient, $constraint);
+
+        if (count($violations) > 0) {
+            return new JsonResponse(['error' => 'Invalid uuid_client format'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $token = $this->selectClientInputPort->selectClient($user, $uuidClient);
+
+            return new JsonResponse(['token' => $token]);
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_FORBIDDEN);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'An error occurred.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

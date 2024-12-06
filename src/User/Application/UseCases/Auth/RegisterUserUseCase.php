@@ -1,4 +1,5 @@
 <?php
+
 namespace App\User\Application\UseCases\Auth;
 
 use App\Entity\Main\User;
@@ -23,11 +24,11 @@ class RegisterUserUseCase implements RegisterUserInputPort
     private NotificationServiceInterface $notificationService;
 
     public function __construct(UserRepositoryInterface $userRepositoryInterface,
-                                UserPasswordHasherInterface $passwordHasher,
-                                ValidatorInterface $validator,
-                                MailerInterface $mailer,
-                                UrlGeneratorInterface $urlGenerator,
-                                NotificationServiceInterface $notificationService)
+        UserPasswordHasherInterface $passwordHasher,
+        ValidatorInterface $validator,
+        MailerInterface $mailer,
+        UrlGeneratorInterface $urlGenerator,
+        NotificationServiceInterface $notificationService)
     {
         $this->userRepositoryInterface = $userRepositoryInterface;
         $this->passwordHasher = $passwordHasher;
@@ -46,6 +47,7 @@ class RegisterUserUseCase implements RegisterUserInputPort
     {
         $user = User::fromCreateUserRequest($data, $this->passwordHasher);
         $this->userRepositoryInterface->save($user);
+
         return $user;
     }
 
@@ -76,15 +78,12 @@ class RegisterUserUseCase implements RegisterUserInputPort
         try {
             $this->userRepositoryInterface->save($user);
 
-            //$this->notificationService->sendEmailVerificationToUser($user);
-            //$this->notificationService->sendEmailToBack($user);
+            // $this->notificationService->sendEmailVerificationToUser($user);
+            // $this->notificationService->sendEmailToBack($user);
 
-            //$this->entityManager->commit();
+            // $this->entityManager->commit();
         } catch (\Exception $e) {
             throw $e;
         }
     }
-
-
-
 }

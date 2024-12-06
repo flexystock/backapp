@@ -3,7 +3,7 @@
 namespace App\Client\Application\DTO;
 
 use App\Entity\Main\Client;
-//use Symfony\Component\Serializer\Attribute\Groups;
+// use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 class ClientDTO

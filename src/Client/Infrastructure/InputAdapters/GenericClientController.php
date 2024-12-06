@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Client\Infrastructure\InputAdapters;
 
 use App\Client\Application\InputPorts\CreateClientInputPort;
@@ -7,7 +9,6 @@ use App\Client\Application\InputPorts\GetAllClientsInputPort;
 use App\Client\Application\InputPorts\GetClientByNameInputPort;
 use App\Client\Application\InputPorts\GetClientByUuidInputPort;
 use OpenApi\Attributes as OA;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -19,10 +20,11 @@ class GenericClientController
     private GetClientByNameInputPort $getClientByNameInputPort;
     private CreateClientInputPort $createClientInputPort;
 
-    public function __construct(GetAllClientsInputPort   $getAllClientsInputPort,
-                                GetClientByUuidInputPort $getClientByUuidInputPort,
-                                GetClientByNameInputPort $getClientByNameInputPort,
-                                CreateClientInputPort    $createClientInputPort){
+    public function __construct(GetAllClientsInputPort $getAllClientsInputPort,
+        GetClientByUuidInputPort $getClientByUuidInputPort,
+        GetClientByNameInputPort $getClientByNameInputPort,
+        CreateClientInputPort $createClientInputPort)
+    {
         $this->getAllClientsInputPort = $getAllClientsInputPort;
         $this->getClientByUuidInputPort = $getClientByUuidInputPort;
         $this->getClientByNameInputPort = $getClientByNameInputPort;
@@ -78,10 +80,9 @@ class GenericClientController
             new OA\Response(
                 response: 400,
                 description: 'Invalid input'
-            )
+            ),
         ]
     )]
-
     public function getClients(Request $request): JsonResponse
     {
         $uuid = $request->query->get('uuid');
@@ -188,7 +189,7 @@ class GenericClientController
                     ],
                     type: 'object'
                 )
-            )
+            ),
         ]
     )]
     public function createClient(Request $request): JsonResponse
@@ -210,20 +211,22 @@ class GenericClientController
                 'message' => 'Client created successfully',
                 'client' => [
                     'uuid_client' => $newClient->getUuidClient(),
-                    'clientName' => $newClient->getClientName()
-                ]
+                    'clientName' => $newClient->getClientName(),
+                ],
             ], 201); // 201 indica que un recurso fue creado
         } catch (\Exception $e) {
             // Manejar cualquier error que ocurra durante la creación
-            return $this->jsonResponse(['error' => 'Error creating client: ' . $e->getMessage()], 500);
+            return $this->jsonResponse(['error' => 'Error creating client: '.$e->getMessage()], 500);
         }
     }
+
     private function jsonResponse(array $data, int $status = 200): JsonResponse
     {
         $response = new JsonResponse($data, $status);
         $response->headers->set('Cache-Control', 'no-cache, private');
         $response->headers->remove('X-Powered-By');
         $response->headers->remove('Server');
+
         return $response;
     }
 }

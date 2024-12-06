@@ -8,7 +8,9 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class PasswordResetRepository implements PasswordResetRepositoryInterface
 {
-    public function __construct(private readonly EntityManagerInterface $entityManager) {}
+    public function __construct(private readonly EntityManagerInterface $entityManager)
+    {
+    }
 
     public function save(PasswordReset $passwordReset): void
     {

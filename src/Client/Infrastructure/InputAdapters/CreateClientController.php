@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Client\Infrastructure\InputAdapters;
@@ -23,9 +24,9 @@ class CreateClientController
     private ValidatorInterface $validator;
 
     public function __construct(CreateClientInputPort $createInputPort,
-                                CreateClientUseCase $createClientUseCase,
-                                SerializerInterface $serializer,
-                                ValidatorInterface $validator)
+        CreateClientUseCase $createClientUseCase,
+        SerializerInterface $serializer,
+        ValidatorInterface $validator)
     {
         $this->createInputPort = $createInputPort;
         $this->createClientUseCase = $createClientUseCase;
@@ -60,7 +61,7 @@ class CreateClientController
                                 new OA\Property(property: 'name', type: 'string'),
                             ],
                             type: 'object'
-                        )
+                        ),
                     ],
                     type: 'object'
                 )
@@ -68,7 +69,7 @@ class CreateClientController
             new OA\Response(
                 response: 400,
                 description: 'Invalid input'
-            )
+            ),
         ]
     )]
     public function __invoke(Request $request): JsonResponse
@@ -88,11 +89,11 @@ class CreateClientController
 
                 return new JsonResponse([
                     'message' => 'Datos inválidos',
-                    'errors' => $errorMessages
+                    'errors' => $errorMessages,
                 ], Response::HTTP_BAD_REQUEST);
             }
             // Ejecutar el caso de uso
-            //die("antes del create");
+            // die("antes del create");
             $this->createInputPort->create($clientRequest);
 
             return new JsonResponse(['success' => true], 201);
@@ -111,12 +112,12 @@ class CreateClientController
      * preparación de respuestas JSON claras y estructuradas para informar al cliente
      * sobre los errores de validación ocurridos.
      *
-     * @param ConstraintViolationListInterface $errors Lista de violaciones de restricciones obtenida tras la validación.
+     * @param ConstraintViolationListInterface $errors lista de violaciones de restricciones obtenida tras la validación
      *
      * @return array Arreglo asociativo con los errores formateados. La estructura es:
      *               [
-     *                   'nombreDelCampo' => 'Mensaje de error',
-     *                   // ...
+     *               'nombreDelCampo' => 'Mensaje de error',
+     *               // ...
      *               ]
      */
     private function formatValidationErrors(ConstraintViolationListInterface $errors): array

@@ -2,12 +2,12 @@
 
 namespace App\User\Application\UseCases;
 
+use App\Client\Application\DTO\ClientDTO;
+use App\Client\Application\DTO\ClientDTOCollection;
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
+use App\Entity\Main\User;
 use App\User\Application\InputPorts\GetUserClientsInterface;
 use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
-use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
-use App\Client\Application\DTO\ClientDTOCollection;
-use App\Client\Application\DTO\ClientDTO;
-use App\Entity\Main\User;
 
 class GetUserClientsUseCase implements GetUserClientsInterface
 {
@@ -16,7 +16,7 @@ class GetUserClientsUseCase implements GetUserClientsInterface
 
     public function __construct(
         UserRepositoryInterface $userRepository,
-        ClientRepositoryInterface $clientRepository
+        ClientRepositoryInterface $clientRepository,
     ) {
         $this->userRepository = $userRepository;
         $this->clientRepository = $clientRepository;
@@ -28,7 +28,7 @@ class GetUserClientsUseCase implements GetUserClientsInterface
         $user = $this->userRepository->findByUuid($userId);
 
         if (!$user) {
-            throw new \Exception("Usuario no encontrado");
+            throw new \Exception('Usuario no encontrado');
         }
 
         // Obtener los clientes asociados al usuario

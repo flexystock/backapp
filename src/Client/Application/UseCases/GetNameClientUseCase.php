@@ -10,7 +10,8 @@ class GetNameClientUseCase implements GetClientByNameInputPort
 {
     private ClientRepositoryInterface $clientRepository;
 
-    public function __construct(ClientRepositoryInterface $clientRepository){
+    public function __construct(ClientRepositoryInterface $clientRepository)
+    {
         $this->clientRepository = $clientRepository;
     }
 
@@ -18,5 +19,4 @@ class GetNameClientUseCase implements GetClientByNameInputPort
     {
         return $this->clientRepository->findByName($name);
     }
-
 }

@@ -24,9 +24,9 @@ class RegisterClientController
     private ValidatorInterface $validator;
 
     public function __construct(RegisterClientInputPort $registerInputPort,
-                                RegisterClientUseCase   $registerClientUseCase,
-                                SerializerInterface   $serializer,
-                                ValidatorInterface    $validator)
+        RegisterClientUseCase $registerClientUseCase,
+        SerializerInterface $serializer,
+        ValidatorInterface $validator)
     {
         $this->registerInputPort = $registerInputPort;
         $this->registerClientUseCase = $registerClientUseCase;
@@ -61,7 +61,7 @@ class RegisterClientController
                                 new OA\Property(property: 'name', type: 'string'),
                             ],
                             type: 'object'
-                        )
+                        ),
                     ],
                     type: 'object'
                 )
@@ -69,7 +69,7 @@ class RegisterClientController
             new OA\Response(
                 response: 400,
                 description: 'Invalid input'
-            )
+            ),
         ]
     )]
     public function __invoke(Request $request): JsonResponse
@@ -86,12 +86,14 @@ class RegisterClientController
 
             if (count($errors) > 0) {
                 $errorMessages = $this->formatValidationErrors($errors);
+
                 return new JsonResponse([
                     'message' => 'Datos inválidos',
-                    'errors' => $errorMessages
+                    'errors' => $errorMessages,
                 ], Response::HTTP_BAD_REQUEST);
             }
             $this->registerInputPort->register($clientRequest);
+
             return new JsonResponse(['success' => true], 201);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], 500);
@@ -107,12 +109,12 @@ class RegisterClientController
      * preparación de respuestas JSON claras y estructuradas para informar al cliente
      * sobre los errores de validación ocurridos.
      *
-     * @param ConstraintViolationListInterface $errors Lista de violaciones de restricciones obtenida tras la validación.
+     * @param ConstraintViolationListInterface $errors lista de violaciones de restricciones obtenida tras la validación
      *
      * @return array Arreglo asociativo con los errores formateados. La estructura es:
      *               [
-     *                   'nombreDelCampo' => 'Mensaje de error',
-     *                   // ...
+     *               'nombreDelCampo' => 'Mensaje de error',
+     *               // ...
      *               ]
      */
     private function formatValidationErrors(ConstraintViolationListInterface $errors): array
