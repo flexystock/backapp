@@ -1,19 +1,19 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\User\Infrastructure\InputAdapters;
 
 use App\User\Application\InputPorts\GetAllUsersInputPort;
+use App\User\Application\InputPorts\GetUserClientsInterface;
 use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
 use OpenApi\Attributes as OA;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Serializer\SerializerInterface;
-use App\User\Application\InputPorts\GetUserClientsInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-
-
 
 class GenericUserController extends AbstractController
 {
@@ -24,9 +24,9 @@ class GenericUserController extends AbstractController
     private UserRepositoryInterface $userRepository;
 
     public function __construct(GetAllUsersInputPort $getAllUsersInputPort, Security $security,
-                                GetUserClientsInterface $getUserClientsUseCase,
-                                SerializerInterface $serializer,
-                                UserRepositoryInterface $userRepository)
+        GetUserClientsInterface $getUserClientsUseCase,
+        SerializerInterface $serializer,
+        UserRepositoryInterface $userRepository)
     {
         $this->getAllUsersInputPort = $getAllUsersInputPort;
         $this->security = $security;
@@ -69,7 +69,7 @@ class GenericUserController extends AbstractController
             new OA\Response(
                 response: 400,
                 description: 'Invalid input'
-            )
+            ),
         ]
     )]
     public function getAllUsers(): JsonResponse
@@ -78,13 +78,13 @@ class GenericUserController extends AbstractController
 
         $usersArray = array_map(function ($user) {
             return [
-                'email' => $user->getEmail()
+                'email' => $user->getEmail(),
             ];
         }, $users);
 
         if (empty($users)) {
             return $this->jsonResponse(['error' => 'Not Found Any User'], Response::HTTP_OK);
-        }else{
+        } else {
             return $this->jsonResponse($usersArray, Response::HTTP_OK);
         }
     }
@@ -95,6 +95,7 @@ class GenericUserController extends AbstractController
         $response->headers->set('Cache-Control', 'no-cache, private');
         $response->headers->remove('X-Powered-By');
         $response->headers->remove('Server');
+
         return $response;
     }
 
@@ -162,5 +163,4 @@ class GenericUserController extends AbstractController
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
 }

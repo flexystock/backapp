@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\User\Infrastructure\OutputAdapters\Repositories;
 
 use App\Entity\Main\User;
@@ -14,6 +16,7 @@ use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 class UserRepository extends ServiceEntityRepository implements UserRepositoryInterface, PasswordUpgraderInterface
 {
     private EntityManagerInterface $entityManager;
+
     public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager)
     {
         $this->entityManager = $entityManager;
@@ -46,6 +49,7 @@ class UserRepository extends ServiceEntityRepository implements UserRepositoryIn
         $this->entityManager->persist($user);
         $this->entityManager->flush();
     }
+
     public function findByUuid(string $uuid): ?User
     {
         return $this->createQueryBuilder('u')

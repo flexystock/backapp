@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Client\Infrastructure\OutputAdapters\Repositories;
 
 use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
@@ -11,6 +13,7 @@ use Doctrine\Persistence\ManagerRegistry;
 class ClientRepository extends ServiceEntityRepository implements ClientRepositoryInterface
 {
     private EntityManagerInterface $entityManager;
+
     public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager)
     {
         $this->entityManager = $entityManager;
@@ -32,9 +35,9 @@ class ClientRepository extends ServiceEntityRepository implements ClientReposito
     {
         return $this->findOneBy(['clientName' => $name]);
     }
+
     public function findOneByPort(int $port): ?Client
     {
         return $this->findOneBy(['port' => $port]);
     }
-
 }

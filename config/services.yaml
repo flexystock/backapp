@@ -109,3 +109,22 @@ services:
     App\User\Infrastructure\InputAdapters\GenericUserController:
         tags: [ 'controller.service_arguments' ]
 
+    App\EventListener\JWTCreatedListener:
+        tags:
+            - { name: 'kernel.event_listener', event: 'lexik_jwt_authentication.on_jwt_created', method: 'onJWTCreated' }
+    App\EventListener\JWTDecodedListener:
+        tags:
+            - { name: 'kernel.event_listener', event: 'lexik_jwt_authentication.on_jwt_decoded', method: 'onJWTDecoded' }
+    App\EventListener\ClientAccessListener:
+        tags:
+            - { name: 'kernel.event_listener', event: 'kernel.request', method: 'onKernelRequest', priority: 10 }
+    App\User\Application\UseCases\Auth\SelectClientUseCase:
+        arguments:
+            $jwtManager: '@lexik_jwt_authentication.jwt_manager'
+        tags: [ 'app.use_case' ]
+
+    App\User\Infrastructure\InputAdapters\AuthController:
+        public: true
+        autowire: true
+        autoconfigure: true
+        tags: [ 'controller.service_arguments' ]

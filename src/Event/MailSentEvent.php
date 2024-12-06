@@ -1,4 +1,5 @@
 <?php
+
 // src/Event/MailSentEvent.php
 
 namespace App\Event;
@@ -29,8 +30,7 @@ class MailSentEvent extends Event
         \DateTimeInterface $sentAt,
         ?array $additionalData = null,
         ?string $errorType = null,
-        ?User $user = null
-
+        ?User $user = null,
     ) {
         $this->recipient = $recipient;
         $this->subject = $subject;
@@ -84,10 +84,12 @@ class MailSentEvent extends Event
     {
         return $this->user;
     }
+
     public function getErrorCode(): ?int
     {
         return $this->errorCode;
     }
+
     public function getErrorType(): ?string
     {
         return $this->errorType;

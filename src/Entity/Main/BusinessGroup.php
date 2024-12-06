@@ -2,7 +2,6 @@
 
 namespace App\Entity\Main;
 
-use App\Entity\Main\User;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -68,6 +67,4 @@ class BusinessGroup
     {
         $this->users = $users;
     }
-
-
 }

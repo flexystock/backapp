@@ -22,7 +22,6 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  */
 class CreateClientUseCase implements CreateClientInputPort
 {
-
     private ClientRepositoryInterface $clientRepository;
     private UserRepositoryInterface $userRepository;
     private ValidatorInterface $validator;
@@ -31,14 +30,15 @@ class CreateClientUseCase implements CreateClientInputPort
     private MailerInterface $mailer;
     private UrlGeneratorInterface $urlGenerator;
     private NotificationServiceInterface $notificationService;
+
     public function __construct(ClientRepositoryInterface $clientRepository,
-                                ValidatorInterface $validator,
-                                UserRepositoryInterface $userRepository,
-                                DockerService $dockerService,
-                                MessageBusInterface $bus,
-                                MailerInterface $mailer,
-                                UrlGeneratorInterface $urlGenerator,
-                                NotificationServiceInterface $notificationService)
+        ValidatorInterface $validator,
+        UserRepositoryInterface $userRepository,
+        DockerService $dockerService,
+        MessageBusInterface $bus,
+        MailerInterface $mailer,
+        UrlGeneratorInterface $urlGenerator,
+        NotificationServiceInterface $notificationService)
     {
         $this->clientRepository = $clientRepository;
         $this->userRepository = $userRepository;
@@ -52,7 +52,7 @@ class CreateClientUseCase implements CreateClientInputPort
 
     public function create(CreateClientRequest $request): Client
     {
-        $client = new Client();//uuiCLient y User_id
+        $client = new Client(); // uuiCLient y User_id
 
         $client->setName($request->getName());
         $client->setClientName($request->getName());
@@ -76,7 +76,7 @@ class CreateClientUseCase implements CreateClientInputPort
         $client->setCurrency($request->getCurrency());
         $client->setPreferredPaymentMethods($request->getPreferredPaymentMethods());
         $client->setOperationHours($request->getOperationHours());
-        $client->setHasMultipleWarehouses($request->getHasMultipleWarehouses() === 'si');
+        $client->setHasMultipleWarehouses('si' === $request->getHasMultipleWarehouses());
         $client->setAnnualSalesVolume($request->getAnnualSalesVolume());
 
         // Asociar el cliente con el usuario si es necesario
@@ -100,33 +100,31 @@ class CreateClientUseCase implements CreateClientInputPort
         // Guardar el usuario y enviar notificaciones
         $this->saveUserAndSendNotifications($user);
         // Enviar el mensaje al bus de Messenger
-        //$this->bus->dispatch(new CreateDockerContainerMessage($client->getUuidClient()));
+        // $this->bus->dispatch(new CreateDockerContainerMessage($client->getUuidClient()));
 
         return $client;
     }
 
-
-
-//    private function createClientContainer(Client $client, string $clientName, int $port): void
-//    {
-//        $scriptPath = '/appdata/www/bin/create_client_container.sh';
-//        if (!file_exists($scriptPath)) {
-//            throw new \Exception("Script not found: " . $scriptPath);
-//        }
-//
-//        $command = sprintf(
-//            'bash %s %s %d 2>&1',
-//            escapeshellarg($scriptPath),
-//            escapeshellarg($clientName),
-//            $port
-//        );
-//        exec($command, $output, $return_var);
-//
-//        if ($return_var !== 0) {
-//            error_log('Error creating client container: ' . implode("\n", $output));
-//            throw new \Exception('Error creating client container: ' . implode("\n", $output));
-//        }
-//    }
+    //    private function createClientContainer(Client $client, string $clientName, int $port): void
+    //    {
+    //        $scriptPath = '/appdata/www/bin/create_client_container.sh';
+    //        if (!file_exists($scriptPath)) {
+    //            throw new \Exception("Script not found: " . $scriptPath);
+    //        }
+    //
+    //        $command = sprintf(
+    //            'bash %s %s %d 2>&1',
+    //            escapeshellarg($scriptPath),
+    //            escapeshellarg($clientName),
+    //            $port
+    //        );
+    //        exec($command, $output, $return_var);
+    //
+    //        if ($return_var !== 0) {
+    //            error_log('Error creating client container: ' . implode("\n", $output));
+    //            throw new \Exception('Error creating client container: ' . implode("\n", $output));
+    //        }
+    //    }
 
     /**
      * @throws \DateMalformedStringException
@@ -158,7 +156,7 @@ class CreateClientUseCase implements CreateClientInputPort
             $this->notificationService->sendEmailVerificationToUser($user);
             $this->notificationService->sendEmailToBack($user);
 
-            //$this->entityManager->commit();
+            // $this->entityManager->commit();
         } catch (\Exception $e) {
             throw $e;
         }

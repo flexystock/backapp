@@ -2,143 +2,142 @@
 
 namespace App\Client\Application\DTO;
 
-use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Annotation\SerializedName;
+use Symfony\Component\Validator\Constraints as Assert;
 
 class RegisterClientRequest
 {
-    #[Assert\NotBlank(message: "El id del usuario es obligatorio.")]
+    #[Assert\NotBlank(message: 'El id del usuario es obligatorio.')]
     #[Assert\Length(
         max: 36,
     )]
     #[SerializedName('user_id')]
     private string $uuid_user;
 
-    #[Assert\NotBlank(message: "El nombre del cliente es obligatorio.")]
+    #[Assert\NotBlank(message: 'El nombre del cliente es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
     #[SerializedName('name')]
     private string $name;
 
-    #[Assert\NotBlank(message: "El nombre de la empresa es obligatorio.")]
+    #[Assert\NotBlank(message: 'El nombre de la empresa es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
     #[SerializedName('company_name')]
     private string $business_group_name;
 
-
-    #[Assert\NotBlank(message: "El NIF es obligatorio.")]
+    #[Assert\NotBlank(message: 'El NIF es obligatorio.')]
     #[Assert\Length(
         max: 12,
     )]
     #[Assert\Regex(
         pattern: '/^[A-HJ-NP-S]{1}[0-9]{8}[A-J]{1}$/',
-        message: "El CIF no es válido."
+        message: 'El CIF no es válido.'
     )]
     private string $nif_cif;
 
-    #[Assert\NotBlank(message: "La fecha de creación es obligatoria.")]
+    #[Assert\NotBlank(message: 'La fecha de creación es obligatoria.')]
     #[Assert\Regex(
         pattern: '/^(0[1-9]|[12][0-9]|3[01])[\/-](0[1-9]|1[0-2])[\/-](19|20)\d\d$/',
-        message: "La fecha de fundación debe estar en formato dd/mm/yyyy."
+        message: 'La fecha de fundación debe estar en formato dd/mm/yyyy.'
     )]
     private string $foundation_date;
 
-    #[Assert\NotBlank(message: "La direccion fiscal es obligatorio.")]
+    #[Assert\NotBlank(message: 'La direccion fiscal es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
     private string $fiscal_address;
 
-    #[Assert\NotBlank(message: "La direccion fisica es obligatorio.")]
+    #[Assert\NotBlank(message: 'La direccion fisica es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
     #[Assert\Regex(
         pattern: '/^[A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\.,\/\-\s]{1,100}$/u',
-        message: "La dirección fiscal no es válida."
+        message: 'La dirección fiscal no es válida.'
     )]
     private string $physical_address;
 
-    #[Assert\NotBlank(message: "La ciudad es obligatorio.")]
+    #[Assert\NotBlank(message: 'La ciudad es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
     #[Assert\Regex(
         pattern: '/^[A-Za-zÁÉÍÓÚáéíóúÑñÜüçÇàáâ...]{1,50}(?:[ -][A-Za-zÁÉÍÓÚáéíóúÑñÜüçÇàáâ...]{1,50})*$/u',
-        message: "La ciudad no es válida."
+        message: 'La ciudad no es válida.'
     )]
     private string $city;
 
-    #[Assert\NotBlank(message: "El pais es obligatorio.")]
+    #[Assert\NotBlank(message: 'El pais es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
     private string $country;
 
-    #[Assert\NotBlank(message: "El codigo postal es obligatorio.")]
+    #[Assert\NotBlank(message: 'El codigo postal es obligatorio.')]
     #[Assert\Regex(
         pattern: '/^[A-Za-z0-9À-ÿ\s\-]{3,10}$/u',
-        message: "El código postal no es válido."
+        message: 'El código postal no es válido.'
     )]
     private int $postal_code;
 
     #[Assert\NotBlank]
-    #[Assert\Type(type: 'numeric', message: "El número de teléfono debe ser numérico.")]
+    #[Assert\Type(type: 'numeric', message: 'El número de teléfono debe ser numérico.')]
     #[Assert\Length(
         min: 9,
         max: 15,
-        minMessage: "El número de teléfono debe tener al menos {{ limit }} dígitos.",
-        maxMessage: "El número de teléfono no puede tener más de {{ limit }} dígitos."
+        minMessage: 'El número de teléfono debe tener al menos {{ limit }} dígitos.',
+        maxMessage: 'El número de teléfono no puede tener más de {{ limit }} dígitos.'
     )]
     private int $company_phone;
 
-    #[Assert\NotBlank(message: "El email de la compañia es obligatorio.")]
+    #[Assert\NotBlank(message: 'El email de la compañia es obligatorio.')]
     #[Assert\Email(message: "El correo electrónico '{{ value }}' no es válido.")]
     private string $company_email;
 
-    #[Assert\NotBlank(message: "El numero de empleados es obligatorio.")]
-    #[Assert\Positive(message: "El número de empleados debe ser un número positivo.")]
+    #[Assert\NotBlank(message: 'El numero de empleados es obligatorio.')]
+    #[Assert\Positive(message: 'El número de empleados debe ser un número positivo.')]
     #[Assert\LessThanOrEqual(
         value: 999999,
-        message: "El número de empleados no puede exceder de 999999."
+        message: 'El número de empleados no puede exceder de 999999.'
     )]
     private int $number_of_employees;
 
-    #[Assert\NotBlank(message: "El sector industrial es obligatorio.")]
+    #[Assert\NotBlank(message: 'El sector industrial es obligatorio.')]
     #[Assert\Regex(
         pattern: '/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü0-9\s\.,\-\&]{1,50}$/u',
-        message: "El sector industrial no es válido."
+        message: 'El sector industrial no es válido.'
     )]
     private string $industry_sector;
 
-    #[Assert\NotBlank(message: "El volumen de inevntario es obligatorio.")]
+    #[Assert\NotBlank(message: 'El volumen de inevntario es obligatorio.')]
     #[Assert\Regex(
         pattern: '/^\d{1,10}$/',
-        message: "El volumen promedio de inventario no es válido."
+        message: 'El volumen promedio de inventario no es válido.'
     )]
     private int $average_inventory_volume;
 
-    #[Assert\NotBlank(message: "El tipo de moneda es obligatorio.")]
+    #[Assert\NotBlank(message: 'El tipo de moneda es obligatorio.')]
     #[Assert\Regex(
         pattern: '/^([A-Za-z]{3,15}(?:\s?[A-Za-z]{2,15})?|[€$¥£₣₹₣])$/u',
-        message: "La moneda no es válida."
+        message: 'La moneda no es válida.'
     )]
     private string $currency;
 
-    #[Assert\NotBlank(message: "Indique si tiene mas de un alamacen.")]
+    #[Assert\NotBlank(message: 'Indique si tiene mas de un alamacen.')]
     #[Assert\Regex(
         pattern: '/^\d{1,5}$/',
-        message: "El número de almacenes no es válido."
+        message: 'El número de almacenes no es válido.'
     )]
     private string $has_multiple_warehouses;
 
-    #[Assert\NotBlank(message: "El volumen anual de ventas es obligatorio.")]
+    #[Assert\NotBlank(message: 'El volumen anual de ventas es obligatorio.')]
     #[Assert\Regex(
         pattern: '/^\d{1,3}(?:\.\d{3})*(?:,([0-9]{1,2}))?$/',
-        message: "El volumen anual de ventas no es válido."
+        message: 'El volumen anual de ventas no es válido.'
     )]
     private string $annual_sales_volume;
 
@@ -162,7 +161,7 @@ class RegisterClientRequest
         $this->name = $name;
     }
 
-    public function setBusinessGroupName (string  $businessGroupName): void
+    public function setBusinessGroupName(string $businessGroupName): void
     {
         $this->business_group_name = $businessGroupName;
     }
@@ -196,6 +195,7 @@ class RegisterClientRequest
     {
         $this->nif_cif = $nif_cif;
     }
+
     public function getFoundationDate(): string
     {
         return $this->foundation_date;
@@ -355,6 +355,4 @@ class RegisterClientRequest
     {
         $this->annual_sales_volume = $annual_sales_volume;
     }
-
-
 }

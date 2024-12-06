@@ -1,4 +1,5 @@
 <?php
+
 namespace App\User\Infrastructure\InputAdapters;
 
 use App\Message\CreateDockerContainerMessage;
@@ -15,8 +16,8 @@ class EmailVerificationController
     private MessageBusInterface $bus;
 
     public function __construct(UserRepositoryInterface $userRepository,
-                                DockerService $dockerService,
-                                MessageBusInterface $bus)
+        DockerService $dockerService,
+        MessageBusInterface $bus)
     {
         $this->userRepository = $userRepository;
         $this->dockerService = $dockerService;

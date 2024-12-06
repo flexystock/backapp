@@ -16,7 +16,7 @@ class LoginUserUseCase implements LoginUserInputPort
     private EntityManagerInterface $entityManager;
 
     public function __construct(UserRepositoryInterface $userRepository, UserPasswordHasherInterface $passwordHasher,
-                                EntityManagerInterface $entityManager)
+        EntityManagerInterface $entityManager)
     {
         $this->userRepository = $userRepository;
         $this->passwordHasher = $passwordHasher;
@@ -25,7 +25,6 @@ class LoginUserUseCase implements LoginUserInputPort
 
     public function login(string $email, string $password, string $ipAddress): ?User
     {
-
         $user = $this->userRepository->findByEmail($email);
 
         if (!$user) {
@@ -38,11 +37,13 @@ class LoginUserUseCase implements LoginUserInputPort
 
         if (!$this->passwordHasher->isPasswordValid($user, $password)) {
             $this->incrementFailedAttempts($user);
+
             return null;
         }
 
         $this->resetFailedAttempts($user);
         $this->registerLogin($user, $ipAddress);
+
         return $user;
     }
 
@@ -52,9 +53,8 @@ class LoginUserUseCase implements LoginUserInputPort
      * Este método crea un nuevo registro en la tabla `login`, almacenando el UUID del usuario,
      * la fecha y hora del login, y la dirección IP desde la cual se realizó el intento de login.
      *
-     * @param User $user La entidad del usuario que se ha logueado.
-     * @param string $ipAddress La dirección IP desde la cual se realizó el intento de login.
-     * @return void
+     * @param User   $user      la entidad del usuario que se ha logueado
+     * @param string $ipAddress la dirección IP desde la cual se realizó el intento de login
      */
     private function registerLogin(User $user, string $ipAddress): void
     {
@@ -71,6 +71,7 @@ class LoginUserUseCase implements LoginUserInputPort
     {
         if ($user->getLockedUntil() && $user->getLockedUntil() > new \DateTimeImmutable()) {
             $lockedUntil = $user->getLockedUntil()->format('Y-m-d H:i:s');
+
             return "Se ha superado el número máximo de intentos. Su cuenta está bloqueada hasta: $lockedUntil.";
         }
 
@@ -91,6 +92,7 @@ class LoginUserUseCase implements LoginUserInputPort
                 return $threshold - $failedAttempts;
             }
         }
+
         return 0;
     }
 
@@ -100,8 +102,7 @@ class LoginUserUseCase implements LoginUserInputPort
      * Si el número de intentos fallidos excede de 3, se bloquea la cuenta del usuario por 15 minutos.
      * El bloqueo se establece en el campo `lockedUntil`.
      *
-     * @param User $user La entidad del usuario cuyo contador de intentos fallidos se va a incrementar.
-     * @return void
+     * @param User $user la entidad del usuario cuyo contador de intentos fallidos se va a incrementar
      */
     private function incrementFailedAttempts(User $user): void
     {
@@ -110,13 +111,13 @@ class LoginUserUseCase implements LoginUserInputPort
 
         if ($failedAttempts > 3) {
             // Si es la primera vez que supera los 3 intentos fallidos
-            if ($failedAttempts == 4) {
+            if (4 == $failedAttempts) {
                 $user->setLockedUntil((new \DateTimeImmutable())->modify('+15 minutes'));
-            } else if ($failedAttempts == 7){
+            } elseif (7 == $failedAttempts) {
                 $user->setLockedUntil((new \DateTimeImmutable())->modify('+1 hour'));
-            }else if($failedAttempts == 10){
+            } elseif (10 == $failedAttempts) {
                 $user->setLockedUntil((new \DateTimeImmutable())->modify('+2 hour'));
-            }else if($failedAttempts == 13){
+            } elseif (13 == $failedAttempts) {
                 $user->setLockedUntil((new \DateTimeImmutable())->modify('+5 hour'));
             }
         }
@@ -131,8 +132,7 @@ class LoginUserUseCase implements LoginUserInputPort
      * Este método establece el contador de intentos fallidos a 0 y desbloquea la cuenta si estaba bloqueada,
      * eliminando cualquier valor en el campo `lockedUntil`.
      *
-     * @param User $user La entidad del usuario cuyo contador de intentos fallidos se va a restablecer.
-     * @return void
+     * @param User $user la entidad del usuario cuyo contador de intentos fallidos se va a restablecer
      */
     private function resetFailedAttempts(User $user): void
     {
@@ -141,5 +141,4 @@ class LoginUserUseCase implements LoginUserInputPort
         $this->entityManager->persist($user);
         $this->entityManager->flush();
     }
-
 }

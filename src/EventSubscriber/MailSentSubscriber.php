@@ -1,4 +1,5 @@
 <?php
+
 // src/EventSubscriber/MailSentSubscriber.php
 
 namespace App\EventSubscriber;
@@ -6,9 +7,8 @@ namespace App\EventSubscriber;
 use App\Entity\Main\LogMail;
 use App\Event\MailSentEvent;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Doctrine\Persistence\ManagerRegistry;
-
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class MailSentSubscriber implements EventSubscriberInterface
 {

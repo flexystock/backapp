@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Entity\Main;
@@ -103,6 +104,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'is_verified', type: 'boolean')]
     private bool $is_verified = false;
 
+    private ?string $uuidClient = null;
+
     #[ORM\ManyToMany(targetEntity: Role::class, inversedBy: 'users')]
     #[ORM\JoinTable(name: 'user_role',
         joinColumns: [new ORM\JoinColumn(name: 'uuid_user', referencedColumnName: 'uuid_user')],
@@ -127,11 +130,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function __construct()
     {
-        $this->uuid_user= Uuid::v4()->toRfc4122();
+        $this->uuid_user = Uuid::v4()->toRfc4122();
         $this->roles = new ArrayCollection();
         $this->clients = new ArrayCollection();
         $this->businessGroups = new ArrayCollection();
     }
+
     public function getUuid(): ?string
     {
         return $this->uuid_user;
@@ -140,24 +144,31 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setUuid(string $uuid): self
     {
         $this->uuid_user = $uuid;
+
         return $this;
     }
+
     public function getName(): string
     {
         return $this->name;
     }
+
     public function setName(string $name): self
     {
         $this->name = $name;
+
         return $this;
     }
+
     public function getSurnames(): string
     {
         return $this->surnames;
     }
+
     public function setSurnames(string $surnames): self
     {
         $this->surnames = $surnames;
+
         return $this;
     }
 
@@ -165,139 +176,183 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         return $this->phone;
     }
+
     public function setPhone(int $phone): self
     {
         $this->phone = $phone;
+
         return $this;
     }
+
     public function getEmail(): string
     {
         return $this->email;
     }
+
     public function setEmail(string $email): self
     {
         $this->email = $email;
+
         return $this;
     }
+
     public function getPassword(): string
     {
         return $this->password;
     }
+
     public function setPassword(string $password): self
     {
         $this->password = $password;
+
         return $this;
     }
+
     public function getUserIdentifier(): string
     {
         return $this->email;
     }
+
     public function getRoles(): array
     {
         // Define los roles de usuario aquí. Por ejemplo:
         return ['ROLE_USER'];
     }
+
     public function eraseCredentials(): void
     {
         // Si almacenas datos sensibles temporales, límpialos aquí.
     }
+
     public function isRoot(): bool
     {
         return $this->is_root;
     }
+
     public function setIsRoot(bool $isRoot): self
     {
         $this->is_root = $isRoot;
+
         return $this;
     }
+
     public function isGhost(): bool
     {
         return $this->is_ghost;
     }
+
     public function setIsGhost(bool $isGhost): self
     {
         $this->is_ghost = $isGhost;
+
         return $this;
     }
+
     public function getMinutesSessionExpiration(): ?int
     {
         return $this->minutes_session_expiration;
     }
+
     public function setMinutesSessionExpiration(?int $minutesSessionExpiration): self
     {
         $this->minutes_session_expiration = $minutesSessionExpiration;
+
         return $this;
     }
+
     public function isActive(): bool
     {
         return $this->active;
     }
+
     public function setActive(bool $active): self
     {
         $this->active = $active;
+
         return $this;
     }
+
     public function getFailedAttempts(): int
     {
         return $this->failed_attempts;
     }
+
     public function setFailedAttempts(int $failedAttempts): self
     {
         $this->failed_attempts = $failedAttempts;
+
         return $this;
     }
+
     public function getLockedUntil(): ?\DateTimeInterface
     {
         return $this->locked_until;
     }
+
     public function setLockedUntil(?\DateTimeInterface $lockedUntil): self
     {
         $this->locked_until = $lockedUntil;
+
         return $this;
     }
+
     public function getLastAccess(): ?\DateTimeInterface
     {
         return $this->last_access;
     }
+
     public function setLastAccess(?\DateTimeInterface $lastAccess): self
     {
         $this->last_access = $lastAccess;
+
         return $this;
     }
+
     public function getUuidUserCreation(): string
     {
         return $this->uuid_user_creation;
     }
+
     public function setUuidUserCreation(string $uuidUserCreation): self
     {
         $this->uuid_user_creation = $uuidUserCreation;
+
         return $this;
     }
+
     public function getDatehourCreation(): \DateTimeInterface
     {
         return $this->date_hour_creation;
     }
+
     public function setDatehourCreation(\DateTimeInterface $datehourCreation): self
     {
         $this->date_hour_creation = $datehourCreation;
+
         return $this;
     }
+
     public function getUuidUserModification(): ?string
     {
         return $this->uuid_user_modification;
     }
+
     public function setUuidUserModification(?string $uuidUserModification): self
     {
         $this->uuid_user_modification = $uuidUserModification;
+
         return $this;
     }
+
     public function getDatehourModification(): ?\DateTimeInterface
     {
         return $this->date_hour_modification;
     }
+
     public function setDatehourModification(?\DateTimeInterface $datehourModification): self
     {
         $this->date_hour_modification = $datehourModification;
+
         return $this;
     }
 
@@ -309,18 +364,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setDocumentType(string $document_type): self
     {
         $this->document_type = $document_type;
+
         return $this;
     }
 
     public function getDocumentNumber(): string
     {
         return $this->document_number;
-
     }
 
     public function setDocumentNumber(string $document_number): self
     {
         $this->document_number = $document_number;
+
         return $this;
     }
 
@@ -332,10 +388,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setTimeZone(string $timezone): self
     {
         $this->timezone = $timezone;
+
         return $this;
     }
 
-    public function getLanguage():string
+    public function getLanguage(): string
     {
         return $this->language;
     }
@@ -343,10 +400,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setLanguage(string $language): self
     {
         $this->language = $language;
+
         return $this;
     }
 
-    public function getPreferredContactMethod():string
+    public function getPreferredContactMethod(): string
     {
         return $this->preferred_contact_method;
     }
@@ -354,10 +412,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPreferredContactMethod(string $preferred_contact_method): self
     {
         $this->preferred_contact_method = $preferred_contact_method;
+
         return $this;
     }
 
-    public function getTwoFactorEnabled():bool
+    public function getTwoFactorEnabled(): bool
     {
         return $this->two_factor_enabled;
     }
@@ -365,10 +424,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setTwoFactorEnabled(bool $two_factor_enabled): self
     {
         $this->two_factor_enabled = $two_factor_enabled;
+
         return $this;
     }
 
-    public function getSecurityQuestion():string
+    public function getSecurityQuestion(): string
     {
         return $this->security_question;
     }
@@ -376,15 +436,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setSecurityQuestion(string $security_question): self
     {
         $this->security_question = $security_question;
+
         return $this;
     }
-    public function getSecurityAnswer():string
+
+    public function getSecurityAnswer(): string
     {
         return $this->security_answer;
     }
+
     public function setSecurityAnswer(string $security_answer): self
     {
         $this->security_answer = $security_answer;
+
         return $this;
     }
 
@@ -396,6 +460,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setVerificationToken(?string $verificationToken): self
     {
         $this->verification_token = $verificationToken;
+
         return $this;
     }
 
@@ -407,6 +472,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setVerificationTokenExpiresAt(?\DateTimeInterface $expiresAt): self
     {
         $this->verification_token_expires_at = $expiresAt;
+
         return $this;
     }
 
@@ -418,6 +484,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setIsVerified(bool $isVerified): self
     {
         $this->is_verified = $isVerified;
+
         return $this;
     }
 
@@ -431,7 +498,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $user->setPassword(
             $passwordHasher->hashPassword($user, $request->getPass())
         );
-        $user->setPhone((int)$request->getPhone());
+        $user->setPhone((int) $request->getPhone());
         $user->setDocumentType($request->getDocumentType());
         $user->setDocumentNumber($request->getDocumentNumber());
         $user->setTimeZone($request->getTimezone());
@@ -445,6 +512,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $user;
     }
+
     // Funcion para agregar un cliente a la colección
     public function addClient(Client $client): self
     {
@@ -469,5 +537,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getClients(): Collection
     {
         return $this->clients;
+    }
+
+    public function getUuidClient(): ?string
+    {
+        return $this->uuidClient;
+    }
+
+    public function setUuidClient(?string $uuidClient): void
+    {
+        $this->uuidClient = $uuidClient;
     }
 }

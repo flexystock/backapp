@@ -17,8 +17,9 @@ class RequestPasswordResetUseCase implements RequestPasswordResetInterface
     public function __construct(
         private UserRepositoryInterface $userRepository,
         private PasswordResetRepositoryInterface $passwordResetRepository,
-        private NotificationServiceInterface $emailService
-    ) {}
+        private NotificationServiceInterface $emailService,
+    ) {
+    }
 
     /**
      * Maneja la solicitud de restablecimiento de contraseña.
@@ -28,9 +29,7 @@ class RequestPasswordResetUseCase implements RequestPasswordResetInterface
      * almacena el token y envía un correo electrónico al usuario con las instrucciones
      * para restablecer su contraseña.
      *
-     * @param ForgotPasswordRequest $request Objeto que contiene el email del usuario.
-     *
-     * @return void
+     * @param ForgotPasswordRequest $request objeto que contiene el email del usuario
      */
     public function requestPasswordReset(ForgotPasswordRequest $request): void
     {

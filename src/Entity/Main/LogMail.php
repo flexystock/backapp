@@ -1,4 +1,5 @@
 <?php
+
 // src/Entity/Main/LogMail.php
 
 namespace App\Entity\Main;
@@ -120,6 +121,7 @@ class LogMail
     {
         $this->additional_data = $additionalData;
     }
+
     public function getErrorCode(): ?int
     {
         return $this->error_code;
@@ -129,6 +131,7 @@ class LogMail
     {
         $this->error_code = $errorCode;
     }
+
     public function getErrorType(): ?string
     {
         return $this->error_type;
@@ -137,7 +140,7 @@ class LogMail
     public function setErrorType(?string $errorType): self
     {
         $this->error_type = $errorType;
+
         return $this;
     }
-
 }

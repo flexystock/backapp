@@ -1,4 +1,5 @@
 <?php
+
 // src/User/Infrastructure/InputAdapters/PasswordResetController.php
 
 namespace App\User\Infrastructure\InputAdapters;
@@ -21,17 +22,17 @@ class PasswordResetController
     private ResetPasswordInterface $passwordReset;
     private ValidatorInterface $validator;
     private RateLimiterFactory $passwordResetLimiter;
+
     public function __construct(RequestPasswordResetInterface $requestPasswordReset,
-                                ResetPasswordInterface $passwordReset,
-                                ValidatorInterface $validator,
-                                RateLimiterFactory $passwordResetLimiter
-                                ){
-        $this->requestPasswordReset= $requestPasswordReset;
+        ResetPasswordInterface $passwordReset,
+        ValidatorInterface $validator,
+        RateLimiterFactory $passwordResetLimiter,
+    ) {
+        $this->requestPasswordReset = $requestPasswordReset;
         $this->passwordReset = $passwordReset;
         $this->passwordResetLimiter = $passwordResetLimiter;
         $this->validator = $validator;
     }
-
 
     #[Route('/api/forgot-password', name: 'api_forgot_password', methods: ['POST'])]
     #[OA\Post(
@@ -67,7 +68,7 @@ class PasswordResetController
                     ],
                     type: 'object'
                 )
-            )
+            ),
         ]
     )]
     public function forgotPassword(Request $request): JsonResponse
@@ -124,7 +125,7 @@ class PasswordResetController
                     ],
                     type: 'object'
                 )
-            )
+            ),
         ]
     )]
     public function resetPassword(Request $request): JsonResponse
@@ -155,6 +156,7 @@ class PasswordResetController
 
         try {
             $this->passwordReset->resetPassword($resetPasswordRequest);
+
             return new JsonResponse(['message' => 'Contraseña actualizada correctamente.'], 200);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], 400);
