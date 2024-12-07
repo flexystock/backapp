@@ -2,6 +2,7 @@
 
 namespace App\EventListener;
 
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
@@ -9,11 +10,13 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 class ClientAccessListener
 {
+    private Security $security;
     private TokenStorageInterface $tokenStorage;
 
-    public function __construct(TokenStorageInterface $tokenStorage)
+    public function __construct(TokenStorageInterface $tokenStorage, Security $security)
     {
         $this->tokenStorage = $tokenStorage;
+        $this->security = $security;
     }
 
     public function onKernelRequest(RequestEvent $event)
@@ -34,17 +37,19 @@ class ClientAccessListener
             return;
         }
 
-        $token = $this->tokenStorage->getToken();
+        //$token = $this->tokenStorage->getToken();
 
-        if (null === $token || !is_object($user = $token->getUser())) {
-            // No hay usuario autenticado
-            return;
-        }
+//        if (null === $token || !is_object($user = $token->getUser())) {
+//            // No hay usuario autenticado
+//            return;
+//        }
 
+        $user = $this->security->getUser();
         if (!$user instanceof UserInterface) {
             // El usuario no es una instancia válida
             return;
         }
+
 
         $uuidClient = $user->getUuidClient();
 

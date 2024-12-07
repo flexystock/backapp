@@ -70,6 +70,16 @@ services:
     App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface:
         alias: App\Client\Infrastructure\OutputAdapters\Repositories\ClientRepository
 
+    App\Service\ClientConnectionProvider:
+        arguments:
+            $params: '@parameter_bag'
+        autowire: true
+        autoconfigure: true
+
+    App\Service\ClientEntityManagerFactory:
+        autowire: true
+        autoconfigure: true
+
     App\MessageHandler\CreateDockerContainerMessageHandler:
         tags: [ 'messenger.message_handler']
 
@@ -108,16 +118,18 @@ services:
     # Controlador
     App\User\Infrastructure\InputAdapters\GenericUserController:
         tags: [ 'controller.service_arguments' ]
+    # Listeners
 
-    App\EventListener\JWTCreatedListener:
+    App\EventListener\ClientEmRequestListener:
+        arguments:
+            $logger: '@logger'
         tags:
-            - { name: 'kernel.event_listener', event: 'lexik_jwt_authentication.on_jwt_created', method: 'onJWTCreated' }
-    App\EventListener\JWTDecodedListener:
-        tags:
-            - { name: 'kernel.event_listener', event: 'lexik_jwt_authentication.on_jwt_decoded', method: 'onJWTDecoded' }
+            - { name: 'kernel.event_listener', event: 'kernel.request', method: 'onKernelRequest', priority: 20 }
+
     App\EventListener\ClientAccessListener:
         tags:
             - { name: 'kernel.event_listener', event: 'kernel.request', method: 'onKernelRequest', priority: 10 }
+
     App\User\Application\UseCases\Auth\SelectClientUseCase:
         arguments:
             $jwtManager: '@lexik_jwt_authentication.jwt_manager'
@@ -128,3 +140,48 @@ services:
         autowire: true
         autoconfigure: true
         tags: [ 'controller.service_arguments' ]
+
+    # Repositorios de Product
+    App\Product\Application\OutputPorts\Repositories\ProductRepositoryInterface:
+        alias: App\Product\Infrastructure\OutputAdapters\Repositories\ProductRepository
+
+    # Casos de uso de Product
+    App\Product\Application\InputPorts\GetProductInputPort:
+        alias: App\Product\Application\UseCases\GetProductUseCase
+
+    # Controladores de Product
+    App\Product\Infrastructure\InputAdapters\ProductController:
+        tags: [ 'controller.service_arguments' ]
+        public: true
+
+    App\Product\Infrastructure\InputAdapters\:
+        resource: '../src/Product/Infrastructure/InputAdapters'
+        tags: [ 'controller.service_arguments' ]
+        public: true
+
+    App\EventListener\JWTCreatedListener:
+        tags:
+            - { name: 'kernel.event_listener', event: 'lexik_jwt_authentication.on_jwt_created', method: 'onJWTCreated' }
+
+    App\EventListener\JWTAuthenticatedListener:
+        arguments:
+            $logger: '@logger'
+        tags:
+            - { name: 'kernel.event_listener', event: 'lexik_jwt_authentication.on_jwt_authenticated', method: 'onJWTAuthenticated' }
+
+    App\Product\Infrastructure\OutputAdapters\Repositories\ClientEntityManagerProvider:
+        arguments:
+            $requestStack: '@request_stack'
+
+
+
+
+
+
+
+
+
+
+
+
+

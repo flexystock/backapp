@@ -343,41 +343,65 @@ class AuthController
     )]
     public function selectClient(Request $request): JsonResponse
     {
-        $token = $this->tokenStorage->getToken();
-
-        if (null === $token || !is_object($user = $token->getUser())) {
-            // No hay usuario autenticado
-            return new JsonResponse(['error' => 'User not found or invalid'], Response::HTTP_UNAUTHORIZED);
-        }
-
-        if (!$user instanceof UserInterface) {
-            // El usuario no es una instancia válida
-            return new JsonResponse(['error' => 'User not found or invalid'], Response::HTTP_UNAUTHORIZED);
-        }
-
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuid_client'] ?? null;
 
         if (!$uuidClient) {
-            return new JsonResponse(['error' => 'uuid_client is required'], Response::HTTP_BAD_REQUEST);
+            $this->logger->warning('SelectClientController: No uuid_client proporcionado.');
+
+            return new JsonResponse(['error' => 'No uuid_client provided'], 400);
         }
 
-        // Validar el formato del UUID (opcional)
-        $constraint = new Assert\Uuid();
-        $violations = $this->validator->validate($uuidClient, $constraint);
-
-        if (count($violations) > 0) {
-            return new JsonResponse(['error' => 'Invalid uuid_client format'], Response::HTTP_BAD_REQUEST);
-        }
+        // Log para depuración
+        $this->logger->info('SelectClientController: Seleccionando cliente con UUID: '.$uuidClient);
 
         try {
-            $token = $this->selectClientInputPort->selectClient($user, $uuidClient);
-
-            return new JsonResponse(['token' => $token]);
-        } catch (AccessDeniedException $e) {
-            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_FORBIDDEN);
+            $newToken = $this->selectClientUseCase->execute($uuidClient);
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => 'An error occurred.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            $this->logger->error('SelectClientController: Error al seleccionar cliente.', ['exception' => $e]);
+
+            return new JsonResponse(['error' => $e->getMessage()], 403);
         }
+
+        // Log para verificar la generación del nuevo token
+        $this->logger->info('SelectClientController: Nuevo token generado.');
+
+        return new JsonResponse(['token' => $newToken]);
+        //        $token = $this->tokenStorage->getToken();
+        //
+        //        if (null === $token || !is_object($user = $token->getUser())) {
+        //            // No hay usuario autenticado
+        //            return new JsonResponse(['error' => 'User not found or invalid'], Response::HTTP_UNAUTHORIZED);
+        //        }
+        //
+        //        if (!$user instanceof UserInterface) {
+        //            // El usuario no es una instancia válida
+        //            return new JsonResponse(['error' => 'User not found or invalid'], Response::HTTP_UNAUTHORIZED);
+        //        }
+        //
+        //        $data = json_decode($request->getContent(), true);
+        //        $uuidClient = $data['uuid_client'] ?? null;
+        //
+        //        if (!$uuidClient) {
+        //            return new JsonResponse(['error' => 'uuid_client is required'], Response::HTTP_BAD_REQUEST);
+        //        }
+        //
+        //        // Validar el formato del UUID (opcional)
+        //        $constraint = new Assert\Uuid();
+        //        $violations = $this->validator->validate($uuidClient, $constraint);
+        //
+        //        if (count($violations) > 0) {
+        //            return new JsonResponse(['error' => 'Invalid uuid_client format'], Response::HTTP_BAD_REQUEST);
+        //        }
+        //
+        //        try {
+        //            $token = $this->selectClientInputPort->selectClient($user, $uuidClient);
+        //
+        //            return new JsonResponse(['token' => $token]);
+        //        } catch (AccessDeniedException $e) {
+        //            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_FORBIDDEN);
+        //        } catch (\Exception $e) {
+        //            return new JsonResponse(['error' => 'An error occurred.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        //        }
     }
 }
