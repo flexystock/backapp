@@ -115,9 +115,6 @@ services:
     App\EventListener\JWTDecodedListener:
         tags:
             - { name: 'kernel.event_listener', event: 'lexik_jwt_authentication.on_jwt_decoded', method: 'onJWTDecoded' }
-    App\EventListener\ClientAccessListener:
-        tags:
-            - { name: 'kernel.event_listener', event: 'kernel.request', method: 'onKernelRequest', priority: 10 }
     App\User\Application\UseCases\Auth\SelectClientUseCase:
         arguments:
             $jwtManager: '@lexik_jwt_authentication.jwt_manager'
@@ -128,3 +125,57 @@ services:
         autowire: true
         autoconfigure: true
         tags: [ 'controller.service_arguments' ]
+
+    App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager:
+        arguments:
+            $mainEntityManager: '@doctrine.orm.main_entity_manager'
+            $logger: '@logger'
+            $params: '@parameter_bag'
+        public: true
+
+
+    # Registrar la Interfaz del Repositorio (alias)
+    App\Product\Application\OutputPorts\Repositories\ProductRepositoryInterface:
+        alias: App\Product\Infrastructure\OutputAdapters\Repositories\ProductRepository
+
+    # Registrar el Repositorio (no inyectado directamente, se crea dinámicamente)
+    # No es necesario registrar aquí ya que se crea en el UseCase
+
+
+    # Registrar el Caso de Uso
+    App\Product\Application\UseCases\GetProductUseCase:
+        arguments:
+            $connectionManager: '@App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager'
+            $logger: '@logger'
+    App\Product\Application\UseCases\GetAllProductsUseCase:
+        arguments:
+            $connectionManager: '@App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager'
+            $logger: '@logger'
+
+    # Registrar la Interfaz del Caso de Uso y vincularla con la implementación
+    App\Product\Application\InputPorts\GetProductUseCaseInterface:
+        alias: App\Product\Application\UseCases\GetProductUseCase
+    # Registrar la Interfaz del Caso de Uso y vincularla con la implementación
+    App\Product\Application\InputPorts\GetAllProductsUseCaseInterface:
+        alias: App\Product\Application\UseCases\GetAllProductsUseCase
+
+    # Registrar el Repositorio
+    App\Product\Infrastructure\OutputAdapters\Repositories\ProductRepository:
+        arguments:
+            $em: '@doctrine.orm.main_entity_manager' # Este EntityManager se reemplazará dinámicamente en el caso de uso
+
+    doctrine.dbal.logger:
+        class: App\Logger\DoctrineSQLLogger
+        arguments:
+            $logger: '@monolog.logger'
+
+    App\Logger\DoctrineSQLMiddleware:
+        arguments:
+            $logger: '@monolog.logger.doctrine'
+        tags:
+            - { name: 'doctrine.dbal.middleware', connection: 'main' }
+
+    App\Logger\DoctrineSQLLogger:
+        arguments:
+            $logger: '@monolog.logger.doctrine'
+        tags: [ 'doctrine.dbal.logger' ]

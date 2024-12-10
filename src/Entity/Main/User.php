@@ -104,7 +104,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'is_verified', type: 'boolean')]
     private bool $is_verified = false;
 
-    private ?string $uuidClient = null;
+    private ?string $selectedClientUuid = null;
 
     #[ORM\ManyToMany(targetEntity: Role::class, inversedBy: 'users')]
     #[ORM\JoinTable(name: 'user_role',
@@ -539,13 +539,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->clients;
     }
 
-    public function getUuidClient(): ?string
+    public function getSelectedClientUuid(): ?string
     {
-        return $this->uuidClient;
+        return $this->selectedClientUuid;
     }
 
-    public function setUuidClient(?string $uuidClient): void
+    public function setSelectedClientUuid(?string $selectedClientUuid): void
     {
-        $this->uuidClient = $uuidClient;
+        $this->selectedClientUuid = $selectedClientUuid;
     }
 }
