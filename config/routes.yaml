@@ -9,3 +9,9 @@ controllers_client:
         path: ../src/Client/Infrastructure/InputAdapters/
         namespace: App\Client\Infrastructure\InputAdapters
     type: attribute
+
+controllers_product:
+    resource:
+        path: ../src/Product/Infrastructure/InputAdapters/
+        namespace: App\Product\Infrastructure\InputAdapters
+    type: attribute
