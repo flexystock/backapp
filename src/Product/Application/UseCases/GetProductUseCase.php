@@ -37,7 +37,7 @@ class GetProductUseCase implements GetProductUseCaseInterface
             // Buscar el producto
 
             $product = $productRepository->findByUuidAndClient($uuidProduct, $uuidClient);
-            // die("antes del serialize");
+
             if (!$product) {
                 $this->logger->warning("GetProductUseCase: Producto '$uuidProduct' no encontrado para cliente '$uuidClient'.");
 

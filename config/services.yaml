@@ -179,3 +179,10 @@ services:
         arguments:
             $logger: '@monolog.logger.doctrine'
         tags: [ 'doctrine.dbal.logger' ]
+    App\EventListener\RequestTimeListener:
+        tags:
+            - { name: 'kernel.event_listener', event: 'kernel.request', method: 'onKernelRequest', priority: 100 }
+
+    App\EventSubscriber\RequestLogSubscriber:
+        tags:
+            - { name: 'kernel.event_subscriber' }
