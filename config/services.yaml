@@ -152,12 +152,34 @@ services:
             $connectionManager: '@App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager'
             $logger: '@logger'
 
+    App\Product\Application\UseCases\CreateProductUseCase:
+        arguments:
+            $connectionManager: '@App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager'
+            $logger: '@logger'
+    App\Product\Application\UseCases\DeleteProductUseCase:
+        arguments:
+            $connectionManager: '@App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager'
+            $logger: '@logger'
+    App\Product\Application\UseCases\UpdateProductUseCase:
+        arguments:
+            $connectionManager: '@App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager'
+            $logger: '@logger'
+
     # Registrar la Interfaz del Caso de Uso y vincularla con la implementación
     App\Product\Application\InputPorts\GetProductUseCaseInterface:
         alias: App\Product\Application\UseCases\GetProductUseCase
     # Registrar la Interfaz del Caso de Uso y vincularla con la implementación
     App\Product\Application\InputPorts\GetAllProductsUseCaseInterface:
         alias: App\Product\Application\UseCases\GetAllProductsUseCase
+
+    App\Product\Application\InputPorts\CreateProductUseCaseInterface:
+        alias: App\Product\Application\UseCases\CreateProductUseCase
+
+    App\Product\Application\InputPorts\DeleteProductUseCaseInterface:
+        alias: App\Product\Application\UseCases\DeleteProductUseCase
+
+    App\Product\Application\InputPorts\UpdateProductUseCaseInterface:
+        alias: App\Product\Application\UseCases\UpdateProductUseCase
 
     # Registrar el Repositorio
     App\Product\Infrastructure\OutputAdapters\Repositories\ProductRepository:
