@@ -2,6 +2,7 @@
 
 namespace App\Product\Application\UseCases;
 
+use App\Entity\Client\ProductHistory;
 use App\Product\Application\DTO\UpdateProductRequest;
 use App\Product\Application\DTO\UpdateProductResponse;
 use App\Product\Application\InputPorts\UpdateProductUseCaseInterface;
@@ -39,7 +40,23 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
 
                 return new UpdateProductResponse(null, 'Product not found', 404);
             }
-
+            // obtenemos campos para guardar el historial
+            $beforeData = [
+                'uuid' => $product->getUuid(),
+                'name' => $product->getName(),
+                'ean' => $product->getEan(),
+                'weight_range' => $product->getWeightRange(),
+                'weight_unit1' => $product->getWeightUnit1(),
+                'weight_unit2' => $product->getWeightUnit2(),
+                'main_unit' => $product->getMainUnit(),
+                'tare' => $product->getTare(),
+                'sale_price' => $product->getSalePrice(),
+                'cost_price' => $product->getCostPrice(),
+                'out_system_stock' => $product->getOutSystemStock(),
+                'days_average_consumption' => $product->getDaysAverageConsumption(),
+                'days_serve_order' => $product->getDaysServeOrder(),
+            ];
+            $beforeJson = json_encode($beforeData);
             // Actualizar sólo los campos que no sean null
             if (null !== $request->getName()) {
                 $product->setName($request->getName());
@@ -86,6 +103,34 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
             if (null !== $request->getDaysServeOrder()) {
                 $product->setDaysServeOrder($request->getDaysServeOrder());
             }
+            // Después de aplicar los cambios:
+            $afterData = [
+                'uuid' => $product->getUuid(),
+                'name' => $product->getName(),
+                'ean' => $product->getEan(),
+                'weight_range' => $product->getWeightRange(),
+                'weight_unit1' => $product->getWeightUnit1(),
+                'weight_unit2' => $product->getWeightUnit2(),
+                'main_unit' => $product->getMainUnit(),
+                'tare' => $product->getTare(),
+                'sale_price' => $product->getSalePrice(),
+                'cost_price' => $product->getCostPrice(),
+                'out_system_stock' => $product->getOutSystemStock(),
+                'days_average_consumption' => $product->getDaysAverageConsumption(),
+                'days_serve_order' => $product->getDaysServeOrder(),
+            ];
+            $afterJson = json_encode($afterData);
+
+            // Crear el registro de historial
+            $history = new ProductHistory();
+            $history->setUuidProduct($product->getUuid());
+            $history->setUuidUserModification($request->getUuidUserModification()); // o el usuario actual
+            $history->setDataProductBeforeModification($beforeJson);
+            $history->setDataProductAfterModification($afterJson);
+            $history->setDateModification(new \DateTime());
+            // Persistir el historial
+            $em->persist($history);
+
 
             // Actualizar uuidUserModification y datehourModification
             $product->setUuidUserModification($request->getUuidUserModification());
