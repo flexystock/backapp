@@ -50,6 +50,9 @@ security:
         - { path: ^/api/user/clients, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/product, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/product_all, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/product_create, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/product_delete, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/product_update, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:

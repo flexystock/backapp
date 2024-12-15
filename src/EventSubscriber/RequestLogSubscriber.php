@@ -63,9 +63,14 @@ class RequestLogSubscriber implements EventSubscriberInterface
             return;
         }
 
-        // Excluir la ruta de login
+        // Excluir la ruta de login y api/doc
         if ('/api/login' === $request->getPathInfo()) {
             $this->logger->info('onKernelTerminate: La ruta es /api/login, no se registra.');
+
+            return;
+        }
+        if ('/api/doc' === $request->getPathInfo()) {
+            $this->logger->info('onKernelTerminate: La ruta es /api/doc, no se registra.');
 
             return;
         }

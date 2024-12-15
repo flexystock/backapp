@@ -13,4 +13,5 @@ interface ProductRepositoryInterface
      */
     public function findByUuidAndClient(string $uuidProduct, string $uuidClient): ?Product;
     public function findAllByUuidClient(string $uuidClient): array;
+    public function save(Product $product): void;
 }
