@@ -48,7 +48,7 @@ class CreateUserRequest
     private string $pass;
 
     #[Assert\NotBlank]
-    #[Assert\Type(type: 'numeric', message: 'El número de teléfono debe ser numérico.')]
+    #[Assert\Type(type: 'string', message: 'El número de teléfono debe ser numérico.')]
     #[Assert\Length(
         min: 9,
         max: 15,
@@ -235,27 +235,4 @@ class CreateUserRequest
         return $this;
     }
 
-    public function getSecurityQuestion(): string
-    {
-        return $this->securityQuestion;
-    }
-
-    public function setSecurityQuestion(string $securityQuestion): self
-    {
-        $this->securityQuestion = $securityQuestion;
-
-        return $this;
-    }
-
-    public function getSecurityAnswer(): string
-    {
-        return $this->securityAnswer;
-    }
-
-    public function setSecurityAnswer(string $securityAnswer): self
-    {
-        $this->securityAnswer = $securityAnswer;
-
-        return $this;
-    }
 }

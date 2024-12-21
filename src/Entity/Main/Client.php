@@ -101,10 +101,10 @@ class Client
     #[ORM\Column(name: 'operation_hours', type: 'string', length: 255, nullable: true)]
     private ?string $operation_hours = null;
 
-    #[ORM\Column(name: 'has_multiple_warehouses', type: 'boolean', options: ['default' => false])]
-    private bool $has_multiple_warehouses = false;
+    #[ORM\Column(name: 'has_multiple_warehouses', type: 'integer', nullable: true)]
+    private int $has_multiple_warehouses;
 
-    #[ORM\Column(name: 'annual_sales_volume', type: 'decimal', precision: 15, scale: 2, nullable: true)]
+    #[ORM\Column(name: 'annual_sales_volume', type: 'integer', precision: 15, scale: 2, nullable: true)]
     private ?string $annual_sales_volume = null;
 
     #[ORM\Column(name: 'verification_token', type: 'string', length: 255, nullable: true)]
@@ -421,12 +421,12 @@ class Client
         $this->operation_hours = $operation_hours;
     }
 
-    public function isHasMultipleWarehouses(): bool
+    public function getNumberWarehouses(): int
     {
         return $this->has_multiple_warehouses;
     }
 
-    public function setHasMultipleWarehouses(bool $has_multiple_warehouses): void
+    public function setNumberWarehouses(int $has_multiple_warehouses): void
     {
         $this->has_multiple_warehouses = $has_multiple_warehouses;
     }
