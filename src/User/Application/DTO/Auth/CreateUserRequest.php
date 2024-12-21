@@ -47,8 +47,10 @@ class CreateUserRequest
     #[SerializedName('password')]
     private string $pass;
 
+
+    //cambiar a string
     #[Assert\NotBlank]
-    #[Assert\Type(type: 'numeric', message: 'El número de teléfono debe ser numérico.')]
+    #[Assert\Type(type: '', message: 'El número de teléfono debe ser numérico.')]
     #[Assert\Length(
         min: 9,
         max: 15,

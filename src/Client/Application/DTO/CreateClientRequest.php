@@ -67,9 +67,11 @@ class CreateClientRequest
     )]
     private string $country;
 
+    //cambiar a string
     #[Assert\NotBlank(message: 'El codigo postal es obligatorio.')]
     private int $postal_code;
 
+    //cambiar a string
     #[Assert\NotBlank]
     #[Assert\Type(type: 'numeric', message: 'El número de teléfono debe ser numérico.')]
     #[Assert\Length(
@@ -102,9 +104,10 @@ class CreateClientRequest
     #[Assert\NotBlank(message: 'El horario es obligatorio.')]
     private string $operation_hours;
 
+    //ambiar a tipo nunmerico
     #[Assert\NotBlank(message: 'Indique si tiene mas de un alamacen.')]
     private string $has_multiple_warehouses;
-
+    //ambiar a tipo nunmerico
     #[Assert\NotBlank(message: 'El volumen anual de ventas es obligatorio.')]
     private string $annual_sales_volume;
 
