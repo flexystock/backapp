@@ -92,6 +92,7 @@ class RegisterClientController
                     'errors' => $errorMessages,
                 ], Response::HTTP_BAD_REQUEST);
             }
+
             $this->registerInputPort->register($clientRequest);
 
             return new JsonResponse(['success' => true], 201);

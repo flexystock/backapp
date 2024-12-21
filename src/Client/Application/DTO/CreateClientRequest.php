@@ -71,13 +71,7 @@ class CreateClientRequest
     private int $postal_code;
 
     #[Assert\NotBlank]
-    #[Assert\Type(type: 'numeric', message: 'El número de teléfono debe ser numérico.')]
-    #[Assert\Length(
-        min: 9,
-        max: 15,
-        minMessage: 'El número de teléfono debe tener al menos {{ limit }} dígitos.',
-        maxMessage: 'El número de teléfono no puede tener más de {{ limit }} dígitos.'
-    )]
+    #[Assert\Type(type: 'string', message: 'El número de teléfono debe ser numérico.')]
     private int $company_phone;
 
     #[Assert\NotBlank(message: 'El email de la compañia es obligatorio.')]
@@ -85,7 +79,7 @@ class CreateClientRequest
     private string $company_email;
 
     #[Assert\NotBlank(message: 'El numero de empleados es obligatorio.')]
-    private int $number_of_employees;
+    private string $number_of_employees;
 
     #[Assert\NotBlank(message: 'El sector industrial es obligatorio.')]
     private string $industry_sector;
@@ -102,11 +96,12 @@ class CreateClientRequest
     #[Assert\NotBlank(message: 'El horario es obligatorio.')]
     private string $operation_hours;
 
-    #[Assert\NotBlank(message: 'Indique si tiene mas de un alamacen.')]
-    private string $has_multiple_warehouses;
+    #[Assert\NotBlank]
+    #[Assert\Type(type: 'int', message: 'El número de almacenes debe ser numérico.')]
+    private int $number_warehouses;
 
     #[Assert\NotBlank(message: 'El volumen anual de ventas es obligatorio.')]
-    private string $annual_sales_volume;
+    private int $annual_sales_volume;
 
     public function getUuidUser(): string
     {
@@ -303,14 +298,14 @@ class CreateClientRequest
         $this->operation_hours = $operation_hours;
     }
 
-    public function getHasMultipleWarehouses(): string
+    public function getNumberWarehouses(): int
     {
-        return $this->has_multiple_warehouses;
+        return $this->number_warehouses;
     }
 
-    public function setHasMultipleWarehouses(string $has_multiple_warehouses): void
+    public function setNumberWarehouses(int $number_warehouses): void
     {
-        $this->has_multiple_warehouses = $has_multiple_warehouses;
+        $this->number_warehouses = $number_warehouses;
     }
 
     public function getAnnualSalesVolume(): string

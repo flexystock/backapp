@@ -175,7 +175,7 @@ class AuthController
                     new OA\Property(property: 'full_name', type: 'string'),
                     new OA\Property(property: 'email', type: 'string'),
                     new OA\Property(property: 'password', type: 'string'),
-                    new OA\Property(property: 'phone_number', type: 'integer'),
+                    new OA\Property(property: 'phone_number', type: 'string'),
                     new OA\Property(property: 'document_type', type: 'string'),
                     new OA\Property(property: 'document_number', type: 'string'),
                     new OA\Property(property: 'timezone', type: 'string'),

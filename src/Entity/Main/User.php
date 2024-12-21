@@ -29,7 +29,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'string', length: 50)]
     private string $surnames;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    #[ORM\Column(type: 'string', nullable: true)]
     private ?int $phone = 60;
 
     #[ORM\Column(type: 'string', length: 255, unique: true)]
@@ -505,8 +505,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $user->setLanguage($request->getLanguage());
         $user->setPreferredContactMethod($request->getPreferredContactMethod());
         $user->setTwoFactorEnabled($request->isTwoFactorEnabled());
-        $user->setSecurityQuestion($request->getSecurityQuestion());
-        $user->setSecurityAnswer($request->getSecurityAnswer());
         $user->setUuidUserCreation($user->getUuid());
         $user->setDatehourCreation(new \DateTime());
 

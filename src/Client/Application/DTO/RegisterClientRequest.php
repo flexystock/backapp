@@ -21,7 +21,6 @@ class RegisterClientRequest
     #[SerializedName('name')]
     private string $name;
 
-    #[Assert\NotBlank(message: 'El nombre de la empresa es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
@@ -32,17 +31,9 @@ class RegisterClientRequest
     #[Assert\Length(
         max: 12,
     )]
-    #[Assert\Regex(
-        pattern: '/^[A-HJ-NP-S]{1}[0-9]{8}[A-J]{1}$/',
-        message: 'El CIF no es válido.'
-    )]
     private string $nif_cif;
 
     #[Assert\NotBlank(message: 'La fecha de creación es obligatoria.')]
-    #[Assert\Regex(
-        pattern: '/^(0[1-9]|[12][0-9]|3[01])[\/-](0[1-9]|1[0-2])[\/-](19|20)\d\d$/',
-        message: 'La fecha de fundación debe estar en formato dd/mm/yyyy.'
-    )]
     private string $foundation_date;
 
     #[Assert\NotBlank(message: 'La direccion fiscal es obligatorio.')]
@@ -85,14 +76,8 @@ class RegisterClientRequest
     private int $postal_code;
 
     #[Assert\NotBlank]
-    #[Assert\Type(type: 'numeric', message: 'El número de teléfono debe ser numérico.')]
-    #[Assert\Length(
-        min: 9,
-        max: 15,
-        minMessage: 'El número de teléfono debe tener al menos {{ limit }} dígitos.',
-        maxMessage: 'El número de teléfono no puede tener más de {{ limit }} dígitos.'
-    )]
-    private int $company_phone;
+    #[Assert\Type(type: 'string', message: 'El número de teléfono debe ser numérico.')]
+    private string $company_phone;
 
     #[Assert\NotBlank(message: 'El email de la compañia es obligatorio.')]
     #[Assert\Email(message: "El correo electrónico '{{ value }}' no es válido.")]
@@ -127,19 +112,16 @@ class RegisterClientRequest
     )]
     private string $currency;
 
-    #[Assert\NotBlank(message: 'Indique si tiene mas de un alamacen.')]
-    #[Assert\Regex(
-        pattern: '/^\d{1,5}$/',
-        message: 'El número de almacenes no es válido.'
-    )]
-    private string $has_multiple_warehouses;
+    #[Assert\NotBlank]
+    #[Assert\Type(type: 'int', message: 'El número de almacenes debe ser numérico.')]
+    private int $number_warehouses;
 
     #[Assert\NotBlank(message: 'El volumen anual de ventas es obligatorio.')]
     #[Assert\Regex(
         pattern: '/^\d{1,3}(?:\.\d{3})*(?:,([0-9]{1,2}))?$/',
         message: 'El volumen anual de ventas no es válido.'
     )]
-    private string $annual_sales_volume;
+    private int $annual_sales_volume;
 
     public function getUuidUser(): string
     {
@@ -316,34 +298,14 @@ class RegisterClientRequest
         $this->currency = $currency;
     }
 
-    public function getPreferredPaymentMethods(): string
+    public function getNumberWarehouses(): int
     {
-        return $this->preferred_payment_methods;
+        return $this->number_warehouses;
     }
 
-    public function setPreferredPaymentMethods(string $preferred_payment_methods): void
+    public function setNumberWarehouses(int $number_warehouses): void
     {
-        $this->preferred_payment_methods = $preferred_payment_methods;
-    }
-
-    public function getOperationHours(): string
-    {
-        return $this->operation_hours;
-    }
-
-    public function setOperationHours(string $operation_hours): void
-    {
-        $this->operation_hours = $operation_hours;
-    }
-
-    public function getHasMultipleWarehouses(): string
-    {
-        return $this->has_multiple_warehouses;
-    }
-
-    public function setHasMultipleWarehouses(string $has_multiple_warehouses): void
-    {
-        $this->has_multiple_warehouses = $has_multiple_warehouses;
+        $this->number_warehouses = $number_warehouses;
     }
 
     public function getAnnualSalesVolume(): string

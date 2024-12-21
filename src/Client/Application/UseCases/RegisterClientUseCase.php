@@ -60,7 +60,7 @@ class RegisterClientUseCase implements RegisterClientInputPort
 
         $client->setName($request->getName());
         $client->setClientName($request->getName());
-        $client->setBusinessType($request->getBusinessType());
+        $client->setBusinessType('HOSTELERIA');
         $client->setFiscalAddress($request->getFiscalAddress());
         $client->setCity($request->getCity());
         $client->setCountry($request->getCountry());
@@ -78,20 +78,22 @@ class RegisterClientUseCase implements RegisterClientInputPort
         $client->setIndustrySector($request->getIndustrySector());
         $client->setAverageInventoryVolume($request->getAverageInventoryVolume());
         $client->setCurrency($request->getCurrency());
-        $client->setPreferredPaymentMethods($request->getPreferredPaymentMethods());
-        $client->setOperationHours($request->getOperationHours());
-        $client->setHasMultipleWarehouses('si' === $request->getHasMultipleWarehouses());
+        $client->setNumberWarehouses($request->getNumberWarehouses());
         $client->setAnnualSalesVolume($request->getAnnualSalesVolume());
 
         // Asociar el cliente con el usuario si es necesario
         $user = $this->userRepository->findOneBy(['uuid_user' => $request->getUuidUser()]);
+        var_dump($user);
         if ($user) {
+            var_dump("asociamos");
+            $user->addClient($client);
             $client->addUser($user);
         } else {
             // Manejar el caso donde el usuario no existe
             throw new \Exception('Usuario no encontrado');
         }
         // Guardar el cliente en la base de datos
+        var_dump($client);
         $this->clientRepository->save($client);
         // Generar el token de verificación
         $this->generateVerificationToken($user);
