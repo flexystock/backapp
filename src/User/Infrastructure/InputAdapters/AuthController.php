@@ -17,9 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -119,7 +117,10 @@ class AuthController
             // No revelar si el usuario no existe
             return $this->jsonResponse(['error' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
         }
-
+        $verified = $user->isVerified();
+        if (!$verified) {
+            return $this->jsonResponse(['error' => 'Usuario NO verificado'], Response::HTTP_UNAUTHORIZED);
+        }
         // Verificar si la cuenta está bloqueada
         if ($user->getLockedUntil() && $user->getLockedUntil() > new \DateTimeImmutable()) {
             $lockedUntil = $user->getLockedUntil()->format('Y-m-d H:i:s');
@@ -301,5 +302,4 @@ class AuthController
 
         return $errorMessages;
     }
-
 }
