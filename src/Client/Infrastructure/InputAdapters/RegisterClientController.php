@@ -43,6 +43,20 @@ class RegisterClientController
             content: new OA\JsonContent(
                 properties: [
                     new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'nif_cif', type: 'string'),
+                    new OA\Property(property: 'foundation_date', type: 'string'),
+                    new OA\Property(property: 'physical_address', type: 'string'),
+                    new OA\Property(property: 'city', type: 'string'),
+                    new OA\Property(property: 'country', type: 'string'),
+                    new OA\Property(property: 'postal_code', type: 'integer'),
+                    new OA\Property(property: 'company_phone', type: 'string'),
+                    new OA\Property(property: 'company_email', type: 'string'),
+                    new OA\Property(property: 'number_of_employees', type: 'integer'),
+                    new OA\Property(property: 'industry_sector', type: 'string'),
+                    new OA\Property(property: 'average_inventory_volume', type: 'integer'),
+                    new OA\Property(property: 'currency', type: 'string'),
+                    new OA\Property(property: 'number_warehouses', type: 'integer'),
+                    new OA\Property(property: 'annual_sales_volume', type: 'integer'),
                 ],
                 type: 'object'
             )

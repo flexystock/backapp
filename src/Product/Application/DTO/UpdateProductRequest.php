@@ -26,7 +26,9 @@ class UpdateProductRequest
     public function __construct(
         string $uuidClient,
         string $uuidProduct,
-        ?string $name = null,
+        string $uuidUserModification,
+        \DateTimeInterface $datehourModification,
+        string $name,
         ?string $ean = null,
         ?float $weightRange = null,
         ?string $nameUnit1 = null,
@@ -40,11 +42,11 @@ class UpdateProductRequest
         ?bool $outSystemStock = null,
         ?int $daysAverageConsumption = null,
         ?int $daysServeOrder = null,
-        string $uuidUserModification,
-        \DateTimeInterface $datehourModification,
     ) {
         $this->uuidClient = $uuidClient;
         $this->uuidProduct = $uuidProduct;
+        $this->uuidUserModification = $uuidUserModification;
+        $this->datehourModification = $datehourModification;
         $this->name = $name;
         $this->ean = $ean;
         $this->weightRange = $weightRange;
@@ -59,8 +61,6 @@ class UpdateProductRequest
         $this->outSystemStock = $outSystemStock;
         $this->daysAverageConsumption = $daysAverageConsumption;
         $this->daysServeOrder = $daysServeOrder;
-        $this->uuidUserModification = $uuidUserModification;
-        $this->datehourModification = $datehourModification;
     }
 
     public function getUuidClient(): string
