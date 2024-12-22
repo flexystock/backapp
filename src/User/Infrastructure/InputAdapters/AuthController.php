@@ -17,9 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -119,7 +117,10 @@ class AuthController
             // No revelar si el usuario no existe
             return $this->jsonResponse(['error' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
         }
-
+        $verified = $user->isVerified();
+        if (!$verified) {
+            return $this->jsonResponse(['error' => 'Usuario NO verificado'], Response::HTTP_UNAUTHORIZED);
+        }
         // Verificar si la cuenta está bloqueada
         if ($user->getLockedUntil() && $user->getLockedUntil() > new \DateTimeImmutable()) {
             $lockedUntil = $user->getLockedUntil()->format('Y-m-d H:i:s');
@@ -170,20 +171,20 @@ class AuthController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['full_name', 'email', 'password'],
+                required: ['full_name', 'email', 'password', 'timezone', 'language'],
                 properties: [
                     new OA\Property(property: 'full_name', type: 'string'),
+                    new OA\Property(property: 'surnames', type: 'string'),
                     new OA\Property(property: 'email', type: 'string'),
                     new OA\Property(property: 'password', type: 'string'),
                     new OA\Property(property: 'phone_number', type: 'string'),
                     new OA\Property(property: 'document_type', type: 'string'),
                     new OA\Property(property: 'document_number', type: 'string'),
-                    new OA\Property(property: 'timezone', type: 'string'),
+                    new OA\Property(property: 'timezone', type: 'datetime'),
                     new OA\Property(property: 'language', type: 'string'),
                     new OA\Property(property: 'preferred_contact_method', type: 'string'),
                     new OA\Property(property: 'two_factor_enabled', type: 'boolean'),
-                    new OA\Property(property: 'security_question', type: 'string'),
-                    new OA\Property(property: 'security_answer', type: 'string'),
+
                 ],
                 type: 'object'
             )
@@ -301,5 +302,4 @@ class AuthController
 
         return $errorMessages;
     }
-
 }

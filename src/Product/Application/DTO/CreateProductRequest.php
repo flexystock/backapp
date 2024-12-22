@@ -27,40 +27,40 @@ class CreateProductRequest
 
     public function __construct(
         string $uuidClient,
-        ?string $name,
+        string $name,
+        string $uuidUserCreation,
+        \DateTimeInterface $datehourCreation,
+        int $daysAverageConsumption = 30,
+        int $daysServeOrder = 0,
+        string $mainUnit = '0',
+        float $tare = 0.0,
+        float $salePrice = 0.00,
+        float $costPrice = 0.00,
         ?string $ean = null,
         ?float $weightRange = null,
         ?string $nameUnit1 = null,
         ?float $weightUnit1 = null,
         ?string $nameUnit2 = null,
         ?float $weightUnit2 = null,
-        string $mainUnit = '0',
-        float $tare = 0.0,
-        float $salePrice = 0.00,
-        float $costPrice = 0.00,
         ?bool $outSystemStock = null,
-        int $daysAverageConsumption = 30,
-        int $daysServeOrder = 0,
-        ?string $uuidUserCreation = null,
-        ?\DateTimeInterface $datehourCreation = null,
     ) {
         $this->uuidClient = $uuidClient;
         $this->name = $name;
+        $this->uuidUserCreation = $uuidUserCreation;
+        $this->datehourCreation = $datehourCreation;
+        $this->daysAverageConsumption = $daysAverageConsumption;
+        $this->daysServeOrder = $daysServeOrder;
+        $this->mainUnit = $mainUnit;
+        $this->tare = $tare;
+        $this->salePrice = $salePrice;
+        $this->costPrice = $costPrice;
         $this->ean = $ean;
         $this->weightRange = $weightRange;
         $this->nameUnit1 = $nameUnit1;
         $this->weightUnit1 = $weightUnit1;
         $this->nameUnit2 = $nameUnit2;
         $this->weightUnit2 = $weightUnit2;
-        $this->mainUnit = $mainUnit;
-        $this->tare = $tare;
-        $this->salePrice = $salePrice;
-        $this->costPrice = $costPrice;
         $this->outSystemStock = $outSystemStock;
-        $this->daysAverageConsumption = $daysAverageConsumption;
-        $this->daysServeOrder = $daysServeOrder;
-        $this->uuidUserCreation = $uuidUserCreation;
-        $this->datehourCreation = $datehourCreation;
     }
 
     public function getUuidUserCreation(): string

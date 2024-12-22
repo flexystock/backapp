@@ -420,21 +420,21 @@ class ProductController extends AbstractController
             // Crear el DTO de la solicitud
             $createProductRequest = new CreateProductRequest($uuidClient,
                 $name,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
+                $uuidUserCreation,
+                $datehourCreation,
+                30,
+                0,
                 '0',
                 0.0,
                 0.00,
                 0.00,
                 null,
-                30,
-                0,
-                $uuidUserCreation,  // ahora no es null
-                $datehourCreation);
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
 
             // Ejecutar el caso de uso
             $response = $this->createProductUseCase->execute($createProductRequest);
@@ -583,7 +583,19 @@ class ProductController extends AbstractController
                     new OA\Property(property: 'uuid_client', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
                     new OA\Property(property: 'uuid_product', type: 'string', format: 'uuid', example: '9a6ae1c0-3bc6-41c8-975a-4de5b4357666'),
                     new OA\Property(property: 'name', type: 'string', example: 'Nuevo nombre del producto'),
-                    // ... otros campos opcionales
+                    new OA\Property(property: 'ean', type: 'string', example: '1234567890123', nullable: true),
+                    new OA\Property(property: 'weightRange', type: 'number', format: 'float', example: 0.2, nullable: true),
+                    new OA\Property(property: 'nameUnit1', type: 'string', example: 'pack', nullable: true),
+                    new OA\Property(property: 'weightUnit1', type: 'number', format: 'float', example: 0.5, nullable: true),
+                    new OA\Property(property: 'nameUnit2', type: 'string', example: 'litros', nullable: true),
+                    new OA\Property(property: 'weightUnit2', type: 'number', format: 'float', example: 2.0, nullable: true),
+                    new OA\Property(property: 'mainUnit', type: 'string', enum: ['0', '1', '2'], example: '0'),
+                    new OA\Property(property: 'tare', type: 'number', format: 'float', example: 0.0),
+                    new OA\Property(property: 'salePrice', type: 'number', format: 'float', example: 2.00),
+                    new OA\Property(property: 'costPrice', type: 'number', format: 'float', example: 1.20),
+                    new OA\Property(property: 'outSystemStock', type: 'boolean', example: false, nullable: true),
+                    new OA\Property(property: 'daysAverageConsumption', type: 'integer', example: 30),
+                    new OA\Property(property: 'daysServeOrder', type: 'integer', example: 0),
                 ],
                 type: 'object'
             )
@@ -595,7 +607,14 @@ class ProductController extends AbstractController
                 description: 'Producto actualizado con éxito',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'product', type: 'object', description: 'Datos del producto actualizado'),
+                        new OA\Property(
+                            property: 'product',
+                            properties: [
+                                new OA\Property(property: 'uuid', type: 'string', format: 'uuid', example: '9a6ae1c0-3bc6-41c8-975a-4de5b4357666'),
+                                new OA\Property(property: 'name', type: 'string', example: 'producto1'),
+                            ],
+                            type: 'object',
+                        ),
                     ],
                     type: 'object'
                 )
@@ -684,6 +703,8 @@ class ProductController extends AbstractController
             $updateRequest = new UpdateProductRequest(
                 $uuidClient,
                 $uuidProduct,
+                $uuidUserModification,
+                $datehourModification,
                 $data['name'] ?? null,
                 $data['ean'] ?? null,
                 isset($data['weightRange']) && '' !== $data['weightRange'] ? (float) $data['weightRange'] : null,
@@ -698,8 +719,6 @@ class ProductController extends AbstractController
                 isset($data['outSystemStock']) && '' !== $data['outSystemStock'] ? (bool) $data['outSystemStock'] : null,
                 isset($data['daysAverageConsumption']) && '' !== $data['daysAverageConsumption'] ? (int) $data['daysAverageConsumption'] : null,
                 isset($data['daysServeOrder']) && '' !== $data['daysServeOrder'] ? (int) $data['daysServeOrder'] : null,
-                $uuidUserModification,
-                $datehourModification
             );
 
             $response = $this->updateProductUseCase->execute($updateRequest);
