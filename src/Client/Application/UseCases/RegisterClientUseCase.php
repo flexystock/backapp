@@ -83,9 +83,7 @@ class RegisterClientUseCase implements RegisterClientInputPort
 
         // Asociar el cliente con el usuario si es necesario
         $user = $this->userRepository->findOneBy(['uuid_user' => $request->getUuidUser()]);
-        var_dump($user);
         if ($user) {
-            var_dump("asociamos");
             $user->addClient($client);
             $client->addUser($user);
         } else {
@@ -93,7 +91,6 @@ class RegisterClientUseCase implements RegisterClientInputPort
             throw new \Exception('Usuario no encontrado');
         }
         // Guardar el cliente en la base de datos
-        var_dump($client);
         $this->clientRepository->save($client);
         // Generar el token de verificación
         $this->generateVerificationToken($user);

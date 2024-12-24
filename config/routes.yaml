@@ -15,3 +15,9 @@ controllers_product:
         path: ../src/Product/Infrastructure/InputAdapters/
         namespace: App\Product\Infrastructure\InputAdapters
     type: attribute
+
+controllers_ttn:
+    resource:
+        path: ../src/Ttn/Infrastructure/InputAdapters/
+        namespace: App\Ttn\Infrastructure\InputAdapters
+    type: attribute

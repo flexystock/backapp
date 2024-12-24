@@ -208,3 +208,46 @@ services:
     App\EventSubscriber\RequestLogSubscriber:
         tags:
             - { name: 'kernel.event_subscriber' }
+    # TTN
+    App\Ttn\Infrastructure\OutputAdapters\Services\TtnApiClient:
+        arguments:
+            $apiBase: '%env(TTN_API_BASE_URL)%'
+            $apiKey: '%env(TTN_API_KEY)%'
+            $tenantId: '%env(TTN_DEFAULT_APPLICATION_ID)%'
+            $apiUserKey: '%env(TTN_USER_APP_KEY)%'
+
+
+    App\Ttn\Infrastructure\OutputAdapters\Services\TtnService:
+        arguments:
+            $apiClient: '@App\Ttn\Infrastructure\OutputAdapters\Services\TtnApiClient'
+            $applicationId: '%env(TTN_APPLICATION_ID)%'
+            $networkServerAddress: '%env(TTN_NETWORK_SERVER_ADDRESS)%'
+            $applicationServerAddress: '%env(TTN_APPLICATION_SERVER_ADDRESS)%'
+            $joinServerAddress: '%env(TTN_JOIN_SERVER_ADDRESS)%'
+            $lorawanVersion: '%env(TTN_LORAWAN_VERSION)%'
+            $lorawanPhyVersion: '%env(TTN_LORAWAN_PHY_VERSION)%'
+            $frequencyPlanId: '%env(TTN_FREQUENCY_PLAN_ID)%'
+            $apiUserKey: '%env(TTN_USER_APP_KEY)%'
+
+    App\Ttn\Application\OutputPorts\TtnServiceInterface:
+        alias: App\Ttn\Infrastructure\OutputAdapters\Services\TtnService
+
+    App\Ttn\Application\UseCases\RegisterAppTtnUseCase:
+        arguments:
+            $ttnService: '@App\Ttn\Application\OutputPorts\TtnServiceInterface'
+
+    App\Ttn\Application\UseCases\RegisterDeviceUseCase:
+        arguments:
+            $ttnService: '@App\Ttn\Application\OutputPorts\TtnServiceInterface'
+
+    App\Ttn\Application\InputPorts\RegisterDeviceUseCaseInterface:
+        alias: App\Ttn\Application\UseCases\RegisterDeviceUseCase
+
+    App\Ttn\Application\InputPorts\RegisterAppTtnUseCaseInterface:
+        alias: App\Ttn\Application\UseCases\RegisterAppTtnUseCase
+
+    App\Ttn\Infrastructure\InputAdapters\TtnController:
+        public: true
+        autowire: true
+        autoconfigure: true
+        tags: [ 'controller.service_arguments' ]
