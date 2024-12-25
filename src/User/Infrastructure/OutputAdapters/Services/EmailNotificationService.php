@@ -46,7 +46,8 @@ class EmailNotificationService implements NotificationServiceInterface
             ->html(
                 '<p>Te damos la bienvenida desde FlexyStock.com. </p>'.
                 '<p>Gracias por registrarte. Por favor,'.htmlspecialchars($userName).' haz clic en el siguiente enlace para verificar tu cuenta:</p>'.
-                '<p><a href="'.$verificationUrl.'">Verificar Cuenta</a></p>'
+                '<p><a href="'.$verificationUrl.'">Verificar Cuenta</a></p>'.
+                '<p>Este enlace caducará a las 24 horas.</p>'
             );
 
         $this->mailer->send($email);
