@@ -47,6 +47,16 @@ services:
     App\User\Infrastructure\OutputAdapters\JWTTokenManager:
         arguments:
             - '%env(APP_SECRET)%'
+
+    App\User\Application\InputPorts\Auth\ResendEmailVerificationTokenInterface:
+        alias: App\User\Application\UseCases\Auth\ResendEmailVerificationTokenUseCase
+        public: true
+
+    # Configuración de servicios para la sección de Client
+    App\User\Application\UseCases\Auth\ResendEmailVerificationTokenUseCase:
+        arguments:
+            $userRepository: '@App\User\Application\OutputPorts\Repositories\UserRepositoryInterface'
+            $notificationService: '@App\User\Application\OutputPorts\NotificationServiceInterface'
     # Configuración de servicios para la sección de Client
     App\Client\Application\UseCases\CreateClientUseCase:
         arguments:
