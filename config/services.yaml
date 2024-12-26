@@ -251,10 +251,10 @@ services:
             $ttnService: '@App\Ttn\Application\OutputPorts\TtnServiceInterface'
 
     App\Ttn\Application\InputPorts\RegisterDeviceUseCaseInterface:
-        alias: App\Ttn\Application\UseCases\RegisterDeviceUseCase
+        alias: RegisterTtnDeviceUseCase
 
     App\Ttn\Application\InputPorts\RegisterAppTtnUseCaseInterface:
-        alias: App\Ttn\Application\UseCases\RegisterAppTtnUseCase
+        alias: RegisterTtnAppUseCase
 
     App\Ttn\Infrastructure\InputAdapters\TtnController:
         public: true

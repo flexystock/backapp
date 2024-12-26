@@ -2,7 +2,7 @@
 
 namespace App\Ttn\Application\DTO;
 
-class RegisterDeviceRequest
+class RegisterTtnDeviceRequest
 {
     private string $deviceId;
     private ?string $devEui;

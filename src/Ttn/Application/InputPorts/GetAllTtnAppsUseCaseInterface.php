@@ -2,7 +2,7 @@
 
 namespace App\Ttn\Application\InputPorts;
 
-interface GetAppsTtnInterface
+interface GetAllTtnAppsUseCaseInterface
 {
     public function execute();
 }
