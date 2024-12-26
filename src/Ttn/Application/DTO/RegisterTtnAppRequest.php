@@ -2,7 +2,7 @@
 
 namespace App\Ttn\Application\DTO;
 
-class RegisterAppTtnRequest
+class RegisterTtnAppRequest
 {
     private string $applicationId;
     private string $name;

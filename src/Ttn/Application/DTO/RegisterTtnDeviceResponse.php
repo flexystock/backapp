@@ -2,7 +2,7 @@
 
 namespace App\Ttn\Application\DTO;
 
-class RegisterDeviceResponse
+class RegisterTtnDeviceResponse
 {
     private bool $success;
     private ?string $error;

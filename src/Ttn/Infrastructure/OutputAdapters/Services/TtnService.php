@@ -2,10 +2,10 @@
 
 namespace App\Ttn\Infrastructure\OutputAdapters\Services;
 
-use App\Ttn\Application\DTO\RegisterAppTtnRequest;
-use App\Ttn\Application\DTO\RegisterAppTtnResponse;
-use App\Ttn\Application\DTO\RegisterDeviceRequest;
-use App\Ttn\Application\DTO\RegisterDeviceResponse;
+use App\Ttn\Application\DTO\RegisterTtnAppRequest;
+use App\Ttn\Application\DTO\RegisterTtnAppResponse;
+use App\Ttn\Application\DTO\RegisterTtnDeviceRequest;
+use App\Ttn\Application\DTO\RegisterTtnDeviceResponse;
 use App\Ttn\Application\OutputPorts\TtnServiceInterface;
 use Psr\Log\LoggerInterface;
 
@@ -46,7 +46,7 @@ class TtnService implements TtnServiceInterface
         $this->apiUserKey = $apiUserKey;
     }
 
-    public function registerApp(RegisterAppTtnRequest $request): RegisterAppTtnResponse
+    public function registerApp(RegisterTtnAppRequest $request): RegisterTtnAppResponse
     {
         $applicationId = $request->getApplicationId();
         $name = $request->getName();
@@ -54,7 +54,7 @@ class TtnService implements TtnServiceInterface
         $appUserKey = true;
         // Validar los datos básicos
         if (empty($applicationId) || empty($name) || empty($description)) {
-            return new RegisterAppTtnResponse(false, 'application_id, name, and description are required.');
+            return new RegisterTtnAppResponse(false, 'application_id, name, and description are required.');
         }
 
         try {
@@ -73,15 +73,15 @@ class TtnService implements TtnServiceInterface
             $this->logger->info('Payload para TTN API:', ['data' => $isPayloadCreatedApp]);
             $this->apiClient->post('/users/santiagofragio/applications', $isPayloadCreatedApp, $appUserKey);
 
-            return new RegisterAppTtnResponse(true);
+            return new RegisterTtnAppResponse(true);
         } catch (\Exception $e) {
             $this->logger->error('Error registering app: '.$e->getMessage());
 
-            return new RegisterAppTtnResponse(false, $e->getMessage());
+            return new RegisterTtnAppResponse(false, $e->getMessage());
         }
     }
 
-    public function registerDevice(RegisterDeviceRequest $request): RegisterDeviceResponse
+    public function registerDevice(RegisterTtnDeviceRequest $request): RegisterTtnDeviceResponse
     {
         $deviceId = $request->getDeviceId();
         $devEui = $request->getDevEui() ?? $this->generateEui();   // Generar EUI si no lo proporciona el front
@@ -190,11 +190,11 @@ class TtnService implements TtnServiceInterface
             var_dump('hola');
             $this->apiClient->put("/as/applications/{$this->applicationId}/devices/{$deviceId}", $asPayload);
 
-            return new RegisterDeviceResponse(true);
+            return new RegisterTtnDeviceResponse(true);
         } catch (\Exception $e) {
             $this->logger->error('Error registering device: '.$e->getMessage());
 
-            return new RegisterDeviceResponse(false, $e->getMessage());
+            return new RegisterTtnDeviceResponse(false, $e->getMessage());
         }
     }
 

@@ -2,7 +2,7 @@
 
 namespace App\Ttn\Application\DTO;
 
-class GetAppsTtnResponse
+class RegisterTtnAppResponse
 {
     private bool $success;
     private ?string $error;

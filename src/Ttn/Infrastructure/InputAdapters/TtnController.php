@@ -3,9 +3,9 @@
 namespace App\Ttn\Infrastructure\InputAdapters;
 
 use App\Client\Application\InputPorts\GetClientByUuidInputPort;
-use App\Ttn\Application\DTO\RegisterAppTtnRequest;
-use App\Ttn\Application\InputPorts\RegisterAppTtnUseCaseInterface;
-use App\Ttn\Application\InputPorts\RegisterDeviceUseCaseInterface;
+use App\Ttn\Application\DTO\RegisterTtnAppRequest;
+use App\Ttn\Application\InputPorts\RegisterTtnAppUseCaseInterface;
+use App\Ttn\Application\InputPorts\RegisterTtnDeviceUseCaseInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,12 +13,12 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class TtnController extends AbstractController
 {
-    private RegisterDeviceUseCaseInterface $registerDeviceUseCase;
-    private RegisterAppTtnUseCaseInterface $registerAppTtnUseCase;
+    private RegisterTtnDeviceUseCaseInterface $registerDeviceUseCase;
+    private RegisterTtnAppUseCaseInterface $registerAppTtnUseCase;
     private GetClientByUuidInputPort $getClientByUuidInputPort;
 
-    public function __construct(RegisterDeviceUseCaseInterface $registerDeviceUseCase, RegisterAppTtnUseCaseInterface $registerAppTtnUseCase,
-        GetClientByUuidInputPort $getClientByUuidInputPort)
+    public function __construct(RegisterTtnDeviceUseCaseInterface $registerDeviceUseCase, RegisterTtnAppUseCaseInterface $registerAppTtnUseCase,
+                                GetClientByUuidInputPort          $getClientByUuidInputPort)
     {
         $this->registerDeviceUseCase = $registerDeviceUseCase;
         $this->registerAppTtnUseCase = $registerAppTtnUseCase;
@@ -26,7 +26,7 @@ class TtnController extends AbstractController
     }
 
     #[Route('/api/app_register', name: 'api_app_register', methods: ['POST'])]
-    public function registerApp(Request $request): JsonResponse
+    public function registerTtnApp(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         if (!$data) {
@@ -41,7 +41,7 @@ class TtnController extends AbstractController
         $applicationId = 'application-id-'.$client->getClientName();
         $applicationName = 'application-Name-'.$client->getClientName();
         $description = 'description-'.$client->getClientName();
-        $dto = new RegisterAppTtnRequest(
+        $dto = new RegisterTtnAppRequest(
             $applicationId,
             $applicationName,
             $description);
@@ -55,13 +55,13 @@ class TtnController extends AbstractController
     }
 
     #[Route('/api/device_register', name: 'api_device_register', methods: ['POST'])]
-    public function registerDevice(Request $request): JsonResponse
+    public function registerTtnDevice(Request $request): JsonResponse
     {
         return $this->extracted($request);
     }
 
     #[Route('/api/get_ttn_apps', name: 'get_ttn_apps', methods: ['GET'])]
-    public function getTtnApps(Request $request): JsonResponse
+    public function getAllTtnApps(Request $request): JsonResponse
     {
         return $this->extracted($request);
     }
@@ -69,5 +69,30 @@ class TtnController extends AbstractController
     public function extracted(Request $request): JsonResponse
     {
         return json_decode($request->getContent(), true);
+    }
+
+    public function getTtnApp(Request $request): JsonResponse
+    {
+        return $this->extracted($request);
+    }
+
+    public function getTtnDevice(Request $request): JsonResponse
+    {
+        return $this->extracted($request);
+    }
+
+    public function deleteTtnApp(Request $request): JsonResponse
+    {
+        return $this->extracted($request);
+    }
+
+    public function deleteTtnDevice(Request $request): JsonResponse
+    {
+        return $this->extracted($request);
+    }
+
+    public function getAllTtnDevices(Request $request): JsonResponse
+    {
+        return $this->extracted($request);
     }
 }

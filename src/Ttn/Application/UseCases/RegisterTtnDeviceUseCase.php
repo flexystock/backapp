@@ -2,12 +2,12 @@
 
 namespace App\Ttn\Application\UseCases;
 
-use App\Ttn\Application\DTO\RegisterDeviceRequest;
-use App\Ttn\Application\DTO\RegisterDeviceResponse;
-use App\Ttn\Application\InputPorts\RegisterDeviceUseCaseInterface;
+use App\Ttn\Application\DTO\RegisterTtnDeviceRequest;
+use App\Ttn\Application\DTO\RegisterTtnDeviceResponse;
+use App\Ttn\Application\InputPorts\RegisterTtnDeviceUseCaseInterface;
 use App\Ttn\Application\OutputPorts\TtnServiceInterface;
 
-class RegisterDeviceUseCase implements RegisterDeviceUseCaseInterface
+class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
 {
     private TtnServiceInterface $ttnService;
 
@@ -16,7 +16,7 @@ class RegisterDeviceUseCase implements RegisterDeviceUseCaseInterface
         $this->ttnService = $ttnService;
     }
 
-    public function execute(RegisterDeviceRequest $request): RegisterDeviceResponse
+    public function execute(RegisterTtnDeviceRequest $request): RegisterTtnDeviceResponse
     {
         return $this->ttnService->registerDevice($request);
     }

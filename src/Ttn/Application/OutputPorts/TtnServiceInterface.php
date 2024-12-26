@@ -2,14 +2,14 @@
 
 namespace App\Ttn\Application\OutputPorts;
 
-use App\Ttn\Application\DTO\RegisterAppTtnRequest;
-use App\Ttn\Application\DTO\RegisterAppTtnResponse;
-use App\Ttn\Application\DTO\RegisterDeviceRequest;
-use App\Ttn\Application\DTO\RegisterDeviceResponse;
+use App\Ttn\Application\DTO\RegisterTtnAppRequest;
+use App\Ttn\Application\DTO\RegisterTtnAppResponse;
+use App\Ttn\Application\DTO\RegisterTtnDeviceRequest;
+use App\Ttn\Application\DTO\RegisterTtnDeviceResponse;
 
 interface TtnServiceInterface
 {
-    public function registerDevice(RegisterDeviceRequest $request): RegisterDeviceResponse;
+    public function registerDevice(RegisterTtnDeviceRequest $request): RegisterTtnDeviceResponse;
 
-    public function registerApp(RegisterAppTtnRequest $request): RegisterAppTtnResponse;
+    public function registerApp(RegisterTtnAppRequest $request): RegisterTtnAppResponse;
 }

@@ -2,12 +2,12 @@
 
 namespace App\Ttn\Application\UseCases;
 
-use App\Ttn\Application\DTO\RegisterAppTtnRequest;
-use App\Ttn\Application\DTO\RegisterAppTtnResponse;
-use App\Ttn\Application\InputPorts\RegisterAppTtnUseCaseInterface;
+use App\Ttn\Application\DTO\RegisterTtnAppRequest;
+use App\Ttn\Application\DTO\RegisterTtnAppResponse;
+use App\Ttn\Application\InputPorts\RegisterTtnAppUseCaseInterface;
 use App\Ttn\Application\OutputPorts\TtnServiceInterface;
 
-class RegisterAppTtnUseCase implements RegisterAppTtnUseCaseInterface
+class RegisterTtnAppUseCase implements RegisterTtnAppUseCaseInterface
 {
     private TtnServiceInterface $ttnService;
 
@@ -16,7 +16,7 @@ class RegisterAppTtnUseCase implements RegisterAppTtnUseCaseInterface
         $this->ttnService = $ttnService;
     }
 
-    public function execute(RegisterAppTtnRequest $request): RegisterAppTtnResponse
+    public function execute(RegisterTtnAppRequest $request): RegisterTtnAppResponse
     {
         return $this->ttnService->registerApp($request);
     }
