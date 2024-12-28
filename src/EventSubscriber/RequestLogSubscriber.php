@@ -100,6 +100,11 @@ class RequestLogSubscriber implements EventSubscriberInterface
 
             return;
         }
+        if ('/api/devices' === $request->getPathInfo()) {
+            $this->logger->info('onKernelTerminate: La ruta es /api/app_register, no se registra.');
+
+            return;
+        }
         // Calcular tiempo de procesamiento
         $startTime = $request->attributes->get('_start_time');
         if (!$startTime) {

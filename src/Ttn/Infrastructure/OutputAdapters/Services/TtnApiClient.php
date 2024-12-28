@@ -2,8 +2,8 @@
 
 namespace App\Ttn\Infrastructure\OutputAdapters\Services;
 
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class TtnApiClient
 {
@@ -13,14 +13,17 @@ class TtnApiClient
     private string $apiKey;
     private string $tenantId;
     private string $apiUserKey;
+    private string $apiAppKey;
 
-    public function __construct(HttpClientInterface $client, string $apiBase, string $apiKey, string $tenantId, string $apiUserKey, LoggerInterface $logger)
+    public function __construct(HttpClientInterface $client, string $apiBase, string $apiKey, string $tenantId, string $apiUserKey,
+        string $apiAppKey, LoggerInterface $logger)
     {
         $this->client = $client;
         $this->apiBase = $apiBase;
         $this->apiKey = $apiKey;
         $this->tenantId = $tenantId;
         $this->apiUserKey = $apiUserKey;
+        $this->apiAppKey = $apiAppKey;
         $this->logger = $logger;
     }
 

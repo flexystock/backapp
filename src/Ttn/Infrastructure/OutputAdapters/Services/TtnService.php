@@ -2,11 +2,14 @@
 
 namespace App\Ttn\Infrastructure\OutputAdapters\Services;
 
+use App\Entity\Main\PoolTtnDevice;
+use App\Entity\Main\TtnApps;
 use App\Ttn\Application\DTO\RegisterTtnAppRequest;
 use App\Ttn\Application\DTO\RegisterTtnAppResponse;
 use App\Ttn\Application\DTO\RegisterTtnDeviceRequest;
 use App\Ttn\Application\DTO\RegisterTtnDeviceResponse;
 use App\Ttn\Application\OutputPorts\TtnServiceInterface;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
 class TtnService implements TtnServiceInterface
@@ -21,6 +24,8 @@ class TtnService implements TtnServiceInterface
     private string $lorawanPhyVersion;
     private string $frequencyPlanId;
     private string $apiUserKey;
+    private string $apiAppKey;
+    private EntityManagerInterface $entityManager;
 
     public function __construct(
         TtnApiClient $apiClient,
@@ -33,6 +38,8 @@ class TtnService implements TtnServiceInterface
         string $lorawanPhyVersion,
         string $frequencyPlanId,
         string $apiUserKey,
+        string $apiAppKey,
+        EntityManagerInterface $entityManager,
     ) {
         $this->apiClient = $apiClient;
         $this->logger = $logger;
@@ -44,6 +51,8 @@ class TtnService implements TtnServiceInterface
         $this->lorawanPhyVersion = $lorawanPhyVersion;
         $this->frequencyPlanId = $frequencyPlanId;
         $this->apiUserKey = $apiUserKey;
+        $this->apiAppKey = $apiAppKey;
+        $this->entityManager = $entityManager;
     }
 
     public function registerApp(RegisterTtnAppRequest $request): RegisterTtnAppResponse
@@ -72,6 +81,21 @@ class TtnService implements TtnServiceInterface
             ];
             $this->logger->info('Payload para TTN API:', ['data' => $isPayloadCreatedApp]);
             $this->apiClient->post('/users/santiagofragio/applications', $isPayloadCreatedApp, $appUserKey);
+
+            // Crear la entidad de la tabla TTN_APPS y guardar en BBDD
+            $ttnApp = new TtnApps();
+            $ttnApp->setUuidClient($request->getUuidClient());
+            $ttnApp->setUuidUserCreation($request->getUuidUserCreation());
+            $ttnApp->setDatehourCreation($request->getDatehourCreation());
+            $ttnApp->setTtnApplicationId($applicationId);
+            $ttnApp->setTtnApplicationName($name);
+            $ttnApp->setTtnApplicationDescription($description);
+            $ttnApp->setNetworkServerAddress($this->networkServerAddress);
+            $ttnApp->setApplicationServerAddress($this->applicationServerAddress);
+            $ttnApp->setJoinServerAddress($this->joinServerAddress);
+
+            $this->entityManager->persist($ttnApp);
+            $this->entityManager->flush();
 
             return new RegisterTtnAppResponse(true);
         } catch (\Exception $e) {
@@ -111,8 +135,7 @@ class TtnService implements TtnServiceInterface
                     ],
                 ],
             ];
-            var_dump($isPayload);
-            var_dump('hola');
+
             $this->apiClient->post("/applications/{$this->applicationId}/devices", $isPayload, false);
 
             // 2. Join Server
@@ -140,8 +163,7 @@ class TtnService implements TtnServiceInterface
                     ],
                 ],
             ];
-            var_dump($jsPayload);
-            var_dump('hola');
+
             $this->apiClient->put("/js/applications/{$this->applicationId}/devices/{$deviceId}", $jsPayload);
 
             // 3. Network Server
@@ -169,8 +191,7 @@ class TtnService implements TtnServiceInterface
                     ],
                 ],
             ];
-            var_dump($nsPayload);
-            var_dump('hola');
+
             $this->apiClient->put("/ns/applications/{$this->applicationId}/devices/{$deviceId}", $nsPayload);
 
             // 4. Application Server
@@ -186,9 +207,19 @@ class TtnService implements TtnServiceInterface
                     'paths' => ['ids.device_id', 'ids.dev_eui', 'ids.join_eui'],
                 ],
             ];
-            var_dump($asPayload);
-            var_dump('hola');
+
             $this->apiClient->put("/as/applications/{$this->applicationId}/devices/{$deviceId}", $asPayload);
+
+            $ttnDevice = new PoolTtnDevice();
+            $ttnDevice->setAvailable(true);
+            $ttnDevice->setEndDeviceId($deviceId);
+            $ttnDevice->setAppEUI($devEui);
+            $ttnDevice->setDevEUI($joinEui);
+            $ttnDevice->setAppKey($appKey);
+            $ttnDevice->setUuidUserCreation($request->getUuidUser());
+            $ttnDevice->setDatehourCreation($request->getDatehourCreation());
+            $this->entityManager->persist($ttnDevice);
+            $this->entityManager->flush();
 
             return new RegisterTtnDeviceResponse(true);
         } catch (\Exception $e) {
