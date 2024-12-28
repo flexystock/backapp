@@ -11,8 +11,8 @@ class CreateClientRequest
     #[Assert\Length(
         max: 36,
     )]
-    #[SerializedName('user_id')]
-    private string $uuid_user;
+    #[SerializedName('userId')]
+    private string $uuidUser;
 
     #[Assert\NotBlank(message: 'El nombre del cliente es obligatorio.')]
     #[Assert\Length(
@@ -25,35 +25,35 @@ class CreateClientRequest
     #[Assert\Length(
         max: 255,
     )]
-    #[SerializedName('company_name')]
-    private string $business_group_name;
+    #[SerializedName('companyName')]
+    private string $businessGroupName;
 
     #[Assert\NotBlank(message: 'El tipo de negocio es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
-    private string $business_type;
+    private string $businessType;
 
     #[Assert\NotBlank(message: 'El NIF es obligatorio.')]
     #[Assert\Length(
         max: 12,
     )]
-    private string $nif_cif;
+    private string $nifCif;
 
     #[Assert\NotBlank(message: 'La fecha de creación es obligatoria.')]
-    private string $foundation_date;
+    private string $foundationDate;
 
     #[Assert\NotBlank(message: 'La direccion fiscal es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
-    private string $fiscal_address;
+    private string $fiscalAddress;
 
     #[Assert\NotBlank(message: 'La direccion fisica es obligatorio.')]
     #[Assert\Length(
         max: 255,
     )]
-    private string $physical_address;
+    private string $physicalAddress;
 
     #[Assert\NotBlank(message: 'La ciudad es obligatorio.')]
     #[Assert\Length(
@@ -68,49 +68,49 @@ class CreateClientRequest
     private string $country;
 
     #[Assert\NotBlank(message: 'El codigo postal es obligatorio.')]
-    private int $postal_code;
+    private int $postalCode;
 
     #[Assert\NotBlank]
     #[Assert\Type(type: 'string', message: 'El número de teléfono debe ser numérico.')]
-    private int $company_phone;
+    private int $companyPhone;
 
     #[Assert\NotBlank(message: 'El email de la compañia es obligatorio.')]
     #[Assert\Email(message: "El correo electrónico '{{ value }}' no es válido.")]
-    private string $company_email;
+    private string $companyEmail;
 
     #[Assert\NotBlank(message: 'El numero de empleados es obligatorio.')]
-    private string $number_of_employees;
+    private string $numberOfEmployees;
 
     #[Assert\NotBlank(message: 'El sector industrial es obligatorio.')]
-    private string $industry_sector;
+    private string $industrySector;
 
     #[Assert\NotBlank(message: 'El volumen de inevntario es obligatorio.')]
-    private int $average_inventory_volume;
+    private int $averageInventoryVolume;
 
     #[Assert\NotBlank(message: 'El tipo de moneda es obligatorio.')]
     private string $currency;
 
     #[Assert\NotBlank(message: 'El tipo de metodo de pago es obligatorio.')]
-    private string $preferred_payment_methods;
+    private string $preferredPaymentMethods;
 
     #[Assert\NotBlank(message: 'El horario es obligatorio.')]
-    private string $operation_hours;
+    private string $operationHours;
 
     #[Assert\NotBlank]
     #[Assert\Type(type: 'int', message: 'El número de almacenes debe ser numérico.')]
-    private int $number_warehouses;
+    private int $numberWarehouses;
 
     #[Assert\NotBlank(message: 'El volumen anual de ventas es obligatorio.')]
-    private int $annual_sales_volume;
+    private int $annualSalesVolume;
 
     public function getUuidUser(): string
     {
-        return $this->uuid_user;
+        return $this->uuidUser;
     }
 
     public function setUuidUser(string $uuidUser): void
     {
-        $this->uuid_user = $uuidUser;
+        $this->uuidUser = $uuidUser;
     }
 
     public function getName(): string
@@ -125,12 +125,12 @@ class CreateClientRequest
 
     public function setBusinessGroupName(string $businessGroupName): void
     {
-        $this->business_group_name = $businessGroupName;
+        $this->businessGroupName = $businessGroupName;
     }
 
     public function getBusinessGroupName(): string
     {
-        return $this->business_group_name;
+        return $this->businessGroupName;
     }
 
     public function setClientName(string $name): void
@@ -140,52 +140,52 @@ class CreateClientRequest
 
     public function getBusinessType(): string
     {
-        return $this->business_type;
+        return $this->businessType;
     }
 
-    public function setBusinessType(string $business_type): void
+    public function setBusinessType(string $businessType): void
     {
-        $this->business_type = $business_type;
+        $this->businessType = $businessType;
     }
 
     public function getNifCif(): string
     {
-        return $this->nif_cif;
+        return $this->nifCif;
     }
 
-    public function setNifCif(string $nif_cif): void
+    public function setNifCif(string $nifCif): void
     {
-        $this->nif_cif = $nif_cif;
+        $this->nifCif = $nifCif;
     }
 
     public function getFoundationDate(): string
     {
-        return $this->foundation_date;
+        return $this->foundationDate;
     }
 
-    public function setFoundationDate(string $foundation_date): void
+    public function setFoundationDate(string $foundationDate): void
     {
-        $this->foundation_date = $foundation_date;
+        $this->foundationDate = $foundationDate;
     }
 
     public function getFiscalAddress(): string
     {
-        return $this->fiscal_address;
+        return $this->fiscalAddress;
     }
 
-    public function setFiscalAddress(string $fiscal_address): void
+    public function setFiscalAddress(string $fiscalAddress): void
     {
-        $this->fiscal_address = $fiscal_address;
+        $this->fiscalAddress = $fiscalAddress;
     }
 
     public function getPhysicalAddress(): string
     {
-        return $this->physical_address;
+        return $this->physicalAddress;
     }
 
-    public function setPhysicalAddress(string $physical_address): void
+    public function setPhysicalAddress(string $physicalAddress): void
     {
-        $this->physical_address = $physical_address;
+        $this->physicalAddress = $physicalAddress;
     }
 
     public function getCity(): string
@@ -210,62 +210,62 @@ class CreateClientRequest
 
     public function getPostalCode(): int
     {
-        return $this->postal_code;
+        return $this->postalCode;
     }
 
-    public function setPostalCode(int $postal_code): void
+    public function setPostalCode(int $postalCode): void
     {
-        $this->postal_code = $postal_code;
+        $this->postalCode = $postalCode;
     }
 
     public function getCompanyPhone(): int
     {
-        return $this->company_phone;
+        return $this->companyPhone;
     }
 
-    public function setCompanyPhone(int $company_phone): void
+    public function setCompanyPhone(int $companyPhone): void
     {
-        $this->company_phone = $company_phone;
+        $this->companyPhone = $companyPhone;
     }
 
     public function getCompanyEmail(): string
     {
-        return $this->company_email;
+        return $this->companyEmail;
     }
 
-    public function setCompanyEmail(string $company_email): void
+    public function setCompanyEmail(string $companyEmail): void
     {
-        $this->company_email = $company_email;
+        $this->companyEmail = $companyEmail;
     }
 
     public function getNumberOfEmployees(): int
     {
-        return $this->number_of_employees;
+        return $this->numberOfEmployees;
     }
 
-    public function setNumberOfEmployees(int $number_of_employees): void
+    public function setNumberOfEmployees(int $numberOfEmployees): void
     {
-        $this->number_of_employees = $number_of_employees;
+        $this->numberOfEmployees = $numberOfEmployees;
     }
 
     public function getIndustrySector(): string
     {
-        return $this->industry_sector;
+        return $this->industrySector;
     }
 
-    public function setIndustrySector(string $industry_sector): void
+    public function setIndustrySector(string $industrySector): void
     {
-        $this->industry_sector = $industry_sector;
+        $this->industrySector = $industrySector;
     }
 
     public function getAverageInventoryVolume(): int
     {
-        return $this->average_inventory_volume;
+        return $this->averageInventoryVolume;
     }
 
-    public function setAverageInventoryVolume(int $average_inventory_volume): void
+    public function setAverageInventoryVolume(int $averageInventoryVolume): void
     {
-        $this->average_inventory_volume = $average_inventory_volume;
+        $this->averageInventoryVolume = $averageInventoryVolume;
     }
 
     public function getCurrency(): string
@@ -280,41 +280,41 @@ class CreateClientRequest
 
     public function getPreferredPaymentMethods(): string
     {
-        return $this->preferred_payment_methods;
+        return $this->preferredPaymentMethods;
     }
 
-    public function setPreferredPaymentMethods(string $preferred_payment_methods): void
+    public function setPreferredPaymentMethods(string $preferredPaymentMethods): void
     {
-        $this->preferred_payment_methods = $preferred_payment_methods;
+        $this->preferredPaymentMethods = $preferredPaymentMethods;
     }
 
     public function getOperationHours(): string
     {
-        return $this->operation_hours;
+        return $this->operationHours;
     }
 
-    public function setOperationHours(string $operation_hours): void
+    public function setOperationHours(string $operationHours): void
     {
-        $this->operation_hours = $operation_hours;
+        $this->operationHours = $operationHours;
     }
 
     public function getNumberWarehouses(): int
     {
-        return $this->number_warehouses;
+        return $this->numberWarehouses;
     }
 
-    public function setNumberWarehouses(int $number_warehouses): void
+    public function setNumberWarehouses(int $numberWarehouses): void
     {
-        $this->number_warehouses = $number_warehouses;
+        $this->numberWarehouses = $numberWarehouses;
     }
 
     public function getAnnualSalesVolume(): string
     {
-        return $this->annual_sales_volume;
+        return $this->annualSalesVolume;
     }
 
-    public function setAnnualSalesVolume(string $annual_sales_volume): void
+    public function setAnnualSalesVolume(string $annualSalesVolume): void
     {
-        $this->annual_sales_volume = $annual_sales_volume;
+        $this->annualSalesVolume = $annualSalesVolume;
     }
 }

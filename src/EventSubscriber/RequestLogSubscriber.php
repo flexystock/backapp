@@ -105,6 +105,11 @@ class RequestLogSubscriber implements EventSubscriberInterface
 
             return;
         }
+        if ('/api/user/clients' === $request->getPathInfo()) {
+            $this->logger->info('onKernelTerminate: La ruta es /api/user/clients, no se registra.');
+
+            return;
+        }
         // Calcular tiempo de procesamiento
         $startTime = $request->attributes->get('_start_time');
         if (!$startTime) {
@@ -122,7 +127,7 @@ class RequestLogSubscriber implements EventSubscriberInterface
         }
 
         // Obtener el uuid_client de la petición
-        $uuidClientFromRequest = $data['uuid_client'] ?? null;
+        $uuidClientFromRequest = $data['uuidClient'] ?? null;
 
         $ip = $request->getClientIp() ?? 'unknown';
         $endpoint = $request->getPathInfo();

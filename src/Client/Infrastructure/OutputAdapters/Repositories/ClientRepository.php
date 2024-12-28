@@ -33,7 +33,7 @@ class ClientRepository extends ServiceEntityRepository implements ClientReposito
 
     public function findByName(string $name): ?Client
     {
-        return $this->findOneBy(['clientName' => $name]);
+        return $this->findOneBy(['client_name' => $name]);
     }
 
     public function findOneByPort(int $port): ?Client
