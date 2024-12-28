@@ -60,7 +60,7 @@ class GenericClientController
                     type: 'array',
                     items: new OA\Items(
                         properties: [
-                            new OA\Property(property: 'uuid_client', type: 'string', example: '492e5a45-9ad9-4876-87f7-0788d842f17d'),
+                            new OA\Property(property: 'uuidClient', type: 'string', example: '492e5a45-9ad9-4876-87f7-0788d842f17d'),
                             new OA\Property(property: 'clientName', type: 'string', example: 'Restaurante Pepe'),
                         ],
                         type: 'object'
@@ -110,7 +110,7 @@ class GenericClientController
         }
 
         return $this->jsonResponse([
-            'uuid_client' => $client->getUuidClient(),
+            'uuidClient' => $client->getUuidClient(),
             'clientName' => $client->getClientName(),
         ], 200);
     }
@@ -123,7 +123,7 @@ class GenericClientController
         }
 
         return $this->jsonResponse([
-            'uuid_client' => $client->getUuidClient(),
+            'uuidClient' => $client->getUuidClient(),
             'clientName' => $client->getClientName(),
         ], 200);
     }
@@ -135,7 +135,7 @@ class GenericClientController
         // Convertir objetos Client en arrays
         $clientsArray = array_map(function ($client) {
             return [
-                'uuid_client' => $client->getUuidClient(),
+                'uuidClient' => $client->getUuidClient(),
                 'clientName' => $client->getClientName(),
             ];
         }, $clients);
@@ -164,7 +164,7 @@ class GenericClientController
                 description: 'Client created successfully',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'uuid_client', type: 'string', example: '492e5a45-9ad9-4876-87f7-0788d842f17d'),
+                        new OA\Property(property: 'uuidClient', type: 'string', example: '492e5a45-9ad9-4876-87f7-0788d842f17d'),
                         new OA\Property(property: 'clientName', type: 'string', example: 'Restaurante Pepe'),
                     ],
                     type: 'object'
@@ -210,7 +210,7 @@ class GenericClientController
             return $this->jsonResponse([
                 'message' => 'Client created successfully',
                 'client' => [
-                    'uuid_client' => $newClient->getUuidClient(),
+                    'uuidClient' => $newClient->getUuidClient(),
                     'clientName' => $newClient->getClientName(),
                 ],
             ], 201); // 201 indica que un recurso fue creado

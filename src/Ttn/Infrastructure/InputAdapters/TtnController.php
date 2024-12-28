@@ -143,10 +143,10 @@ class TtnController extends AbstractController
                                 properties: [
                                     new OA\Property(property: 'uuid', type: 'string', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
                                     new OA\Property(property: 'available', type: 'boolean', example: true),
-                                    new OA\Property(property: 'end_device_id', type: 'string', example: 'heltec-ab01-1234'),
-                                    new OA\Property(property: 'app_eui', type: 'string', example: '70B3D57ED004A75B'),
-                                    new OA\Property(property: 'dev_eui', type: 'string', example: '70B3D57ED004A75C'),
-                                    new OA\Property(property: 'app_key', type: 'string', example: '11223344556677889900AABBCCDDEEFF'),
+                                    new OA\Property(property: 'endDeviceId', type: 'string', example: 'heltec-ab01-1234'),
+                                    new OA\Property(property: 'appEui', type: 'string', example: '70B3D57ED004A75B'),
+                                    new OA\Property(property: 'devEui', type: 'string', example: '70B3D57ED004A75C'),
+                                    new OA\Property(property: 'appKey', type: 'string', example: '11223344556677889900AABBCCDDEEFF'),
                                 ],
                                 type: 'object'
                             )

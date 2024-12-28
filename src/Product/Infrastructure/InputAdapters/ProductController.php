@@ -49,9 +49,9 @@ class ProductController extends AbstractController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['uuid_client', 'uuid'],
+                required: ['uuidClient', 'uuid'],
                 properties: [
-                    new OA\Property(property: 'uuid_client', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
+                    new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
                     new OA\Property(property: 'uuid', type: 'string', format: 'uuid', example: '9a6ae1c0-3bc6-41c8-975a-4de5b4357666'),
                 ],
                 type: 'object'
@@ -78,10 +78,10 @@ class ProductController extends AbstractController
             ),
             new OA\Response(
                 response: 400,
-                description: 'Faltan "uuid_client" o "uuid", o el formato es inválido',
+                description: 'Faltan "uuidClient" o "uuid", o el formato es inválido',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'error', type: 'string', example: 'uuid_client and uuid are required'),
+                        new OA\Property(property: 'error', type: 'string', example: 'uuidClient and uuid are required'),
                     ],
                     type: 'object',
                 )
@@ -121,18 +121,18 @@ class ProductController extends AbstractController
     public function getProductByUuid(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $uuidClient = $data['uuid_client'] ?? null;
+        $uuidClient = $data['uuidClient'] ?? null;
         $uuidProduct = $data['uuid'] ?? null;
 
         if (!$uuidClient || !$uuidProduct) {
-            $this->logger->warning('ProductController: uuid_client o uuid_product no proporcionado.');
+            $this->logger->warning('ProductController: uuid_client o uuidProduct no proporcionado.');
 
-            return new JsonResponse(['error' => 'uuid_client and uuid are required'], 400);
+            return new JsonResponse(['error' => 'uuidClient and uuid are required'], 400);
         }
 
         // Validar formato de UUID
         if (!$this->isValidUuid($uuidClient) || !$this->isValidUuid($uuidProduct)) {
-            $this->logger->warning('ProductController: uuid_client o uuid_product con formato inválido.');
+            $this->logger->warning('ProductController: uuidClient o uuidProduct con formato inválido.');
 
             return new JsonResponse(['error' => 'Invalid uuid format'], 400);
         }
@@ -177,9 +177,9 @@ class ProductController extends AbstractController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['uuid_client'],
+                required: ['uuidClient'],
                 properties: [
-                    new OA\Property(property: 'uuid_client', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
+                    new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
                 ],
                 type: 'object'
             )
@@ -205,10 +205,10 @@ class ProductController extends AbstractController
             ),
             new OA\Response(
                 response: 400,
-                description: 'Faltan "uuid_client" o el formato es inválido',
+                description: 'Faltan "uuidClient" o el formato es inválido',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'error', type: 'string', example: 'uuid_client are required'),
+                        new OA\Property(property: 'error', type: 'string', example: 'uuidClient are required'),
                     ],
                     type: 'object',
                 )
@@ -248,12 +248,12 @@ class ProductController extends AbstractController
     public function getAllProducts(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $uuidClient = $data['uuid_client'] ?? null;
+        $uuidClient = $data['uuidClient'] ?? null;
 
         if (!$uuidClient) {
-            $this->logger->warning('ProductController: uuid_client no proporcionado.');
+            $this->logger->warning('ProductController: uuidClient no proporcionado.');
 
-            return new JsonResponse(['error' => 'uuid_client are required'], 400);
+            return new JsonResponse(['error' => 'uuidClient are required'], 400);
         }
         // Verificar que el usuario tiene acceso al cliente
         $user = $this->getUser();
@@ -303,9 +303,9 @@ class ProductController extends AbstractController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['uuid_client', 'name'],
+                required: ['uuidClient', 'name'],
                 properties: [
-                    new OA\Property(property: 'uuid_client', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
+                    new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
                     new OA\Property(property: 'name', type: 'string', example: 'Nuevo producto'),
                     new OA\Property(property: 'ean', type: 'string', example: '1234567890123', nullable: true),
                     new OA\Property(property: 'weightRange', type: 'number', format: 'float', example: 0.2, nullable: true),
@@ -391,13 +391,13 @@ class ProductController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        $uuidClient = $data['uuid_client'] ?? null;
+        $uuidClient = $data['uuidClient'] ?? null;
         $name = $data['name'] ?? null;
 
         if (!$uuidClient || !$name) {
-            $this->logger->warning('ProductController: uuid_client or name are required.');
+            $this->logger->warning('ProductController: uuidClient or name are required.');
 
-            return new JsonResponse(['error' => 'uuid_client, name or description are required'], 400);
+            return new JsonResponse(['error' => 'uuidClient, name or description are required'], 400);
         }
         // Verificar que el usuario tiene acceso al cliente
         $user = $this->getUser();
@@ -458,10 +458,10 @@ class ProductController extends AbstractController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['uuid_client', 'uuid_product'],
+                required: ['uuid_client', 'uuidProduct'],
                 properties: [
-                    new OA\Property(property: 'uuid_client', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
-                    new OA\Property(property: 'uuid_product', type: 'string', format: 'uuid', example: '9a6ae1c0-3bc6-41c8-975a-4de5b4357666'),
+                    new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
+                    new OA\Property(property: 'uuidProduct', type: 'string', format: 'uuid', example: '9a6ae1c0-3bc6-41c8-975a-4de5b4357666'),
                 ],
                 type: 'object'
             )
@@ -480,10 +480,10 @@ class ProductController extends AbstractController
             ),
             new OA\Response(
                 response: 400,
-                description: 'Faltan campos uuid_client o uuid_product',
+                description: 'Faltan campos uuidClient o uuid_product',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'error', type: 'string', example: 'Missing required fields: uuid_client or uuid_product'),
+                        new OA\Property(property: 'error', type: 'string', example: 'Missing required fields: uuidClient or uuidProduct'),
                     ],
                     type: 'object'
                 )
@@ -533,13 +533,13 @@ class ProductController extends AbstractController
     public function deleteProduct(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $uuidClient = $data['uuid_client'] ?? null;
-        $uuidProduct = $data['uuid_product'] ?? null;
+        $uuidClient = $data['uuidClient'] ?? null;
+        $uuidProduct = $data['uuidProduct'] ?? null;
 
         if (!$uuidClient || !$uuidProduct) {
-            $this->logger->warning('ProductController: uuid_client o uuid_product no proporcionado.');
+            $this->logger->warning('ProductController: uuidClient o uuidProduct no proporcionado.');
 
-            return new JsonResponse(['error' => 'Missing required fields: uuid_client or uuid_product'], 400);
+            return new JsonResponse(['error' => 'Missing required fields: uuidClient or uuidProduct'], 400);
         }
 
         $user = $this->getUser();
@@ -578,10 +578,10 @@ class ProductController extends AbstractController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['uuid_client', 'uuid_product'],
+                required: ['uuidClient', 'uuidProduct'],
                 properties: [
-                    new OA\Property(property: 'uuid_client', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
-                    new OA\Property(property: 'uuid_product', type: 'string', format: 'uuid', example: '9a6ae1c0-3bc6-41c8-975a-4de5b4357666'),
+                    new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
+                    new OA\Property(property: 'uuidProduct', type: 'string', format: 'uuid', example: '9a6ae1c0-3bc6-41c8-975a-4de5b4357666'),
                     new OA\Property(property: 'name', type: 'string', example: 'Nuevo nombre del producto'),
                     new OA\Property(property: 'ean', type: 'string', example: '1234567890123', nullable: true),
                     new OA\Property(property: 'weightRange', type: 'number', format: 'float', example: 0.2, nullable: true),
@@ -674,13 +674,13 @@ class ProductController extends AbstractController
     public function updateProduct(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $uuidClient = $data['uuid_client'] ?? null;
-        $uuidProduct = $data['uuid_product'] ?? null;
+        $uuidClient = $data['uuidClient'] ?? null;
+        $uuidProduct = $data['uuidProduct'] ?? null;
 
         if (!$uuidClient || !$uuidProduct) {
-            $this->logger->warning('ProductController: uuid_client o uuid_product no proporcionado.');
+            $this->logger->warning('ProductController: uuidClient o uuidProduct no proporcionado.');
 
-            return new JsonResponse(['error' => 'Missing required fields: uuid_client or uuid_product'], 400);
+            return new JsonResponse(['error' => 'Missing required fields: uuidClient or uuidProduct'], 400);
         }
 
         $user = $this->getUser();

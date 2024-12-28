@@ -81,10 +81,10 @@ class GetAllTtnDevicesUseCase implements GetAllTtnDevicesUseCaseInterface
         return [
             'uuid' => $ttnDevice->getUuidUserCreation(),
             'available' => $ttnDevice->getAvailable(),
-            'end_device_id' => $ttnDevice->getEndDeviceId(),
-            'app_eui' => $ttnDevice->getAppEUI(),
-            'dev_eui' => $ttnDevice->getDevEUI(),
-            'app_key' => $ttnDevice->getAppKey(),
+            'endDeviceId' => $ttnDevice->getEndDeviceId(),
+            'appEui' => $ttnDevice->getAppEUI(),
+            'devEui' => $ttnDevice->getDevEUI(),
+            'appKey' => $ttnDevice->getAppKey(),
             // ...otros campos que necesites
         ];
     }

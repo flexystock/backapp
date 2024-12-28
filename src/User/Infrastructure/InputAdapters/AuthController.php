@@ -171,19 +171,19 @@ class AuthController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['full_name', 'email', 'password', 'timezone', 'language'],
+                required: ['fullName', 'email', 'password', 'timezone', 'language'],
                 properties: [
-                    new OA\Property(property: 'full_name', type: 'string'),
+                    new OA\Property(property: 'fullName', type: 'string'),
                     new OA\Property(property: 'surnames', type: 'string'),
                     new OA\Property(property: 'email', type: 'string'),
                     new OA\Property(property: 'password', type: 'string'),
-                    new OA\Property(property: 'phone_number', type: 'string'),
-                    new OA\Property(property: 'document_type', type: 'string'),
-                    new OA\Property(property: 'document_number', type: 'string'),
+                    new OA\Property(property: 'phoneNumber', type: 'string'),
+                    new OA\Property(property: 'documentType', type: 'string'),
+                    new OA\Property(property: 'documentNumber', type: 'string'),
                     new OA\Property(property: 'timezone', type: 'datetime'),
                     new OA\Property(property: 'language', type: 'string'),
-                    new OA\Property(property: 'preferred_contact_method', type: 'string'),
-                    new OA\Property(property: 'two_factor_enabled', type: 'boolean'),
+                    new OA\Property(property: 'preferredContactMethod', type: 'string'),
+                    new OA\Property(property: 'twoFactorEnabled', type: 'boolean'),
 
                 ],
                 type: 'object'
@@ -202,7 +202,7 @@ class AuthController
                             properties: [
                                 new OA\Property(property: 'id', type: 'integer'),
                                 new OA\Property(property: 'email', type: 'string'),
-                                new OA\Property(property: 'full_name', type: 'string'),
+                                new OA\Property(property: 'fullName', type: 'string'),
                             ],
                             type: 'object'
                         ),
