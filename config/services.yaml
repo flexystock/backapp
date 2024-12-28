@@ -225,6 +225,7 @@ services:
             $apiKey: '%env(TTN_API_KEY)%'
             $tenantId: '%env(TTN_DEFAULT_APPLICATION_ID)%'
             $apiUserKey: '%env(TTN_USER_APP_KEY)%'
+            $apiAppKey: '%env(TTN_APP_KEY)%'
 
 
     App\Ttn\Infrastructure\OutputAdapters\Services\TtnService:
@@ -238,26 +239,44 @@ services:
             $lorawanPhyVersion: '%env(TTN_LORAWAN_PHY_VERSION)%'
             $frequencyPlanId: '%env(TTN_FREQUENCY_PLAN_ID)%'
             $apiUserKey: '%env(TTN_USER_APP_KEY)%'
+            $apiAppKey: '%env(TTN_APP_KEY)%'
 
     App\Ttn\Application\OutputPorts\TtnServiceInterface:
         alias: App\Ttn\Infrastructure\OutputAdapters\Services\TtnService
 
-    App\Ttn\Application\UseCases\RegisterAppTtnUseCase:
+    App\Ttn\Application\UseCases\RegisterTtnAppUseCase:
         arguments:
             $ttnService: '@App\Ttn\Application\OutputPorts\TtnServiceInterface'
 
-    App\Ttn\Application\UseCases\RegisterDeviceUseCase:
+    App\Ttn\Application\UseCases\RegisterTtnDeviceUseCase:
         arguments:
             $ttnService: '@App\Ttn\Application\OutputPorts\TtnServiceInterface'
 
-    App\Ttn\Application\InputPorts\RegisterDeviceUseCaseInterface:
-        alias: RegisterTtnDeviceUseCase
+    App\Ttn\Application\InputPorts\RegisterTtnDeviceUseCaseInterface:
+        alias: App\Ttn\Application\UseCases\RegisterTtnDeviceUseCase
 
-    App\Ttn\Application\InputPorts\RegisterAppTtnUseCaseInterface:
-        alias: RegisterTtnAppUseCase
+    App\Ttn\Application\InputPorts\RegisterTtnAppUseCaseInterface:
+        alias: App\Ttn\Application\UseCases\RegisterTtnAppUseCase
 
     App\Ttn\Infrastructure\InputAdapters\TtnController:
         public: true
         autowire: true
         autoconfigure: true
         tags: [ 'controller.service_arguments' ]
+
+    App\Ttn\Application\InputPorts\GetAllTtnDevicesUseCaseInterface:
+        alias: App\Ttn\Application\UseCases\GetAllTtnDevicesUseCase
+
+    App\Ttn\Application\InputPorts\GetAllTtnAppsUseCaseInterface:
+        alias: App\Ttn\Application\UseCases\GetAllTtnAppsUseCase
+
+    App\Ttn\Infrastructure\OutputAdapters\Repositories\PoolTtnDeviceRepository:
+        arguments:
+            $em: '@doctrine.orm.main_entity_manager' # Este EntityManager se reemplazará dinámicamente en el caso de uso
+
+    App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface:
+        alias: App\Ttn\Infrastructure\OutputAdapters\Repositories\PoolTtnDeviceRepository
+
+
+
+

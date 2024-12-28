@@ -54,7 +54,8 @@ security:
         - { path: ^/api/product_delete, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/product_update, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/device_register, roles: IS_AUTHENTICATED_FULLY }
-        - { path: ^/api/app_register, roles: PUBLIC_ACCESS }
+        - { path: ^/api/app_register, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/devices, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:
