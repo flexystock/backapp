@@ -89,10 +89,27 @@ class TtnController extends AbstractController
     #[Route('/api/devices', name: 'api_devices', methods: ['GET'])]
     #[OA\Get(
         path: '/api/devices',
-        summary: 'Obtener dispositivos con paginación y filtrado por "available"',
         description: 'Este endpoint devuelve un listado paginado de los dispositivos. 
                   Permite filtrar el campo "available" por `true` o `false`. 
                   Si se envía vacío, devuelve todos los dispositivos.',
+        summary: 'Obtener dispositivos con paginación y filtrado por "available"',
+        requestBody: new OA\RequestBody(
+            description: 'Envío opcional de "available". 
+                      Puede ser `true`, `false`, o vacío. 
+                      Si es vacío o no se envía, se devuelven todos.',
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(
+                        property: 'available',
+                        type: 'string',
+                        enum: ['true', 'false', ''],
+                        example: 'true'
+                    ),
+                ],
+                type: 'object'
+            )
+        ),
         tags: ['Devices'],
         parameters: [
             new OA\Parameter(
@@ -110,23 +127,6 @@ class TtnController extends AbstractController
                 schema: new OA\Schema(type: 'integer', default: 10)
             ),
         ],
-        requestBody: new OA\RequestBody(
-            required: false,
-            description: 'Envío opcional de "available". 
-                      Puede ser `true`, `false`, o vacío. 
-                      Si es vacío o no se envía, se devuelven todos.',
-            content: new OA\JsonContent(
-                properties: [
-                    new OA\Property(
-                        property: 'available',
-                        type: 'string',
-                        enum: ['true', 'false', ''],
-                        example: 'true'
-                    ),
-                ],
-                type: 'object'
-            )
-        ),
         responses: [
             new OA\Response(
                 response: 200,
@@ -140,7 +140,6 @@ class TtnController extends AbstractController
                             property: 'devices',
                             type: 'array',
                             items: new OA\Items(
-                                type: 'object',
                                 properties: [
                                     new OA\Property(property: 'uuid', type: 'string', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
                                     new OA\Property(property: 'available', type: 'boolean', example: true),
@@ -148,7 +147,8 @@ class TtnController extends AbstractController
                                     new OA\Property(property: 'app_eui', type: 'string', example: '70B3D57ED004A75B'),
                                     new OA\Property(property: 'dev_eui', type: 'string', example: '70B3D57ED004A75C'),
                                     new OA\Property(property: 'app_key', type: 'string', example: '11223344556677889900AABBCCDDEEFF'),
-                                ]
+                                ],
+                                type: 'object'
                             )
                         ),
                     ],
