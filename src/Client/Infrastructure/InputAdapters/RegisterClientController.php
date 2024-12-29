@@ -53,7 +53,7 @@ class RegisterClientController
                     new OA\Property(property: 'companyEmail', type: 'string'),
                     new OA\Property(property: 'numberOfEmployees', type: 'integer'),
                     new OA\Property(property: 'industrySector', type: 'string'),
-                    new OA\Property(property: 'averageInventory_volume', type: 'integer'),
+                    new OA\Property(property: 'averageInventoryVolume', type: 'integer'),
                     new OA\Property(property: 'currency', type: 'string'),
                     new OA\Property(property: 'numberWarehouses', type: 'integer'),
                     new OA\Property(property: 'annualSalesVolume', type: 'integer'),
