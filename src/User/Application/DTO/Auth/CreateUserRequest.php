@@ -16,7 +16,7 @@ class CreateUserRequest
         pattern: '/^(?=.{1,50}$)[A-Za-zÁÉÍÓÚáéíóúÑñÜü]+(?:[-\'][A-Za-zÁÉÍÓÚáéíóúÑñÜü]+)?(?: [A-Za-zÁÉÍÓÚáéíóúÑñÜü]+(?:[-\'][A-Za-zÁÉÍÓÚáéíóúÑñÜü]+)?)*$/u',
         message: 'El nombre completo no es válido.'
     )]
-    #[SerializedName('full_name')]
+    #[SerializedName('fullName')]
     private string $name;
 
     #[Assert\NotBlank(message: 'Los apellidos son obligatorios.')]
@@ -59,7 +59,7 @@ class CreateUserRequest
         pattern: "/^\d{9,15}$/",
         message: 'El número de teléfono debe contener entre 9 y 15 dígitos numéricos.'
     )]
-    #[SerializedName('phone_number')]
+    #[SerializedName('phoneNumber')]
     private string $phone;
 
     #[Assert\NotBlank]
@@ -67,7 +67,7 @@ class CreateUserRequest
         choices: ['DNI', 'NIE'],
         message: "El tipo de documento debe ser 'DNI' o 'NIE'."
     )]
-    #[SerializedName('document_type')]
+    #[SerializedName('documentType')]
     private string $documentType;
 
     #[Assert\NotBlank]
@@ -79,7 +79,7 @@ class CreateUserRequest
         pattern: '/^[A-Za-z0-9-]+$/',
         message: 'El número de documento solo puede contener letras, números y guiones.'
     )]
-    #[SerializedName('document_number')]
+    #[SerializedName('documentNumber')]
     private string $documentNumber;
 
     #[Assert\NotBlank]
@@ -94,12 +94,12 @@ class CreateUserRequest
         choices: ['email', 'phone'],
         message: "El método de contacto preferido debe ser 'email', 'phone' o 'sms'."
     )]
-    #[SerializedName('preferred_contact_method')]
+    #[SerializedName('preferredContactMethod')]
     private string $preferredContactMethod;
 
     #[Assert\NotNull]
     #[Assert\Type(type: 'bool', message: 'El valor debe ser verdadero o falso.')]
-    #[SerializedName('two_factor_enabled')]
+    #[SerializedName('twoFactorEnabled')]
     private bool $twoFactorEnabled;
     // Métodos getters y setters
 
