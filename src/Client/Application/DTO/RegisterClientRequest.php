@@ -158,16 +158,6 @@ class RegisterClientRequest
         $this->name = $name;
     }
 
-    public function getBusinessType(): string
-    {
-        return $this->businessType;
-    }
-
-    public function setBusinessType(string $businessType): void
-    {
-        $this->businessType = $businessType;
-    }
-
     public function getNifCif(): string
     {
         return $this->nifCif;
