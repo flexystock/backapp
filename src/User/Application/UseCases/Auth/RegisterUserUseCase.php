@@ -45,6 +45,13 @@ class RegisterUserUseCase implements RegisterUserInputPort
      */
     public function register(CreateUserRequest $data): User
     {
+        // En tu UseCase o al inicio del proceso:
+        $existingUser = $this->userRepositoryInterface->findByEmail($data->getEmail());
+        if ($existingUser) {
+            // Significa que ya hay un email igual en la BBDD.
+            // Puedes lanzar una excepción controlada o devolver un error 400
+            throw new \RuntimeException('EMAIL_IN_USE');
+        }
         $user = User::fromCreateUserRequest($data, $this->passwordHasher);
         $this->userRepositoryInterface->save($user);
 

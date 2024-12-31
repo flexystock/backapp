@@ -37,7 +37,7 @@ class RegisterClientController
     #[Route('/api/client_register', name: 'api_register', methods: ['POST'])]
     #[OA\Post(
         path: '/api/client_register',
-        summary: 'Create a new Client',
+        summary: 'REGISTER a new Client',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -64,8 +64,8 @@ class RegisterClientController
         tags: ['Client'],
         responses: [
             new OA\Response(
-                response: 200,
-                description: 'Clientsuccessfully',
+                response: 201,
+                description: 'Client created successfully',
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'status', type: 'string'),
@@ -84,34 +84,79 @@ class RegisterClientController
                 response: 400,
                 description: 'Invalid input'
             ),
+            new OA\Response(
+                response: 404,
+                description: 'Associated user not found'
+            ),
+            new OA\Response(
+                response: 409,
+                description: 'Conflict (e.g. duplicated data)'
+            ),
+            new OA\Response(
+                response: 500,
+                description: 'Internal Server Error'
+            ),
         ]
     )]
     public function __invoke(Request $request): JsonResponse
     {
         try {
-            // Deserializar el contenido JSON en una instancia del DTO
+            // 1) Deserializar JSON => DTO
             $clientRequest = $this->serializer->deserialize(
                 $request->getContent(),
                 RegisterClientRequest::class,
                 'json'
             );
 
+            // 2) Validar DTO con Symfony Validator
             $errors = $this->validator->validate($clientRequest);
-
             if (count($errors) > 0) {
                 $errorMessages = $this->formatValidationErrors($errors);
 
                 return new JsonResponse([
+                    'status' => 'error',
                     'message' => 'INVALID_DATA',
                     'errors' => $errorMessages,
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            $this->registerInputPort->register($clientRequest);
+            // 3) Llamar al caso de uso
+            $client = $this->registerInputPort->register($clientRequest);
 
-            return new JsonResponse(['SUCCESS' => true], 201);
+            // 4) Respuesta exitosa con 201
+            return new JsonResponse([
+                'status' => 'success',
+                'message' => 'Client registered successfully',
+                'client' => [
+                    'id' => $client->getUuidClient(),
+                    'name' => $client->getName(),
+                ],
+            ], Response::HTTP_CREATED);
+        } catch (\RuntimeException $e) {
+            // Ejemplo: si en el UseCase lanzas \RuntimeException('USER_NOT_FOUND'), capturamos.
+            if ('USER_NOT_FOUND' === $e->getMessage()) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'USER_NOT_FOUND',
+                ], Response::HTTP_NOT_FOUND);
+            }
+            if ('CLIENT_DUPLICATED' === $e->getMessage()) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'CLIENT_ALREADY_EXISTS',
+                ], Response::HTTP_CONFLICT);
+            }
+            // Otros casos de \RuntimeException que quieras.
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         } catch (\Exception $e) {
-            return new JsonResponse(['ERROR' => $e->getMessage()], 500);
+            // Errores inesperados
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

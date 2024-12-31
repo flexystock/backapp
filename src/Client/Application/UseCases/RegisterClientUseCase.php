@@ -56,8 +56,15 @@ class RegisterClientUseCase implements RegisterClientInputPort
      */
     public function register(RegisterClientRequest $request): Client
     {
-        $client = new Client(); // uuiCLient y User_id
+        // 1) Buscar el user
+        $user = $this->userRepository->findOneBy(['uuid_user' => $request->getUuidUser()]);
+        if (!$user) {
+            // Lanzas algo semántico
+            throw new \RuntimeException('USER_NOT_FOUND');
+        }
 
+        // 2) Crear Client y setear campos
+        $client = new Client();
         $client->setName($request->getName());
         $client->setClientName($request->getName());
         $client->setBusinessType('HOSTELERIA');
@@ -81,15 +88,10 @@ class RegisterClientUseCase implements RegisterClientInputPort
         $client->setNumberWarehouses($request->getNumberWarehouses());
         $client->setAnnualSalesVolume($request->getAnnualSalesVolume());
 
-        // Asociar el cliente con el usuario si es necesario
-        $user = $this->userRepository->findOneBy(['uuid_user' => $request->getUuidUser()]);
-        if ($user) {
-            $user->addClient($client);
-            $client->addUser($user);
-        } else {
-            // Manejar el caso donde el usuario no existe
-            throw new \Exception('USER_NOT_FOUND');
-        }
+        // 3) Asociar el cliente con el usuario si es necesario
+        $user->addClient($client);
+        $client->addUser($user);
+
         // Guardar el cliente en la base de datos
         $this->clientRepository->save($client);
         // Generar el token de verificación
@@ -101,27 +103,6 @@ class RegisterClientUseCase implements RegisterClientInputPort
 
         return $client;
     }
-
-    //    private function createClientContainer(Client $client, string $clientName, int $port): void
-    //    {
-    //        $scriptPath = '/appdata/www/bin/create_client_container.sh';
-    //        if (!file_exists($scriptPath)) {
-    //            throw new \Exception("Script not found: " . $scriptPath);
-    //        }
-    //
-    //        $command = sprintf(
-    //            'bash %s %s %d 2>&1',
-    //            escapeshellarg($scriptPath),
-    //            escapeshellarg($clientName),
-    //            $port
-    //        );
-    //        exec($command, $output, $return_var);
-    //
-    //        if ($return_var !== 0) {
-    //            error_log('Error creating client container: ' . implode("\n", $output));
-    //            throw new \Exception('Error creating client container: ' . implode("\n", $output));
-    //        }
-    //    }
 
     /**
      * @throws \DateMalformedStringException

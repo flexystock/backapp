@@ -36,8 +36,8 @@ class CreateClientController
 
     #[Route('/api/client_create', name: 'client_create', methods: ['POST'])]
     #[OA\Post(
-        path: '/api/client_register',
-        summary: 'Create a new Client',
+        path: '/api/client_create',
+        summary: 'CREATE a new Client',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(

@@ -95,7 +95,12 @@ class DockerService
 
     private function generateContainerName(string $clientName, string $uuid): string
     {
-        return 'client_db_'.$clientName.'_'.substr($uuid, 0, 12);
+        // 1) Quitar o reemplazar espacios y caracteres no permitidos.
+        //    Reemplazamos con subrayado `_`.
+        $safeClientName = preg_replace('/[^A-Za-z0-9_.-]+/', '_', $clientName);
+
+        // 2) Armar el nombre final
+        return 'client_db_'.$safeClientName.'_'.substr($uuid, 0, 12);
     }
 
     private function generateVolumeName(string $containerName): string

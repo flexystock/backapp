@@ -262,9 +262,14 @@ class AuthController
                 'error' => $e->getMessage(),
             ], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
-            // Otros errores
-            // error al intentar registrar un usuario con el mismo email
-            //dos o tres palabras en myusculas
+            if ($e->getMessage() === 'EMAIL_IN_USE') {
+                return new JsonResponse([
+                    'message' => 'REGISTER_FAILED',
+                    'error' => 'EMAIL_ALREADY_EXISTS',
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            // Otros errores genéricos:
             return new JsonResponse([
                 'message' => 'REGISTER_FAILED',
                 'error' => $e->getMessage(),
