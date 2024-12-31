@@ -11,7 +11,7 @@ class RegisterClientRequest
     #[Assert\Length(
         max: 36,
     )]
-    #[SerializedName('userId')]
+    #[SerializedName('uuidUser')]
     private string $uuidUser;
 
     #[Assert\NotBlank(message: 'REQUIRED_NAME')]
@@ -130,7 +130,7 @@ class RegisterClientRequest
 
     public function setUuidUser(string $uuidUser): void
     {
-        $this->uuid_user = $uuidUser;
+        $this->uuidUser = $uuidUser;
     }
 
     public function getName(): string
@@ -156,16 +156,6 @@ class RegisterClientRequest
     public function setClientName(string $name): void
     {
         $this->name = $name;
-    }
-
-    public function getBusinessType(): string
-    {
-        return $this->businessType;
-    }
-
-    public function setBusinessType(string $businessType): void
-    {
-        $this->businessType = $businessType;
     }
 
     public function getNifCif(): string
@@ -243,7 +233,7 @@ class RegisterClientRequest
         return $this->companyPhone;
     }
 
-    public function setCompanyPhone(int $companyPhone): void
+    public function setCompanyPhone(string $companyPhone): void
     {
         $this->companyPhone = $companyPhone;
     }
@@ -308,12 +298,12 @@ class RegisterClientRequest
         $this->numberWarehouses = $numberWarehouses;
     }
 
-    public function getAnnualSalesVolume(): string
+    public function getAnnualSalesVolume(): int
     {
         return $this->annualSalesVolume;
     }
 
-    public function setAnnualSalesVolume(string $annualSalesVolume): void
+    public function setAnnualSalesVolume(int $annualSalesVolume): void
     {
         $this->annualSalesVolume = $annualSalesVolume;
     }

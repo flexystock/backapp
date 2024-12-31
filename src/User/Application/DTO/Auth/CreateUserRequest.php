@@ -16,7 +16,7 @@ class CreateUserRequest
         pattern: '/^(?=.{1,50}$)[A-Za-zÁÉÍÓÚáéíóúÑñÜü]+(?:[-\'][A-Za-zÁÉÍÓÚáéíóúÑñÜü]+)?(?: [A-Za-zÁÉÍÓÚáéíóúÑñÜü]+(?:[-\'][A-Za-zÁÉÍÓÚáéíóúÑñÜü]+)?)*$/u',
         message: 'INVALID_FULL_NAME'
     )]
-    #[SerializedName('full_name')]
+    #[SerializedName('fullName')]
     private string $name;
 
     #[Assert\NotBlank(message: 'REQUIRED_SURNAMES')]
@@ -59,7 +59,7 @@ class CreateUserRequest
         pattern: "/^\d{9,15}$/",
         message: 'INVALID_PHONE_NUMBER'
     )]
-    #[SerializedName('phone_number')]
+    #[SerializedName('phoneNumber')]
     private string $phone;
 
     #[Assert\NotBlank]
@@ -67,7 +67,7 @@ class CreateUserRequest
         choices: ['DNI', 'NIE'],
         message: "INVALID_DOCUMENT_TYPE"
     )]
-    #[SerializedName('document_type')]
+    #[SerializedName('documentType')]
     private string $documentType;
 
     #[Assert\NotBlank]
@@ -79,7 +79,7 @@ class CreateUserRequest
         pattern: '/^[A-Za-z0-9-]+$/',
         message: 'INVALID_DOCUMENT_NUMBER'
     )]
-    #[SerializedName('document_number')]
+    #[SerializedName('documentNumber')]
     private string $documentNumber;
 
     #[Assert\NotBlank]
@@ -94,12 +94,13 @@ class CreateUserRequest
         choices: ['email', 'phone'],
         message: "INVALID_PREFERRED_CONTACT_METHOD"
     )]
-    #[SerializedName('preferred_contact_method')]
+    #[SerializedName('preferredContactMethod')]
     private string $preferredContactMethod;
 
     #[Assert\NotNull]
-    #[Assert\Type(type: 'bool', message: 'INVALID_TWO_FACTOR_ENABLED')]
-    #[SerializedName('two_factor_enabled')]
+    #[Assert\Type(type: 'bool', message: 'El valor debe ser verdadero o falso.')]
+    #[SerializedName('twoFactorEnabled')]
+
     private bool $twoFactorEnabled;
     // Métodos getters y setters
 
