@@ -16,6 +16,8 @@ class PoolTtnDevice
     private bool $available;
     #[ORM\Column(type: 'string', length: 100)]
     private string $end_device_id;
+    #[ORM\Column(type: 'string', length: 36)]
+    private string $end_device_name;
     #[ORM\Column(type: 'string', length: 100)]
     private string $appEUI;
     #[ORM\Column(type: 'string', length: 100)]
@@ -56,6 +58,17 @@ class PoolTtnDevice
     public function setEndDeviceId(string $endDeviceId): self
     {
         $this->end_device_id = $endDeviceId;
+
+        return $this;
+    }
+    public function getEndDeviceName(): ?string
+    {
+        return $this->end_device_name;
+    }
+
+    public function setEndDeviceName(string $endDeviceName): self
+    {
+        $this->end_device_name = $endDeviceName;
 
         return $this;
     }
@@ -143,4 +156,6 @@ class PoolTtnDevice
 
         return $this;
     }
+
+
 }

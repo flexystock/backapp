@@ -7,18 +7,20 @@ class RegisterTtnDeviceRequest
     private string $deviceId;
     private string $uuidUser;
     private \DateTimeInterface $datehourCreation;
+    private ?string $uuidClient;
     private ?string $devEui;
     private ?string $joinEui;
     private ?string $appKey;
     // Otros campos según sea necesario
 
     public function __construct(string $deviceId, string $uuidUser,
-        \DateTimeInterface $datehourCreation, ?string $devEui = null,
+        \DateTimeInterface $datehourCreation, ?string $uuidClient = null, ?string $devEui = null,
         ?string $joinEui = null, ?string $appKey = null,
     ) {
         $this->deviceId = $deviceId;
         $this->uuidUser = $uuidUser;
         $this->datehourCreation = $datehourCreation;
+        $this->uuidClient = $uuidClient;
         $this->devEui = $devEui;
         $this->joinEui = $joinEui;
         $this->appKey = $appKey;
@@ -52,5 +54,9 @@ class RegisterTtnDeviceRequest
     public function getDatehourCreation(): \DateTimeInterface
     {
         return $this->datehourCreation;
+    }
+    public function getUuidClient(): ?string
+    {
+        return $this->uuidClient;
     }
 }

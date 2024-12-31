@@ -88,7 +88,7 @@ class CreateClientController
                 $errorMessages = $this->formatValidationErrors($errors);
 
                 return new JsonResponse([
-                    'message' => 'Datos inválidos',
+                    'message' => 'INVALID_DATA',
                     'errors' => $errorMessages,
                 ], Response::HTTP_BAD_REQUEST);
             }
@@ -96,10 +96,10 @@ class CreateClientController
             // die("antes del create");
             $this->createInputPort->create($clientRequest);
 
-            return new JsonResponse(['success' => true], 201);
+            return new JsonResponse(['SUCCESS' => true], 201);
         } catch (\Exception $e) {
             // Manejar excepciones y devolver una respuesta adecuada
-            return new JsonResponse(['error' => $e->getMessage()], 500);
+            return new JsonResponse(['ERROR' => $e->getMessage()], 500);
         }
     }
 

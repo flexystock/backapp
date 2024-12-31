@@ -34,30 +34,30 @@ class EmailVerificationController
         // die("llegamos");
         $user = $this->userRepository->findOneByVerificationToken($token);
         if (!$user) {
-            return new Response('El enlace de verificación no es válido.', Response::HTTP_BAD_REQUEST);
+            return new Response('INVALID_LINK', Response::HTTP_BAD_REQUEST);
         }
         if ($user->isVerified()) {
-            return new Response('Tu cuenta ya ha sido verificada.', Response::HTTP_OK);
+            return new Response('YOUR_ACCOUNT_IS_ALREADY_VERIFIED', Response::HTTP_BAD_REQUEST);
         }
         if ($user->getVerificationTokenExpiresAt() < new \DateTime()) {
             $resendEmail = $this->resendEmailVerificationToken->resendEmailVerificationToken($user, $token);
             if (!$resendEmail) {
-                return new Response('Error al reenviar el mail de verificacion.', Response::HTTP_BAD_REQUEST);
+                return new Response('ERROR_RESENDING_EMAIL', Response::HTTP_BAD_REQUEST);
             }
 
-            return new Response('El enlace de verificación ha expirado. Se le reenvió un nuevo enlace de verificación.', Response::HTTP_BAD_REQUEST);
+            return new Response('LINK_TO_VERIFY_EXPIRED.NEW_LINK_SENT', Response::HTTP_BAD_REQUEST);
         }
 
         $clients = $user->getClients();
 
         if ($clients->isEmpty()) {
-            return new Response('No hay clientes asociados a este usuario.', Response::HTTP_BAD_REQUEST);
+            return new Response('NO_CLIENT_ASSOCIATED', Response::HTTP_BAD_REQUEST);
         }
 
         $client = $clients->first();
 
         if (!$client) {
-            return new Response('No se pudo obtener el cliente asociado.', Response::HTTP_BAD_REQUEST);
+            return new Response('NO_CLIENT_ASSOCIATED', Response::HTTP_BAD_REQUEST);
         }
 
         $this->bus->dispatch(new CreateDockerContainerMessage($client->getUuidClient()));
@@ -66,6 +66,6 @@ class EmailVerificationController
         $user->setVerificationTokenExpiresAt(null);
         $this->userRepository->save($user);
 
-        return new Response('¡Tu cuenta ha sido verificada exitosamente!', Response::HTTP_OK);
+        return new Response('YOUR_ACCOUNT_IS_VERIFIED', Response::HTTP_OK);
     }
 }

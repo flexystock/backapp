@@ -251,6 +251,7 @@ services:
     App\Ttn\Application\UseCases\RegisterTtnDeviceUseCase:
         arguments:
             $ttnService: '@App\Ttn\Application\OutputPorts\TtnServiceInterface'
+            $deviceRepository: '@App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface'
 
     App\Ttn\Application\InputPorts\RegisterTtnDeviceUseCaseInterface:
         alias: App\Ttn\Application\UseCases\RegisterTtnDeviceUseCase
@@ -276,6 +277,43 @@ services:
 
     App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface:
         alias: App\Ttn\Infrastructure\OutputAdapters\Repositories\PoolTtnDeviceRepository
+
+    App\Ttn\Application\InputPorts\UnassignTtnDeviceUseCaseInterface:
+        alias: App\Ttn\Application\UseCases\UnassignTtnDeviceUseCase
+
+    App\Ttn\Application\UseCases\UnassignTtnDeviceUseCase:
+        arguments:
+            $ttnService: '@App\Ttn\Application\OutputPorts\TtnServiceInterface'
+            $deviceRepository: '@App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface'
+
+    # Scales UseCase
+    App\Scales\Application\UseCases\RegisterScalesUseCase:
+        arguments:
+            $scalesRepository: '@App\Scales\Application\OutputPorts\ScalesRepositoryInterface'
+
+    # Scales Repository
+    App\Scales\Infrastructure\OutputAdapters\Repositories\ScalesRepository:
+        arguments:
+            $em: '@doctrine.orm.main_entity_manager' # Este EntityManager se reemplazará dinámicamente en el caso de uso
+
+    # Alias OutputPort
+    App\Scales\Application\OutputPorts\ScalesRepositoryInterface:
+        alias: App\Scales\Infrastructure\OutputAdapters\Repositories\ScalesRepository
+
+    # Alias InputPort
+    App\Scales\Application\InputPorts\RegisterScalesUseCaseInterface:
+        alias: App\Scales\Application\UseCases\RegisterScalesUseCase
+
+    # Controller
+    App\Scales\Infrastructure\InputAdapters\ScalesController:
+        arguments:
+            $registerScalesUseCase: '@App\Scales\Application\InputPorts\RegisterScalesUseCaseInterface'
+            $logger: '@logger'
+        tags: [ 'controller.service_arguments' ]
+        public: true
+
+
+
 
 
 

@@ -8,5 +8,5 @@ interface GetAllTtnDevicesUseCaseInterface
 {
     public function execute(): GetAllTtnDevicesResponse;
 
-    public function executePaginated(int $page, int $limit, ?bool $available): GetAllTtnDevicesResponse;
+    public function executePaginated(int $page, int $limit, ?bool $available, ?string $uuidClient): GetAllTtnDevicesResponse;
 }

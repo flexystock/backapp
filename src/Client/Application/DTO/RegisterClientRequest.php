@@ -7,14 +7,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class RegisterClientRequest
 {
-    #[Assert\NotBlank(message: 'El id del usuario es obligatorio.')]
+    #[Assert\NotBlank(message: 'REQUIRED_USER_ID')]
     #[Assert\Length(
         max: 36,
     )]
     #[SerializedName('userId')]
     private string $uuidUser;
 
-    #[Assert\NotBlank(message: 'El nombre del cliente es obligatorio.')]
+    #[Assert\NotBlank(message: 'REQUIRED_NAME')]
     #[Assert\Length(
         max: 255,
     )]
@@ -27,38 +27,38 @@ class RegisterClientRequest
     #[SerializedName('companyName')]
     private string $businessGroupName;
 
-    #[Assert\NotBlank(message: 'El NIF es obligatorio.')]
+    #[Assert\NotBlank(message: 'REQUIRED_BUSINESS_TYPE')]
     #[Assert\Length(
         max: 12,
     )]
     private string $nifCif;
 
-    #[Assert\NotBlank(message: 'La fecha de creación es obligatoria.')]
+    #[Assert\NotBlank(message: 'REQUIRED_FOUNDATION_DATE')]
     private string $foundationDate;
 
-    #[Assert\NotBlank(message: 'La direccion fiscal es obligatorio.')]
+    #[Assert\NotBlank(message: 'REQUIRED_FISCAL_ADDRESS')]
     #[Assert\Length(
         max: 255,
     )]
     private string $fiscalAddress;
 
-    #[Assert\NotBlank(message: 'La direccion fisica es obligatorio.')]
+    #[Assert\NotBlank(message: 'REQUIRED_PHYSICAL_ADDRESS')]
     #[Assert\Length(
         max: 255,
     )]
     #[Assert\Regex(
         pattern: '/^[A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\.,\/\-\s]{1,100}$/u',
-        message: 'La dirección fiscal no es válida.'
+        message: 'INVALID_PHYSICAL_ADDRESS'
     )]
     private string $physicalAddress;
 
-    #[Assert\NotBlank(message: 'La ciudad es obligatorio.')]
+    #[Assert\NotBlank(message: 'REQUIRED_CITY')]
     #[Assert\Length(
         max: 255,
     )]
     #[Assert\Regex(
         pattern: '/^[A-Za-zÁÉÍÓÚáéíóúÑñÜüçÇàáâ...]{1,50}(?:[ -][A-Za-zÁÉÍÓÚáéíóúÑñÜüçÇàáâ...]{1,50})*$/u',
-        message: 'La ciudad no es válida.'
+        message: 'INVALID_CITY'
     )]
     private string $city;
 
@@ -68,58 +68,58 @@ class RegisterClientRequest
     )]
     private string $country;
 
-    #[Assert\NotBlank(message: 'El codigo postal es obligatorio.')]
+    #[Assert\NotBlank(message: 'REQUIRED_POSTAL_CODE')]
     #[Assert\Regex(
         pattern: '/^[A-Za-z0-9À-ÿ\s\-]{3,10}$/u',
-        message: 'El código postal no es válido.'
+        message: 'INVALID_POSTAL_CODE'
     )]
     private int $postalCode;
 
     #[Assert\NotBlank]
-    #[Assert\Type(type: 'string', message: 'El número de teléfono debe ser numérico.')]
+    #[Assert\Type(type: 'string', message: 'INVALID_PHONE_NUMBER')]
     private string $companyPhone;
 
-    #[Assert\NotBlank(message: 'El email de la compañia es obligatorio.')]
-    #[Assert\Email(message: "El correo electrónico '{{ value }}' no es válido.")]
+    #[Assert\NotBlank(message: 'COMPANY_EMAIL_REQUIRED')]
+    #[Assert\Email(message: "INVALID_EMAIL")]
     private string $companyEmail;
 
-    #[Assert\NotBlank(message: 'El numero de empleados es obligatorio.')]
-    #[Assert\Positive(message: 'El número de empleados debe ser un número positivo.')]
+    #[Assert\NotBlank(message: 'REQUIRED_NUMBER_OF_EMPLOYEES')]
+    #[Assert\Positive(message: 'INVALID_NUMBER_OF_EMPLOYEES')]
     #[Assert\LessThanOrEqual(
         value: 999999,
-        message: 'El número de empleados no puede exceder de 999999.'
+        message: 'INVALID_NUMBER_OF_EMPLOYEES'
     )]
     private int $numberOfEmployees;
 
-    #[Assert\NotBlank(message: 'El sector industrial es obligatorio.')]
+    #[Assert\NotBlank(message: 'REQUIRED_INDUSTRY_SECTOR')]
     #[Assert\Regex(
         pattern: '/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü0-9\s\.,\-\&]{1,50}$/u',
-        message: 'El sector industrial no es válido.'
+        message: 'INVALID_INDUSTRY_SECTOR'
     )]
     private string $industrySector;
 
-    #[Assert\NotBlank(message: 'El volumen de inevntario es obligatorio.')]
+    #[Assert\NotBlank(message: 'REQUIRED_AVERAGE_INVENTORY_VOLUME')]
     #[Assert\Regex(
         pattern: '/^\d{1,10}$/',
-        message: 'El volumen promedio de inventario no es válido.'
+        message: 'INVALID_AVERAGE_INVENTORY_VOLUME'
     )]
     private int $averageInventoryVolume;
 
-    #[Assert\NotBlank(message: 'El tipo de moneda es obligatorio.')]
+    #[Assert\NotBlank(message: 'REQUIRED_CURRENCY')]
     #[Assert\Regex(
         pattern: '/^([A-Za-z]{3,15}(?:\s?[A-Za-z]{2,15})?|[€$¥£₣₹₣])$/u',
-        message: 'La moneda no es válida.'
+        message: 'INVALID_CURRENCY'
     )]
     private string $currency;
 
     #[Assert\NotBlank]
-    #[Assert\Type(type: 'int', message: 'El número de almacenes debe ser numérico.')]
+    #[Assert\Type(type: 'int', message: 'INVALID_NUMBER_OF_WAREHOUSES')]
     private int $numberWarehouses;
 
-    #[Assert\NotBlank(message: 'El volumen anual de ventas es obligatorio.')]
+    #[Assert\NotBlank(message: 'REQUIRED_ANNUAL_SALES_VOLUME')]
     #[Assert\Regex(
         pattern: '/^\d{1,3}(?:\.\d{3})*(?:,([0-9]{1,2}))?$/',
-        message: 'El volumen anual de ventas no es válido.'
+        message: 'INVALID_ANNUAL_SALES_VOLUME'
     )]
     private int $annualSalesVolume;
 
@@ -238,7 +238,7 @@ class RegisterClientRequest
         $this->postalCode = $postalCode;
     }
 
-    public function getCompanyPhone(): int
+    public function getCompanyPhone(): string
     {
         return $this->companyPhone;
     }

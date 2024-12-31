@@ -22,7 +22,7 @@ class SelectClientUseCase implements SelectClientInputPort
     public function selectClient(UserInterface $user, string $uuidClient): string
     {
         if (!$this->userHasAccessToClient($user, $uuidClient)) {
-            throw new AccessDeniedException('You do not have access to this client');
+            throw new AccessDeniedException('YOU_DO_NOT_HAVE_ACCESS_TO_THIS_CLIENT');
         }
 
         // Establecer el uuid_client en el usuario

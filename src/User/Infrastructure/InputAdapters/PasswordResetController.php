@@ -81,12 +81,12 @@ class PasswordResetController
         $errors = $this->validator->validate($forgotPasswordRequest);
 
         if (count($errors) > 0) {
-            return new JsonResponse(['errors' => (string) $errors], 400);
+            return new JsonResponse(['ERRORS' => (string) $errors], 400);
         }
 
         $this->requestPasswordReset->requestPasswordReset($forgotPasswordRequest);
 
-        return new JsonResponse(['message' => 'Si el email existe, se ha enviado un código de restablecimiento.'], 200);
+        return new JsonResponse(['MESSAGE' => 'EMAIL_SENT'], 200);
     }
 
     #[Route('/api/reset-password', name: 'api_reset_password', methods: ['POST'])]
@@ -138,7 +138,7 @@ class PasswordResetController
         if (!$limit->isAccepted()) {
             // Si no hay tokens disponibles, lanzar una excepción o manejar el error
             $retryAfter = $limit->getRetryAfter()->getTimestamp() - time();
-            throw new TooManyRequestsHttpException($retryAfter, 'Demasiados intentos. Por favor, inténtelo de nuevo en 15 minutos.');
+            throw new TooManyRequestsHttpException($retryAfter, 'OVER_LIMIT');
         }
 
         $data = json_decode($request->getContent(), true);
@@ -151,15 +151,15 @@ class PasswordResetController
         $errors = $this->validator->validate($resetPasswordRequest);
 
         if (count($errors) > 0) {
-            return new JsonResponse(['errors' => (string) $errors], 400);
+            return new JsonResponse(['ERRORS' => (string) $errors], 400);
         }
 
         try {
             $this->passwordReset->resetPassword($resetPasswordRequest);
 
-            return new JsonResponse(['message' => 'Contraseña actualizada correctamente.'], 200);
+            return new JsonResponse(['MESSAGE' => 'PASSWORD_UPDATED'], 200);
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], 400);
+            return new JsonResponse(['ERROR' => $e->getMessage()], 400);
         }
     }
 }
