@@ -39,10 +39,10 @@ class GetAllTtnDevicesUseCase implements GetAllTtnDevicesUseCaseInterface
         // TODO: Implement getAll() method.
     }
 
-    public function executePaginated(int $page, int $limit, ?bool $available): GetAllTtnDevicesResponse
+    public function executePaginated(int $page, int $limit, ?bool $available = null, ?string $uuidClient = null): GetAllTtnDevicesResponse
     {
         // 1. Obtenemos QueryBuilder en lugar de traer todo
-        $qb = $this->poolTtnDeviceRepository->createQueryBuilderAllDevices($available);
+        $qb = $this->poolTtnDeviceRepository->createQueryBuilderAllDevices($available, $uuidClient);
 
         // 2. Paginamos
         $pagination = $this->paginator->paginate(
@@ -79,9 +79,9 @@ class GetAllTtnDevicesUseCase implements GetAllTtnDevicesUseCaseInterface
     private function serializeTtnDevice(PoolTtnDevice $ttnDevice): array
     {
         return [
-            'uuid' => $ttnDevice->getUuidUserCreation(),
             'available' => $ttnDevice->getAvailable(),
             'endDeviceId' => $ttnDevice->getEndDeviceId(),
+            'endDeviceName' => $ttnDevice->getEndDeviceName(),
             'appEui' => $ttnDevice->getAppEUI(),
             'devEui' => $ttnDevice->getDevEUI(),
             'appKey' => $ttnDevice->getAppKey(),

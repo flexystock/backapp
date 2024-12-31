@@ -98,7 +98,7 @@ class AuthController
         $password = $data['password'] ?? null;
 
         if (!$this->isValidLoginRequest($mail, $password)) {
-            return $this->jsonResponse(['error' => 'Invalid email or password'], Response::HTTP_BAD_REQUEST);
+                return $this->jsonResponse(['ERROR' => 'INVALID_EMAIL_OR_PASSWORD'], Response::HTTP_BAD_REQUEST);
         }
 
         $user = $this->loginInputPort->login($mail, $password, $request->getClientIp());
@@ -110,30 +110,30 @@ class AuthController
                 // El usuario existe, manejar intentos fallidos
                 $lockMessage = $this->loginInputPort->handleFailedLogin($user);
                 if ($lockMessage) {
-                    return $this->jsonResponse(['error' => $lockMessage], Response::HTTP_UNAUTHORIZED);
+                    return $this->jsonResponse(['ERROR' => $lockMessage], Response::HTTP_UNAUTHORIZED);
                 }
             }
 
             // No revelar si el usuario no existe
-            return $this->jsonResponse(['error' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
+            return $this->jsonResponse(['ERROR' => 'INVALID_CREDENTIALS'], Response::HTTP_UNAUTHORIZED);
         }
         $verified = $user->isVerified();
         if (!$verified) {
-            return $this->jsonResponse(['error' => 'Usuario NO verificado'], Response::HTTP_UNAUTHORIZED);
+            return $this->jsonResponse(['ERROR' => 'USER_NOT_VERIFIED'], Response::HTTP_UNAUTHORIZED);
         }
         // Verificar si la cuenta está bloqueada
         if ($user->getLockedUntil() && $user->getLockedUntil() > new \DateTimeImmutable()) {
             $lockedUntil = $user->getLockedUntil()->format('Y-m-d H:i:s');
 
-            return $this->jsonResponse(['error' => "Su cuenta está bloqueada hasta: $lockedUntil."], Response::HTTP_UNAUTHORIZED);
+            return $this->jsonResponse(['ERROR' => "YOUR_ACCOUNT_IS_LOCKED_UNTIL: $lockedUntil."], Response::HTTP_UNAUTHORIZED);
         }
 
         try {
             $token = $this->jwtManager->create($user);
 
-            return $this->jsonResponse(['token' => $token]);
+            return $this->jsonResponse(['TOKEN' => $token]);
         } catch (\Exception $e) {
-            return $this->jsonResponse(['error' => $e->getMessage()], 500);
+            return $this->jsonResponse(['ERROR' => $e->getMessage()], 500);
         }
     }
 
@@ -184,7 +184,6 @@ class AuthController
                     new OA\Property(property: 'language', type: 'string'),
                     new OA\Property(property: 'preferredContactMethod', type: 'string'),
                     new OA\Property(property: 'twoFactorEnabled', type: 'boolean'),
-
                 ],
                 type: 'object'
             )
@@ -212,7 +211,7 @@ class AuthController
             ),
             new OA\Response(
                 response: 400,
-                description: 'Entrada inválida',
+                description: 'INVALID_INPUT',
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'message', type: 'string'),
@@ -240,7 +239,7 @@ class AuthController
                 $errorMessages = $this->formatValidationErrors($errors);
 
                 return new JsonResponse([
-                    'message' => 'Datos inválidos',
+                    'message' => 'INVALID_DATA',
                     'errors' => $errorMessages,
                 ], Response::HTTP_BAD_REQUEST);
             }
@@ -248,7 +247,7 @@ class AuthController
             $user = $this->registerUseCase->register($userRequest);
 
             $responseContent = [
-                'message' => 'Usuario registrado exitosamente',
+                'message' => 'REGISTER_SUCCESSFUL',
                 'user' => [
                     'id' => $user->getUuid(),
                     'email' => $user->getEmail(),
@@ -259,13 +258,15 @@ class AuthController
         } catch (\Symfony\Component\Serializer\Exception\NotEncodableValueException $e) {
             // Error al deserializar el JSON (formato inválido)
             return new JsonResponse([
-                'message' => 'Formato JSON inválido.',
+                'message' => 'INVALID_JSON_FORMAT',
                 'error' => $e->getMessage(),
             ], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
             // Otros errores
+            // error al intentar registrar un usuario con el mismo email
+            //dos o tres palabras en myusculas
             return new JsonResponse([
-                'message' => 'Ocurrió un error al registrar el usuario.',
+                'message' => 'REGISTER_FAILED',
                 'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }

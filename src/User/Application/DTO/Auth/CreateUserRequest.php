@@ -7,57 +7,57 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class CreateUserRequest
 {
-    #[Assert\NotBlank(message: 'El nombre completo es obligatorio.')]
+    #[Assert\NotBlank(message: 'REQUIRED_FULL_NAME')]
     #[Assert\Length(
         max: 255,
-        maxMessage: 'El nombre completo no puede tener más de {{ limit }} caracteres.'
+        maxMessage: 'INVALID_FULL_NAME'
     )]
     #[Assert\Regex(
         pattern: '/^(?=.{1,50}$)[A-Za-zÁÉÍÓÚáéíóúÑñÜü]+(?:[-\'][A-Za-zÁÉÍÓÚáéíóúÑñÜü]+)?(?: [A-Za-zÁÉÍÓÚáéíóúÑñÜü]+(?:[-\'][A-Za-zÁÉÍÓÚáéíóúÑñÜü]+)?)*$/u',
-        message: 'El nombre completo no es válido.'
+        message: 'INVALID_FULL_NAME'
     )]
     #[SerializedName('fullName')]
     private string $name;
 
-    #[Assert\NotBlank(message: 'Los apellidos son obligatorios.')]
+    #[Assert\NotBlank(message: 'REQUIRED_SURNAMES')]
     #[Assert\Regex(
         pattern: '/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü ]{1,255}$/',
-        message: 'Los apellidos solo pueden contener letras y espacios.'
+        message: 'INVALID_SURNAMES'
     )]
     #[SerializedName('surnames')]
     private string $surnames;
 
-    #[Assert\NotBlank(message: 'El correo electrónico es obligatorio.')]
-    #[Assert\Email(message: "El correo electrónico '{{ value }}' no es válido.")]
+    #[Assert\NotBlank(message: 'REQUIRED_EMAIL')]
+    #[Assert\Email(message: "INVALID_EMAIL")]
     #[Assert\Regex(
         pattern: "/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}$/",
         message: 'El correo electrónico debe seguir el formato correcto.'
     )]
     private string $email;
 
-    #[Assert\NotBlank(message: 'La contraseña es obligatoria.')]
+    #[Assert\NotBlank(message: 'REQUIRED_PASSWORD')]
     #[Assert\Length(
         min: 8,
-        minMessage: 'La contraseña debe tener al menos {{ limit }} caracteres.'
+        minMessage: 'INVALID_PASSWORD'
     )]
     #[Assert\Regex(
         pattern: "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?\":{}|<>])[A-Za-z\d!@#$%^&*(),.?\":{}|<>]{6,}$/",
-        message: 'La contraseña debe tener al menos 8 caracteres, incluyendo una letra mayúscula, una minúscula, un número y un carácter especial.'
+        message: 'INVALID_PASSWORD'
     )]
     #[SerializedName('password')]
     private string $pass;
 
     #[Assert\NotBlank]
-    #[Assert\Type(type: 'string', message: 'El número de teléfono debe ser numérico.')]
+    #[Assert\Type(type: 'string', message: 'INVALID_PHONE_NUMBER')]
     #[Assert\Length(
         min: 9,
         max: 15,
-        minMessage: 'El número de teléfono debe tener al menos {{ limit }} dígitos.',
-        maxMessage: 'El número de teléfono no puede tener más de {{ limit }} dígitos.'
+        minMessage: 'INVALID_PHONE_NUMBER',
+        maxMessage: 'INVALID_PHONE_NUMBER'
     )]
     #[Assert\Regex(
         pattern: "/^\d{9,15}$/",
-        message: 'El número de teléfono debe contener entre 9 y 15 dígitos numéricos.'
+        message: 'INVALID_PHONE_NUMBER'
     )]
     #[SerializedName('phoneNumber')]
     private string $phone;
@@ -65,7 +65,7 @@ class CreateUserRequest
     #[Assert\NotBlank]
     #[Assert\Choice(
         choices: ['DNI', 'NIE'],
-        message: "El tipo de documento debe ser 'DNI' o 'NIE'."
+        message: "INVALID_DOCUMENT_TYPE"
     )]
     #[SerializedName('documentType')]
     private string $documentType;
@@ -73,17 +73,17 @@ class CreateUserRequest
     #[Assert\NotBlank]
     #[Assert\Length(
         max: 20,
-        maxMessage: 'El número de documento no puede tener más de {{ limit }} caracteres.'
+        maxMessage: 'INVALID_DOCUMENT_NUMBER'
     )]
     #[Assert\Regex(
         pattern: '/^[A-Za-z0-9-]+$/',
-        message: 'El número de documento solo puede contener letras, números y guiones.'
+        message: 'INVALID_DOCUMENT_NUMBER'
     )]
     #[SerializedName('documentNumber')]
     private string $documentNumber;
 
     #[Assert\NotBlank]
-    #[Assert\Timezone(message: "La zona horaria '{{ value }}' no es válida.")]
+    #[Assert\Timezone(message: "INVALID_TIMEZONE")]
     private string $timezone;
 
     #[Assert\NotBlank]
@@ -92,7 +92,7 @@ class CreateUserRequest
     #[Assert\NotBlank]
     #[Assert\Choice(
         choices: ['email', 'phone'],
-        message: "El método de contacto preferido debe ser 'email', 'phone' o 'sms'."
+        message: "INVALID_PREFERRED_CONTACT_METHOD"
     )]
     #[SerializedName('preferredContactMethod')]
     private string $preferredContactMethod;
@@ -100,6 +100,7 @@ class CreateUserRequest
     #[Assert\NotNull]
     #[Assert\Type(type: 'bool', message: 'El valor debe ser verdadero o falso.')]
     #[SerializedName('twoFactorEnabled')]
+
     private bool $twoFactorEnabled;
     // Métodos getters y setters
 

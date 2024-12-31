@@ -8,6 +8,8 @@ use App\Ttn\Application\DTO\RegisterTtnAppRequest;
 use App\Ttn\Application\DTO\RegisterTtnAppResponse;
 use App\Ttn\Application\DTO\RegisterTtnDeviceRequest;
 use App\Ttn\Application\DTO\RegisterTtnDeviceResponse;
+use App\Ttn\Application\DTO\UnassignTtnDeviceRequest;
+use App\Ttn\Application\DTO\UnassignTtnDeviceResponse;
 use App\Ttn\Application\OutputPorts\TtnServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -105,12 +107,13 @@ class TtnService implements TtnServiceInterface
         }
     }
 
-    public function registerDevice(RegisterTtnDeviceRequest $request): RegisterTtnDeviceResponse
+    public function registerDevice(RegisterTtnDeviceRequest $request): void
     {
         $deviceId = $request->getDeviceId();
-        $devEui = $request->getDevEui() ?? $this->generateEui();   // Generar EUI si no lo proporciona el front
-        $joinEui = $request->getJoinEui() ?? $this->generateEui();
-        $appKey = $request->getAppKey() ?? $this->generateAppKey();
+        $devEui = $request->getDevEui();   // Generar EUI si no lo proporciona el front
+        $joinEui = $request->getJoinEui();
+        $appKey = $request->getAppKey();
+        $nameDevice = $request->getUuidClient() ?? 'free';
 
         try {
             // 1. Identity Server
@@ -121,6 +124,7 @@ class TtnService implements TtnServiceInterface
                         'dev_eui' => $devEui,
                         'join_eui' => $joinEui,
                     ],
+                    'name' => $nameDevice,
                     'join_server_address' => $this->joinServerAddress,
                     'network_server_address' => $this->networkServerAddress,
                     'application_server_address' => $this->applicationServerAddress,
@@ -132,6 +136,7 @@ class TtnService implements TtnServiceInterface
                         'application_server_address',
                         'ids.dev_eui',
                         'ids.join_eui',
+                        'name',
                     ],
                 ],
             ];
@@ -194,6 +199,7 @@ class TtnService implements TtnServiceInterface
 
             $this->apiClient->put("/ns/applications/{$this->applicationId}/devices/{$deviceId}", $nsPayload);
 
+
             // 4. Application Server
             $asPayload = [
                 'end_device' => [
@@ -209,35 +215,39 @@ class TtnService implements TtnServiceInterface
             ];
 
             $this->apiClient->put("/as/applications/{$this->applicationId}/devices/{$deviceId}", $asPayload);
+            $this->logger->info('Device register successfully');
 
-            $ttnDevice = new PoolTtnDevice();
-            $ttnDevice->setAvailable(true);
-            $ttnDevice->setEndDeviceId($deviceId);
-            $ttnDevice->setAppEUI($devEui);
-            $ttnDevice->setDevEUI($joinEui);
-            $ttnDevice->setAppKey($appKey);
-            $ttnDevice->setUuidUserCreation($request->getUuidUser());
-            $ttnDevice->setDatehourCreation($request->getDatehourCreation());
-            $this->entityManager->persist($ttnDevice);
-            $this->entityManager->flush();
-
-            return new RegisterTtnDeviceResponse(true);
         } catch (\Exception $e) {
             $this->logger->error('Error registering device: '.$e->getMessage());
 
-            return new RegisterTtnDeviceResponse(false, $e->getMessage());
+            // Podrías lanzar tu propia excepción para que el UseCase sepa que falló
+            throw new \RuntimeException('Error unassigning device in TTN', 0, $e);
         }
     }
 
-    private function generateEui(): string
-    {
-        // Genera un EUI de 8 bytes en hex
-        return strtoupper(bin2hex(random_bytes(8)));
-    }
 
-    private function generateAppKey(): string
+
+    public function unassignDevice(string $deviceId): void
     {
-        // Genera un AppKey de 16 bytes en hex
-        return strtoupper(bin2hex(random_bytes(16)));
+        try {
+            $isPayload = [
+                'end_device' => [
+                    'name' => 'free',
+                ],
+                'field_mask' => [
+                    'paths' => [
+                        'name',
+                    ],
+                ],
+            ];
+
+            $this->apiClient->put("/applications/{$this->applicationId}/devices/{$deviceId}", $isPayload);
+            $this->logger->info('Device unassigned successfully');
+        } catch (\Exception $e) {
+            $this->logger->error('Error unassigning device in TTN: '.$e->getMessage());
+
+            // Podrías lanzar tu propia excepción para que el UseCase sepa que falló
+            throw new \RuntimeException('Error unassigning device in TTN', 0, $e);
+        }
     }
 }

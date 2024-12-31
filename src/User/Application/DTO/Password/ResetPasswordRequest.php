@@ -6,14 +6,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class ResetPasswordRequest
 {
-    #[Assert\NotBlank(message: 'El email es obligatorio.')]
-    #[Assert\Email(message: "El correo electrónico '{{ value }}' no es válido.")]
+    #[Assert\NotBlank(message: 'EMAIL_REQUIRED')]
+    #[Assert\Email(message: "INVALID_EMAIL")]
     public string $email;
 
-    #[Assert\NotBlank(message: 'El código es obligatorio.')]
+    #[Assert\NotBlank(message: 'TOKEN_REQUIRED')]
     public string $token;
 
-    #[Assert\NotBlank(message: 'La nueva contraseña es obligatoria.')]
-    #[Assert\Length(min: 8, minMessage: 'La contraseña debe tener al menos {{ limit }} caracteres.')]
+    #[Assert\NotBlank(message: 'PASSWORD_REQUIRED')]
+    #[Assert\Length(min: 8, minMessage: 'INVALID_PASSWORD')]
     public string $newPassword;
 }

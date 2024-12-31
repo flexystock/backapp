@@ -28,7 +28,7 @@ class GetUserClientsUseCase implements GetUserClientsInterface
         $user = $this->userRepository->findByUuid($userId);
 
         if (!$user) {
-            throw new \Exception('Usuario no encontrado');
+            throw new \Exception('USER_NOT_FOUND');
         }
 
         // Obtener los clientes asociados al usuario

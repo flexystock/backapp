@@ -21,3 +21,9 @@ controllers_ttn:
         path: ../src/Ttn/Infrastructure/InputAdapters/
         namespace: App\Ttn\Infrastructure\InputAdapters
     type: attribute
+
+controllers_scales:
+    resource:
+        path: ../src/Scales/Infrastructure/InputAdapters/
+        namespace: App\Scales\Infrastructure\InputAdapters
+    type: attribute

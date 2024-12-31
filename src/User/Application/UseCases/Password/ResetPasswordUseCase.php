@@ -47,7 +47,7 @@ class ResetPasswordUseCase implements ResetPasswordInterface
 
         // Verificar si existe el registro de restablecimiento de contraseña
         if (!$passwordReset) {
-            throw new \Exception('Código inválido o expirado.');
+            throw new \Exception('INVALID_TOKEN_OR_EXPIRED');
         }
 
         // Incrementar el contador de intentos
@@ -58,7 +58,7 @@ class ResetPasswordUseCase implements ResetPasswordInterface
         if ($passwordReset->hasExceededMaxAttempts($maxAttempts)) {
             // Eliminar el registro de restablecimiento
             $this->passwordResetRepository->remove($passwordReset);
-            throw new \Exception('Se ha excedido el número máximo de intentos. Solicite un nuevo código.');
+            throw new \Exception('MAX_ATTEMPTS_EXCEEDED');
         }
 
         // Guardar el incremento de intentos en la base de datos
@@ -66,13 +66,13 @@ class ResetPasswordUseCase implements ResetPasswordInterface
 
         // Verificar el token
         if (!$passwordReset->verifyToken($request->token)) {
-            throw new \Exception('Código inválido o expirado.');
+            throw new \Exception('INVALID_TOKEN_OR_EXPIRED');
         }
         // Buscar al usuario por email
         $user = $this->userRepository->findByEmail($request->email);
 
         if (!$user) {
-            throw new \Exception('Usuario no encontrado.');
+            throw new \Exception('USER_NOT_FOUND');
         }
         // Actualizar la contraseña
         $hashedPassword = $this->passwordHasher->hashPassword($user, $request->newPassword);

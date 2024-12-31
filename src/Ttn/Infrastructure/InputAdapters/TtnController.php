@@ -5,10 +5,13 @@ namespace App\Ttn\Infrastructure\InputAdapters;
 use App\Client\Application\InputPorts\GetClientByUuidInputPort;
 use App\Ttn\Application\DTO\RegisterTtnAppRequest;
 use App\Ttn\Application\DTO\RegisterTtnDeviceRequest;
+use App\Ttn\Application\DTO\UnassignTtnDeviceRequest;
 use App\Ttn\Application\InputPorts\GetAllTtnDevicesUseCaseInterface;
 use App\Ttn\Application\InputPorts\RegisterTtnAppUseCaseInterface;
 use App\Ttn\Application\InputPorts\RegisterTtnDeviceUseCaseInterface;
+use App\Ttn\Application\InputPorts\UnassignTtnDeviceUseCaseInterface;
 use OpenApi\Attributes as OA;
+use Psr\Log\LoggerInterface;
 use Random\RandomException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,16 +25,22 @@ class TtnController extends AbstractController
     private RegisterTtnAppUseCaseInterface $registerTtnAppUseCase;
     private GetClientByUuidInputPort $getClientByUuidInputPort;
     private GetAllTtnDevicesUseCaseInterface $getAllTtnDevicesUseCase;
+    private UnassignTtnDeviceUseCaseInterface $unassignTtnDeviceUseCase;
+    private LoggerInterface $logger;
 
     public function __construct(RegisterTtnDeviceUseCaseInterface $registerTtnDeviceUseCase,
         RegisterTtnAppUseCaseInterface $registerTtnAppUseCase,
         GetClientByUuidInputPort $getClientByUuidInputPort,
-        GetAllTtnDevicesUseCaseInterface $getAllTtnDevicesUseCase)
+        GetAllTtnDevicesUseCaseInterface $getAllTtnDevicesUseCase,
+        UnassignTtnDeviceUseCaseInterface $unassignTtnDeviceUseCase,
+        LoggerInterface $logger)
     {
         $this->registerTtnDeviceUseCase = $registerTtnDeviceUseCase;
         $this->registerTtnAppUseCase = $registerTtnAppUseCase;
         $this->getClientByUuidInputPort = $getClientByUuidInputPort;
         $this->getAllTtnDevicesUseCase = $getAllTtnDevicesUseCase;
+        $this->unassignTtnDeviceUseCase = $unassignTtnDeviceUseCase;
+        $this->logger = $logger;
     }
 
     #[Route('/api/app_register', name: 'api_app_register', methods: ['POST'])]
@@ -72,11 +81,110 @@ class TtnController extends AbstractController
      * @throws RandomException
      */
     #[Route('/api/device_register', name: 'api_device_register', methods: ['POST'])]
-    public function registerTtnDevice(): JsonResponse
+    #[OA\Post(
+        path: '/api/device_register',
+        description: 'Registra un nuevo dispositivo en TTN. El parámetro `uuidClient` es opcional. Si se proporciona, `end_device_name` se establecerá con el valor de `uuidClient`; de lo contrario, se establecerá en "free".',
+        summary: 'Registrar un dispositivo TTN',
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            description: 'Datos para registrar el dispositivo. `uuidClient` es opcional.',
+            required: false,
+            content: new OA\JsonContent(
+                required: [],
+                properties: [
+                    new OA\Property(
+                        property: 'uuidClient',
+                        description: 'UUID del cliente. Opcional.',
+                        type: 'string',
+                        format: 'uuid',
+                        example: 'c014a415-4113-49e5-80cb-cc3158c15236'
+                    ),
+                ],
+                type: 'object'
+            )
+        ),
+        tags: ['Devices'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Dispositivo registrado exitosamente',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'message',
+                            type: 'string',
+                            example: 'Device registered successfully'
+                        ),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Solicitud incorrecta debido a un formato inválido de `uuidClient`.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'error',
+                            type: 'string',
+                            example: 'Invalid uuid format'
+                        ),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'El usuario no tiene permisos suficientes (no es root).',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'error',
+                            type: 'string',
+                            example: 'Root are required'
+                        ),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'No autenticado. El token de autenticación es inválido o está ausente.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'error',
+                            type: 'string',
+                            example: 'Unauthorized'
+                        ),
+                    ],
+                    type: 'object'
+                )
+            ),
+        ]
+    )]
+    public function registerTtnDevice(Request $request): JsonResponse
     {
         $uuidUser = $this->getUser()->getUuid();
+        $data = json_decode($request->getContent(), true);
+        $uuidClient = $data['uuidClient'] ?? null;
+
+        if (!$this->getUser()->isRoot()) {
+            $this->logger->warning('TtnController: Rol sin permisos.');
+
+            return new JsonResponse(['error' => 'Root are required'], 400);
+        }
+
+        // Validar formato de UUID
+        if ($uuidClient && !$this->isValidUuid($uuidClient)) {
+            $this->logger->warning('TtnController: uuidClient con formato inválido.');
+
+            return new JsonResponse(['error' => 'Invalid uuid format'], 400);
+        }
+
         $deviceId = 'heltec-ab01-'.random_int(1000, 9999);
-        $dtoDevice = new RegisterTtnDeviceRequest($deviceId, $uuidUser, new \DateTime(), null, null, null);
+
+        $dtoDevice = new RegisterTtnDeviceRequest($deviceId, $uuidUser, new \DateTime(), $uuidClient, null, null, null);
         $response = $this->registerTtnDeviceUseCase->execute($dtoDevice);
 
         if ($response->isSuccess()) {
@@ -91,8 +199,11 @@ class TtnController extends AbstractController
         path: '/api/devices',
         description: 'Este endpoint devuelve un listado paginado de los dispositivos. 
                   Permite filtrar el campo "available" por `true` o `false`. 
-                  Si se envía vacío, devuelve todos los dispositivos.',
-        summary: 'Obtener dispositivos con paginación y filtrado por "available"',
+                  Si se envía vacío, devuelve todos los dispositivos.
+                  Tambien se puede solicitar por tipo de cliente `uuidClient`
+                  como parametro opcioinal. Si se envía, devuelve los dispositivos
+                  que pertenecen al cliente.',
+        summary: 'Obtener dispositivos con paginación y filtrado por "available" y por `uuidClient`',
         requestBody: new OA\RequestBody(
             description: 'Envío opcional de "available". 
                       Puede ser `true`, `false`, o vacío. 
@@ -105,6 +216,12 @@ class TtnController extends AbstractController
                         type: 'string',
                         enum: ['true', 'false', ''],
                         example: 'true'
+                    ),
+                    new OA\Property(
+                        property: 'uuidClient',
+                        type: 'string',
+                        enum: ['c014a415-4113-49e5-80cb-cc3158c15236', ''],
+                        example: 'c014a415-4113-49e5-80cb-cc3158c15236'
                     ),
                 ],
                 type: 'object'
@@ -141,9 +258,9 @@ class TtnController extends AbstractController
                             type: 'array',
                             items: new OA\Items(
                                 properties: [
-                                    new OA\Property(property: 'uuid', type: 'string', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
                                     new OA\Property(property: 'available', type: 'boolean', example: true),
                                     new OA\Property(property: 'endDeviceId', type: 'string', example: 'heltec-ab01-1234'),
+                                    new OA\Property(property: 'endDeviceName', type: 'string', example: 'prueba4-client'),
                                     new OA\Property(property: 'appEui', type: 'string', example: '70B3D57ED004A75B'),
                                     new OA\Property(property: 'devEui', type: 'string', example: '70B3D57ED004A75C'),
                                     new OA\Property(property: 'appKey', type: 'string', example: '11223344556677889900AABBCCDDEEFF'),
@@ -182,8 +299,16 @@ class TtnController extends AbstractController
     {
         // Verificar que el usuario tiene acceso al cliente
         $data = json_decode($request->getContent(), true);
+        $uuidClient = $data['uuidClient'] ?? null;
         // Valor crudo (string, bool, null, dependiendo de Postman/Front)
         $availableRaw = $data['available'] ?? null;
+
+        // Validar formato de UUID
+        if ($uuidClient && !$this->isValidUuid($uuidClient)) {
+            $this->logger->warning('ProductController: uuidClient con formato inválido.');
+
+            return new JsonResponse(['error' => 'Invalid uuid format'], 400);
+        }
 
         $user = $this->getUser();
         if (!$user) {
@@ -207,7 +332,7 @@ class TtnController extends AbstractController
             $page = $request->query->getInt('page', 1);
             $limit = $request->query->getInt('limit', 10);
 
-            $response = $this->getAllTtnDevicesUseCase->executePaginated($page, $limit, $available);
+            $response = $this->getAllTtnDevicesUseCase->executePaginated($page, $limit, $available, $uuidClient);
 
             return new JsonResponse([
                 'totalItems' => $response->getMeta()['totalItems'],
@@ -223,5 +348,109 @@ class TtnController extends AbstractController
 
             return new JsonResponse(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    #[Route('/api/unassign_ttn_device', name: 'unassign_ttn_device', methods: ['PUT'])]
+    #[OA\Put(
+        path: '/api/unassign_ttn_device',
+        summary: 'Desasignar un dispositivo TTN',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['uuidClient', 'endDeviceId'],
+                properties: [
+                    new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
+                    new OA\Property(property: 'endDeviceId', type: 'string', example: 'heltec-ab01-1234'),
+                ],
+                type: 'object'
+            )
+        ),
+        tags: ['Devices'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Dispositivo desasignado correctamente',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Device unassigned successfully'),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Faltan campos uuidClient o endDeviceId',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'error', type: 'string', example: 'Missing required fields: uuidClient or endDeviceId'),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'No autenticado',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'error', type: 'string', example: 'Unauthorized'),
+                    ],
+                    type: 'object',
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'El usuario no tiene acceso al cliente especificado',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'error', type: 'string', example: 'Access denied to the specified client'),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(
+                response: 500,
+                description: 'Error interno del servidor',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'error', type: 'string', example: 'Internal Server Error'),
+                    ],
+                    type: 'object'
+                )
+            ),
+        ]
+    )]
+    public function UnassignTtnDevice(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $uuidClient = $data['uuidClient'] ?? null;
+        $endDeviceId = $data['endDeviceId'] ?? null;
+
+        if (!$uuidClient || !$endDeviceId) {
+            $this->logger->warning('TtnController: uuidClient o endDeviceId no proporcionado.');
+
+            return new JsonResponse(['error' => 'uuidClient and endDeviceId are required'], 400);
+        }
+
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Unauthorized'], 401);
+        }
+        $dtoUnassign = new UnassignTtnDeviceRequest($uuidClient, $endDeviceId, $user->getUuid(), new \DateTime());
+
+        $response = $this->unassignTtnDeviceUseCase->execute($dtoUnassign);
+
+        if ($response->isSuccess()) {
+            return new JsonResponse(['message' => 'Device unassigned successfully'], Response::HTTP_OK);
+        } else {
+            return new JsonResponse(['error' => $response->getError()], status: Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    /**
+     * Valida el formato UUID.
+     */
+    private function isValidUuid(string $uuid): bool
+    {
+        return 1 === preg_match('/^[0-9a-fA-F-]{36}$/', $uuid);
     }
 }

@@ -85,7 +85,7 @@ class CreateClientUseCase implements CreateClientInputPort
             $client->addUser($user);
         } else {
             // Manejar el caso donde el usuario no existe
-            throw new \Exception('Usuario no encontrado');
+            throw new \Exception('USER_NOT_FOUND');
         }
 
         // Guardar el cliente en la base de datos
