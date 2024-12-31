@@ -28,7 +28,7 @@ class CreateUserRequest
     private string $surnames;
 
     #[Assert\NotBlank(message: 'REQUIRED_EMAIL')]
-    #[Assert\Email(message: "INVALID_EMAIL")]
+    #[Assert\Email(message: 'INVALID_EMAIL')]
     #[Assert\Regex(
         pattern: "/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}$/",
         message: 'El correo electrónico debe seguir el formato correcto.'
@@ -65,7 +65,7 @@ class CreateUserRequest
     #[Assert\NotBlank]
     #[Assert\Choice(
         choices: ['DNI', 'NIE'],
-        message: "INVALID_DOCUMENT_TYPE"
+        message: 'INVALID_DOCUMENT_TYPE'
     )]
     #[SerializedName('documentType')]
     private string $documentType;
@@ -83,7 +83,7 @@ class CreateUserRequest
     private string $documentNumber;
 
     #[Assert\NotBlank]
-    #[Assert\Timezone(message: "INVALID_TIMEZONE")]
+    #[Assert\Timezone(message: 'INVALID_TIMEZONE')]
     private string $timezone;
 
     #[Assert\NotBlank]
@@ -92,7 +92,7 @@ class CreateUserRequest
     #[Assert\NotBlank]
     #[Assert\Choice(
         choices: ['email', 'phone'],
-        message: "INVALID_PREFERRED_CONTACT_METHOD"
+        message: 'INVALID_PREFERRED_CONTACT_METHOD'
     )]
     #[SerializedName('preferredContactMethod')]
     private string $preferredContactMethod;
@@ -100,7 +100,6 @@ class CreateUserRequest
     #[Assert\NotNull]
     #[Assert\Type(type: 'bool', message: 'El valor debe ser verdadero o falso.')]
     #[SerializedName('twoFactorEnabled')]
-
     private bool $twoFactorEnabled;
     // Métodos getters y setters
 
@@ -235,5 +234,4 @@ class CreateUserRequest
 
         return $this;
     }
-
 }

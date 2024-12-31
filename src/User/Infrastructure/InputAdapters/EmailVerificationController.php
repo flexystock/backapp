@@ -31,7 +31,6 @@ class EmailVerificationController
     #[Route('/verify/{token}', name: 'user_verification')]
     public function verifyUserEmail(string $token): Response
     {
-        // die("llegamos");
         $user = $this->userRepository->findOneByVerificationToken($token);
         if (!$user) {
             return new Response('INVALID_LINK', Response::HTTP_BAD_REQUEST);
