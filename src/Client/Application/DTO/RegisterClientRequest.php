@@ -27,7 +27,7 @@ class RegisterClientRequest
     #[SerializedName('companyName')]
     private string $businessGroupName;
 
-    #[Assert\NotBlank(message: 'REQUIRED_BUSINESS_TYPE')]
+    #[Assert\NotBlank(message: 'REQUIRED_NIFCIF')]
     #[Assert\Length(
         max: 12,
     )]
@@ -62,7 +62,7 @@ class RegisterClientRequest
     )]
     private string $city;
 
-    #[Assert\NotBlank(message: 'El pais es obligatorio.')]
+    #[Assert\NotBlank(message: 'REQUIRED_COUNTRY')]
     #[Assert\Length(
         max: 255,
     )]

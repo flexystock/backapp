@@ -110,12 +110,23 @@ class DockerService
 
     private function generateDatabaseName(string $clientName, string $uuid): string
     {
-        return 'client_db_'.$clientName.'_'.substr($uuid, 0, 4);
+        // 1) Quitar o reemplazar espacios y caracteres no permitidos.
+        //    Reemplazamos con subrayado `_`.
+        $safeClientName = preg_replace('/[^A-Za-z0-9_.-]+/', '_', $clientName);
+
+        // 2) Armar el nombre final
+
+        return 'client_db_'.$safeClientName.'_'.substr($uuid, 0, 4);
     }
 
     private function generateDatabaseUser(string $clientName, string $uuid): string
     {
-        return 'client_user_'.$clientName.'_'.substr($uuid, 0, 4);
+        // 1) Quitar o reemplazar espacios y caracteres no permitidos.
+        //    Reemplazamos con subrayado `_`.
+        $safeClientName = preg_replace('/[^A-Za-z0-9_.-]+/', '_', $clientName);
+
+        // 2) Armar el nombre final
+        return 'client_user_'.$safeClientName.'_'.substr($uuid, 0, 4);
     }
 
     /**
