@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Profile\Infrastructure\OutputAdapters;
 
 use App\Entity\Main\Profile;
-use App\Profile\Infrastructure\OutputPorts\ProfileRepositoryInterface;
+use App\Profile\Application\OutputPorts\ProfileRepositoryInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;

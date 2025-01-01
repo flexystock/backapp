@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Profile\Infrastructure\OutputPorts;
+namespace App\Profile\Application\OutputPorts;
 
 use App\Entity\Main\Profile;
 
