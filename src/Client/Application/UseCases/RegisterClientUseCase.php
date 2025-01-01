@@ -62,7 +62,11 @@ class RegisterClientUseCase implements RegisterClientInputPort
             // Lanzas algo semántico
             throw new \RuntimeException('USER_NOT_FOUND');
         }
-
+        //BBuscamos cliente por si ya hay uno con ese nombre
+        $client = $this->clientRepository->findOneBy(['name' => $request->getName()]);
+        if ($client) {
+            throw new \RuntimeException('CLIENT_DUPLICATED');
+        }
         // 2) Crear Client y setear campos
         $client = new Client();
         $client->setName($request->getName());
