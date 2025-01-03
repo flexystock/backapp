@@ -106,7 +106,7 @@ class GenericClientController
     {
         $client = $this->getClientByUuidInputPort->getByUuid($uuid);
         if (!$client) {
-            return $this->jsonResponse(['ERROR' => 'CLIENT_NOT_FOUND'], 404);
+            return $this->jsonResponse(['message' => 'CLIENT_NOT_FOUND'], 404);
         }
 
         return $this->jsonResponse([
@@ -119,7 +119,7 @@ class GenericClientController
     {
         $client = $this->getClientByNameInputPort->getByName($name);
         if (!$client) {
-            return $this->jsonResponse(['ERROR' => 'CLIENT_NOT_FOUND'], 404);
+            return $this->jsonResponse(['message' => 'CLIENT_NOT_FOUND'], 404);
         }
 
         return $this->jsonResponse([
@@ -200,7 +200,7 @@ class GenericClientController
 
         // Validar que el nombre es proporcionado
         if (!$name) {
-            return $this->jsonResponse(['ERROR' => 'REQUIRED_NAME'], 400);
+            return $this->jsonResponse(['message' => 'REQUIRED_CLIENT_NAME'], 400);
         }
 
         // Crear el cliente utilizando el caso de uso correspondiente
@@ -216,7 +216,7 @@ class GenericClientController
             ], 201); // 201 indica que un recurso fue creado
         } catch (\Exception $e) {
             // Manejar cualquier error que ocurra durante la creación
-            return $this->jsonResponse(['ERROR' => $e->getMessage()], 500);
+            return $this->jsonResponse(['message' => $e->getMessage()], 500);
         }
     }
 

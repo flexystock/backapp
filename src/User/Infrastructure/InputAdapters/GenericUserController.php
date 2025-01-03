@@ -83,7 +83,7 @@ class GenericUserController extends AbstractController
         }, $users);
 
         if (empty($users)) {
-            return $this->jsonResponse(['ERROR' => 'NOT_FOUND_ANY_USER'], Response::HTTP_OK);
+            return $this->jsonResponse(['message' => 'NOT_FOUND_ANY_USER'], Response::HTTP_OK);
         } else {
             return $this->jsonResponse($usersArray, Response::HTTP_OK);
         }
@@ -143,13 +143,13 @@ class GenericUserController extends AbstractController
         $user = $this->security->getUser();
 
         if (!$user) {
-            return new JsonResponse(['ERROR' => 'USER_NOT_AUTHENTICATED'], Response::HTTP_UNAUTHORIZED);
+            return new JsonResponse(['message' => 'USER_NOT_AUTHENTICATED'], Response::HTTP_UNAUTHORIZED);
         }
         // Obtener el usuario desde el repositorio para asegurarnos de que está gestionado por Doctrine
         $userEntity = $this->userRepository->findByUuid($user->getUuid());
 
         if (!$userEntity) {
-            return new JsonResponse(['ERROR' => 'USER_NOT_FOUND'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['message' => 'USER_NOT_FOUND_CLIENTS'], Response::HTTP_NOT_FOUND);
         }
         // Obtener los clientes asociados
         try {
@@ -160,7 +160,7 @@ class GenericUserController extends AbstractController
 
             return new JsonResponse(json_decode($data), Response::HTTP_OK);
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }
