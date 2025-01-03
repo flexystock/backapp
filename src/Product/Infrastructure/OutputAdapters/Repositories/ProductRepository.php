@@ -47,7 +47,7 @@ class ProductRepository implements ProductRepositoryInterface
         return $this->em->getRepository(Product::class)->findAll();
     }
 
-    public function save(Product $product): void
+    public function save(Product $product): void // ?Product
     {
         $this->em->persist($product);
         $this->em->flush();

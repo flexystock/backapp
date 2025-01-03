@@ -28,14 +28,12 @@ class CreateProductRequest
     public function __construct(
         string $uuidClient,
         string $name,
-        string $uuidUserCreation,
-        \DateTimeInterface $datehourCreation,
-        int $daysAverageConsumption = 30,
-        int $daysServeOrder = 0,
-        string $mainUnit = '0',
-        float $tare = 0.0,
-        float $salePrice = 0.00,
-        float $costPrice = 0.00,
+        ?int $mainUnit = null,
+        ?float $salePrice = null,
+        ?float $costPrice = null,
+        ?float $tare = null,
+        ?int $daysServeOrder = null,
+        ?int $daysAverageConsumption = null,
         ?string $ean = null,
         ?float $weightRange = null,
         ?string $nameUnit1 = null,
@@ -46,26 +44,20 @@ class CreateProductRequest
     ) {
         $this->uuidClient = $uuidClient;
         $this->name = $name;
-        $this->uuidUserCreation = $uuidUserCreation;
-        $this->datehourCreation = $datehourCreation;
         $this->daysAverageConsumption = $daysAverageConsumption;
-        $this->daysServeOrder = $daysServeOrder;
-        $this->mainUnit = $mainUnit;
-        $this->tare = $tare;
-        $this->salePrice = $salePrice;
-        $this->costPrice = $costPrice;
+        $this->mainUnit = $mainUnit ?? 0;
+        $this->tare = $tare ?? 0.0;
+        $this->salePrice = $salePrice ?? 0.00;
+        $this->costPrice = $costPrice ?? 0.00;
+        $this->daysServeOrder = $daysServeOrder ?? 0;
+        $this->daysAverageConsumption = $daysAverageConsumption ?? 30;
         $this->ean = $ean;
-        $this->weightRange = $weightRange;
+        $this->weightRange = $weightRange ?? 0.00000;
         $this->nameUnit1 = $nameUnit1;
-        $this->weightUnit1 = $weightUnit1;
+        $this->weightUnit1 = $weightUnit1 ?? 0.00000;
         $this->nameUnit2 = $nameUnit2;
-        $this->weightUnit2 = $weightUnit2;
-        $this->outSystemStock = $outSystemStock;
-    }
-
-    public function getUuidUserCreation(): string
-    {
-        return $this->uuidUserCreation;
+        $this->weightUnit2 = $weightUnit2 ?? 0.00000;
+        $this->outSystemStock = $outSystemStock ?? false;
     }
 
     public function getName(): string
@@ -103,7 +95,7 @@ class CreateProductRequest
         return $this->weightUnit2;
     }
 
-    public function getMainUnit(): string
+    public function getMainUnit(): int
     {
         return $this->mainUnit;
     }
@@ -147,13 +139,22 @@ class CreateProductRequest
     {
         $this->uuidClient = $uuidClient;
     }
+    public function getUuidUserCreation(): ?string
+    {
+        return $this->uuidUserCreation;
+    }
 
-    public function getDatehourCreation(): \DateTimeInterface
+    public function setUuidUserCreation(?string $uuidUserCreation): void
+    {
+        $this->uuidUserCreation = $uuidUserCreation;
+    }
+
+    public function getDatehourCreation(): ?\DateTimeInterface
     {
         return $this->datehourCreation;
     }
 
-    public function setDatehourCreation(\DateTimeInterface $datehourCreation): void
+    public function setDatehourCreation(?\DateTimeInterface $datehourCreation): void
     {
         $this->datehourCreation = $datehourCreation;
     }

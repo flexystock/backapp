@@ -98,7 +98,7 @@ class AuthController
         $password = $data['password'] ?? null;
 
         if (!$this->isValidLoginRequest($mail, $password)) {
-                return $this->jsonResponse(['ERROR' => 'INVALID_EMAIL_OR_PASSWORD'], Response::HTTP_BAD_REQUEST);
+            return $this->jsonResponse(['ERROR' => 'INVALID_EMAIL_OR_PASSWORD'], Response::HTTP_BAD_REQUEST);
         }
 
         $user = $this->loginInputPort->login($mail, $password, $request->getClientIp());
@@ -262,7 +262,7 @@ class AuthController
                 'error' => $e->getMessage(),
             ], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
-            if ($e->getMessage() === 'EMAIL_IN_USE') {
+            if ('EMAIL_IN_USE' === $e->getMessage()) {
                 return new JsonResponse([
                     'message' => 'REGISTER_FAILED',
                     'error' => 'EMAIL_ALREADY_EXISTS',
