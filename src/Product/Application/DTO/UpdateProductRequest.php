@@ -13,7 +13,7 @@ class UpdateProductRequest
     private ?float $weightUnit1;
     private ?string $nameUnit2;
     private ?float $weightUnit2;
-    private ?string $mainUnit;
+    private ?int $mainUnit;
     private ?float $tare;
     private ?float $salePrice;
     private ?float $costPrice;
@@ -26,8 +26,6 @@ class UpdateProductRequest
     public function __construct(
         string $uuidClient,
         string $uuidProduct,
-        string $uuidUserModification,
-        \DateTimeInterface $datehourModification,
         string $name,
         ?string $ean = null,
         ?float $weightRange = null,
@@ -35,7 +33,7 @@ class UpdateProductRequest
         ?float $weightUnit1 = null,
         ?string $nameUnit2 = null,
         ?float $weightUnit2 = null,
-        ?string $mainUnit = null,
+        ?int $mainUnit = null,
         ?float $tare = null,
         ?float $salePrice = null,
         ?float $costPrice = null,
@@ -45,8 +43,6 @@ class UpdateProductRequest
     ) {
         $this->uuidClient = $uuidClient;
         $this->uuidProduct = $uuidProduct;
-        $this->uuidUserModification = $uuidUserModification;
-        $this->datehourModification = $datehourModification;
         $this->name = $name;
         $this->ean = $ean;
         $this->weightRange = $weightRange;
@@ -54,7 +50,7 @@ class UpdateProductRequest
         $this->weightUnit1 = $weightUnit1;
         $this->nameUnit2 = $nameUnit2;
         $this->weightUnit2 = $weightUnit2;
-        $this->mainUnit = $mainUnit;
+        $this->mainUnit = $mainUnit ?? 0;
         $this->tare = $tare;
         $this->salePrice = $salePrice;
         $this->costPrice = $costPrice;
@@ -108,7 +104,7 @@ class UpdateProductRequest
         return $this->weightUnit2;
     }
 
-    public function getMainUnit(): ?string
+    public function getMainUnit(): ?int
     {
         return $this->mainUnit;
     }
@@ -152,4 +148,15 @@ class UpdateProductRequest
     {
         return $this->datehourModification;
     }
+
+    public function setDatehourModification(\DateTimeInterface $datehourModification): void
+    {
+        $this->datehourModification = $datehourModification;
+    }
+
+    public function setUuidUserModification(string $uuidUserModification): void
+    {
+        $this->uuidUserModification = $uuidUserModification;
+    }
+
 }
