@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\User\Infrastructure\InputAdapters;
 
-use App\Entity\Main\User;
 use App\User\Application\DTO\Auth\CreateUserRequest;
 use App\User\Application\InputPorts\Auth\LoginUserInputPort;
 use App\User\Application\InputPorts\Auth\SelectClientInputPort;
@@ -98,7 +97,7 @@ class AuthController
         $password = $data['password'] ?? null;
 
         if (!$this->isValidLoginRequest($mail, $password)) {
-                return $this->jsonResponse(['message' => 'INVALID_EMAIL_OR_PASSWORD'], Response::HTTP_BAD_REQUEST);
+            return $this->jsonResponse(['message' => 'INVALID_EMAIL_OR_PASSWORD'], Response::HTTP_BAD_REQUEST);
         }
 
         $user = $this->loginInputPort->login($mail, $password, $request->getClientIp());
@@ -250,7 +249,7 @@ class AuthController
                 'error' => $e->getMessage(),
             ], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
-            if ($e->getMessage() === 'EMAIL_IN_USE') {
+            if ('EMAIL_IN_USE' === $e->getMessage()) {
                 return new JsonResponse([
                     'message' => 'EMAIL_ALREADY_EXISTS',
                     'error' => 'REGISTER_FAILED',
