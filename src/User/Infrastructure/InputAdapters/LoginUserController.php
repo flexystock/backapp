@@ -68,7 +68,7 @@ class LoginUserController
     //        $password = $data['password'] ?? null;
     //
     //        if (!$this->isValidLoginRequest($mail, $password)) {
-    //            return $this->jsonResponse(['error' => 'Invalid email or password'], JsonResponse::HTTP_BAD_REQUEST);
+    //            return $this->jsonResponse(['message' => 'Invalid email or password'], JsonResponse::HTTP_BAD_REQUEST);
     //        }
     //
     //        $user = $this->loginInputPort->login($mail, $password, $request->getClientIp());
@@ -80,24 +80,24 @@ class LoginUserController
     //                // El usuario existe, manejar intentos fallidos
     //                $lockMessage = $this->loginInputPort->handleFailedLogin($user);
     //                if ($lockMessage) {
-    //                    return $this->jsonResponse(['error' => $lockMessage], JsonResponse::HTTP_UNAUTHORIZED);
+    //                    return $this->jsonResponse(['message' => $lockMessage], JsonResponse::HTTP_UNAUTHORIZED);
     //                }
     //            }
     //            // No revelar si el usuario no existe
-    //            return $this->jsonResponse(['error' => 'Invalid credentials'], JsonResponse::HTTP_UNAUTHORIZED);
+    //            return $this->jsonResponse(['message' => 'Invalid credentials'], JsonResponse::HTTP_UNAUTHORIZED);
     //        }
     //
     //        // Verificar si la cuenta está bloqueada
     //        if ($user->getLockedUntil() && $user->getLockedUntil() > new \DateTimeImmutable()) {
     //            $lockedUntil = $user->getLockedUntil()->format('Y-m-d H:i:s');
-    //            return $this->jsonResponse(['error' => "Su cuenta está bloqueada hasta: $lockedUntil."], JsonResponse::HTTP_UNAUTHORIZED);
+    //            return $this->jsonResponse(['message' => "Su cuenta está bloqueada hasta: $lockedUntil."], JsonResponse::HTTP_UNAUTHORIZED);
     //        }
     //
     //        try {
     //            $token = $this->jwtManager->create($user);
     //            return $this->jsonResponse(['token' => $token]);
     //        } catch (\Exception $e) {
-    //            return $this->jsonResponse(['error' => $e->getMessage()], 500);
+    //            return $this->jsonResponse(['message' => $e->getMessage()], 500);
     //        }
     //    }
     //

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\User\Infrastructure\InputAdapters;
 
-use App\Entity\Main\User;
 use App\User\Application\DTO\Auth\CreateUserRequest;
 use App\User\Application\InputPorts\Auth\LoginUserInputPort;
 use App\User\Application\InputPorts\Auth\SelectClientInputPort;
@@ -98,7 +97,9 @@ class AuthController
         $password = $data['password'] ?? null;
 
         if (!$this->isValidLoginRequest($mail, $password)) {
-            return $this->jsonResponse(['ERROR' => 'INVALID_EMAIL_OR_PASSWORD'], Response::HTTP_BAD_REQUEST);
+
+            return $this->jsonResponse(['message' => 'INVALID_EMAIL_OR_PASSWORD'], Response::HTTP_BAD_REQUEST);
+
         }
 
         $user = $this->loginInputPort->login($mail, $password, $request->getClientIp());
@@ -110,22 +111,22 @@ class AuthController
                 // El usuario existe, manejar intentos fallidos
                 $lockMessage = $this->loginInputPort->handleFailedLogin($user);
                 if ($lockMessage) {
-                    return $this->jsonResponse(['ERROR' => $lockMessage], Response::HTTP_UNAUTHORIZED);
+                    return $this->jsonResponse(['message' => $lockMessage], Response::HTTP_UNAUTHORIZED);
                 }
             }
 
             // No revelar si el usuario no existe
-            return $this->jsonResponse(['ERROR' => 'INVALID_CREDENTIALS'], Response::HTTP_UNAUTHORIZED);
+            return $this->jsonResponse(['message' => 'INVALID_CREDENTIALS'], Response::HTTP_UNAUTHORIZED);
         }
         $verified = $user->isVerified();
         if (!$verified) {
-            return $this->jsonResponse(['ERROR' => 'USER_NOT_VERIFIED'], Response::HTTP_UNAUTHORIZED);
+            return $this->jsonResponse(['message' => 'USER_NOT_VERIFIED'], Response::HTTP_UNAUTHORIZED);
         }
         // Verificar si la cuenta está bloqueada
         if ($user->getLockedUntil() && $user->getLockedUntil() > new \DateTimeImmutable()) {
             $lockedUntil = $user->getLockedUntil()->format('Y-m-d H:i:s');
 
-            return $this->jsonResponse(['ERROR' => "YOUR_ACCOUNT_IS_LOCKED_UNTIL: $lockedUntil."], Response::HTTP_UNAUTHORIZED);
+            return $this->jsonResponse(['message' => "YOUR_ACCOUNT_IS_LOCKED_UNTIL: $lockedUntil."], Response::HTTP_UNAUTHORIZED);
         }
 
         try {
@@ -133,25 +134,13 @@ class AuthController
 
             return $this->jsonResponse(['TOKEN' => $token]);
         } catch (\Exception $e) {
-            return $this->jsonResponse(['ERROR' => $e->getMessage()], 500);
+            return $this->jsonResponse(['message' => $e->getMessage()], 500);
         }
     }
 
     private function isValidLoginRequest(?string $mail, ?string $password): bool
     {
         return $mail && filter_var($mail, FILTER_VALIDATE_EMAIL) && $password;
-    }
-
-    private function isAccountLocked(User $user): bool
-    {
-        $criticalAttempts = [4, 7, 10, 13];
-        if (in_array($user->getFailedAttempts(), $criticalAttempts, true)) {
-            $this->loginInputPort->handleFailedLogin($user);
-
-            return true;
-        }
-
-        return false;
     }
 
     private function jsonResponse(array $data, int $status = 200): JsonResponse
@@ -264,9 +253,9 @@ class AuthController
         } catch (\Exception $e) {
             if ('EMAIL_IN_USE' === $e->getMessage()) {
                 return new JsonResponse([
-                    'message' => 'REGISTER_FAILED',
-                    'error' => 'EMAIL_ALREADY_EXISTS',
-                ], Response::HTTP_BAD_REQUEST);
+                    'message' => 'EMAIL_ALREADY_EXISTS',
+                    'error' => 'REGISTER_FAILED',
+                ], Response::HTTP_CONFLICT);
             }
 
             // Otros errores genéricos:
