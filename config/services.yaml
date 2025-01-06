@@ -143,7 +143,7 @@ services:
             $params: '@parameter_bag'
         public: true
 
-
+    # PRODUCT
     # Registrar la Interfaz del Repositorio (alias)
     App\Product\Application\OutputPorts\Repositories\ProductRepositoryInterface:
         alias: App\Product\Infrastructure\OutputAdapters\Repositories\ProductRepository

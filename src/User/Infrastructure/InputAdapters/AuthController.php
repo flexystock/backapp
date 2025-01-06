@@ -97,7 +97,9 @@ class AuthController
         $password = $data['password'] ?? null;
 
         if (!$this->isValidLoginRequest($mail, $password)) {
+
             return $this->jsonResponse(['message' => 'INVALID_EMAIL_OR_PASSWORD'], Response::HTTP_BAD_REQUEST);
+
         }
 
         $user = $this->loginInputPort->login($mail, $password, $request->getClientIp());
