@@ -58,6 +58,7 @@ security:
         - { path: ^/api/devices, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/unassign_ttn_device, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/scale_register, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/ttn-uplink, roles: PUBLIC_ACCESS }
 
 when@test:
     security:

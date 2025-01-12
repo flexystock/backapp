@@ -14,5 +14,6 @@ interface ScalesRepositoryInterface
 
     public function save(Scales $scales): void;
 
+    public function findOneBy(string $endDeviceId): ?Scales;
     // Otras operaciones (findOneBy..., etc.)
 }

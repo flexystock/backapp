@@ -40,6 +40,12 @@ class Scales
     private float $voltage_min;
 
     /**
+     * Porcentaje de carga, si se usa para indicar la ocupación respecto al máximo.
+     */
+    #[ORM\Column(name: 'voltage_percentage', type: 'decimal', precision: 5, scale: 2)]
+    private float $voltage_percentage;
+
+    /**
      * Último envío de la báscula.
      * Puede ser NULL => por eso ?DateTimeInterface
      */
@@ -236,6 +242,17 @@ class Scales
     public function setDatehourModification(?\DateTimeInterface $datehourModification): self
     {
         $this->datehour_modification = $datehourModification;
+        return $this;
+    }
+
+    public function getVoltagePercentage(): float
+    {
+        return $this->voltage_percentage;
+    }
+
+    public function setVoltagePercentage(float $voltagePercentage): self
+    {
+        $this->voltage_percentage = $voltagePercentage;
         return $this;
     }
 }
