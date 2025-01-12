@@ -17,24 +17,26 @@ class JWTCreatedListener
 
     public function onJWTCreated(JWTCreatedEvent $event)
     {
-        $token = $this->tokenStorage->getToken();
-
-        if (null === $token || !is_object($user = $token->getUser())) {
-            // No hay usuario autenticado
-            return;
-        }
-
+        // 1) Obtenemos el usuario directamente del evento
+        $user = $event->getUser();
         if (!$user instanceof UserInterface) {
-            // El usuario no es una instancia válida
+            // Por si no fuera una instancia válida, salimos
             return;
         }
 
+        // 2) Obtenemos el payload
         $payload = $event->getData();
 
-        // Agregar el uuid_client al payload si está disponible
-        if ($user->getUuidClient()) {
-            $payload['uuid_client'] = $user->getUuidClient();
-        }
+        // 3) Añadimos la info que quieras en el JWT
+        //    dataUser, uuid_client, etc.
+        $payload['dataUser'] = [
+            'mail' => $user->getEmail(),
+            'fullname' => $user->getName(),
+            'surname' => $user->getSurnames(),
+        ];
+
+        // (Opcional) Eliminar 'username'
+        // unset($payload['username']);
 
         $event->setData($payload);
     }
