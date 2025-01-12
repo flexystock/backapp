@@ -28,4 +28,10 @@ class ScalesRepository implements ScalesRepositoryInterface
         $this->em->persist($scales);
         $this->em->flush();
     }
+    public function findOneBy(string $endDeviceId): ?Scales
+    {
+        return $this->em->getRepository(Scales::class)->findOneBy([
+            'end_device_id' => $endDeviceId,
+        ]);
+    }
 }

@@ -2,7 +2,7 @@
 
 // src/Product/Infrastructure/OutputAdapters/Services/ClientConnectionManager.php
 
-namespace App\Product\Infrastructure\OutputAdapters\Services;
+namespace App\Ttn\Infrastructure\OutputAdapters\Services;
 
 use App\Entity\Main\Client;
 use Doctrine\DBAL\Configuration as DBALConfiguration;
@@ -80,18 +80,13 @@ class ClientConnectionManager
         $this->logger->info("ClientConnectionManager: Creating EntityManager for client UUID '$uuidClient'.");
 
         // Configuración de Doctrine ORM
-        $proxyDir = __DIR__ . '/../../../../var/doctrine/proxies';
         $config = ORMSetup::createAttributeMetadataConfiguration(
             paths: [__DIR__.'/../../../../Entity/Client'], // Ruta a las entidades del cliente
-            isDevMode: true, // Cambia a true en desarrollo
-            proxyDir: $proxyDir,
+            isDevMode: false, // Cambia a true en desarrollo
+            proxyDir: null,
             cache: null,
             //useSimpleAnnotationReader: false,
         );
-        $absolutePath = __DIR__.'/../../../../Entity/Client';
-        $this->logger->info('absolutePath', [
-            'absolutePath' => $absolutePath,
-        ]);
         // Configuración de DBAL
         $dbalConfig = new DBALConfiguration();
         // Configurar el Schema Manager Factory
