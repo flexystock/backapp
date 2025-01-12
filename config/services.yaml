@@ -312,6 +312,19 @@ services:
         tags: [ 'controller.service_arguments' ]
         public: true
 
+    App\Ttn\Infrastructure\InputAdapters\:
+        resource: '../src/Ttn/Infrastructure/InputAdapters'
+        tags: [ 'controller.service_arguments' ]
+        public: true
+
+    App\Ttn\Application\InputPorts\HandleTtnUplinkUseCaseInterface:
+        alias: App\Ttn\Application\UseCases\HandleTtnUplinkUseCase
+
+    App\Ttn\Application\UseCases\HandleTtnUplinkUseCase:
+        arguments:
+            $poolTtnDeviceRepo: '@App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface'
+            $connManager: '@App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager'
+            $ScaleRepository: '@App\Scales\Application\OutputPorts\ScalesRepositoryInterface'
 
 
 
