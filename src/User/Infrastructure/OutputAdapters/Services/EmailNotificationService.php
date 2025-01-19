@@ -190,4 +190,29 @@ class EmailNotificationService implements NotificationServiceInterface
 
         $this->eventDispatcher->dispatch($event);
     }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function sendEmailVerificationCreatedClientToUser(User $user): void
+    {
+        $verificationUrl = $this->urlGenerator->generate(
+            'client_verification',
+            ['token' => $user->getVerificationToken()],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
+        $userName = $user->getName();
+        $email = (new Email())
+            ->from('flexystock@gmail.com')
+            ->to($user->getEmail())
+            ->subject('Verifica tu cliente')
+            ->html(
+                '<p>Gracias por registrar un nevo cliente </p>'.
+                '<p>Gracias por registrarte. Por favor,'.htmlspecialchars($userName).' haz clic en el siguiente enlace para verificar el cliente:</p>'.
+                '<p><a href="'.$verificationUrl.'">Verificar Cliente</a></p>'.
+                '<p>Este enlace caducará a las 24 horas.</p>'
+            );
+
+        $this->mailer->send($email);
+    }
 }

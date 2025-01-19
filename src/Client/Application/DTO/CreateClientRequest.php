@@ -28,12 +28,6 @@ class CreateClientRequest
     #[SerializedName('companyName')]
     private string $businessGroupName;
 
-    #[Assert\NotBlank(message: 'REQUIRED_BUSINESS_TYPE')]
-    #[Assert\Length(
-        max: 255,
-    )]
-    private string $businessType;
-
     #[Assert\NotBlank(message: 'REQUIRED_NIF')]
     #[Assert\Length(
         max: 12,
@@ -72,7 +66,7 @@ class CreateClientRequest
 
     #[Assert\NotBlank]
     #[Assert\Type(type: 'string', message: 'INVALID_PHONE_NUMBER')]
-    private int $companyPhone;
+    private string $companyPhone;
 
     #[Assert\NotBlank(message: 'COMPANY_EMAIL_REQUIRED')]
     #[Assert\Email(message: 'INVALID_EMAIL')]
@@ -89,12 +83,6 @@ class CreateClientRequest
 
     #[Assert\NotBlank(message: 'REQUIRED_CURRENCY')]
     private string $currency;
-
-    #[Assert\NotBlank(message: 'REQUIRED_PREFERRED_PAYMENT_METHODS')]
-    private string $preferredPaymentMethods;
-
-    #[Assert\NotBlank(message: 'REQUIRED_OPERATION_HOURS')]
-    private string $operationHours;
 
     #[Assert\NotBlank]
     #[Assert\Type(type: 'int', message: 'INVALID_NUMBER_OF_WAREHOUSES')]
@@ -136,16 +124,6 @@ class CreateClientRequest
     public function setClientName(string $name): void
     {
         $this->name = $name;
-    }
-
-    public function getBusinessType(): string
-    {
-        return $this->businessType;
-    }
-
-    public function setBusinessType(string $businessType): void
-    {
-        $this->businessType = $businessType;
     }
 
     public function getNifCif(): string
@@ -218,12 +196,12 @@ class CreateClientRequest
         $this->postalCode = $postalCode;
     }
 
-    public function getCompanyPhone(): int
+    public function getCompanyPhone(): string
     {
         return $this->companyPhone;
     }
 
-    public function setCompanyPhone(int $companyPhone): void
+    public function setCompanyPhone(string $companyPhone): void
     {
         $this->companyPhone = $companyPhone;
     }
@@ -276,26 +254,6 @@ class CreateClientRequest
     public function setCurrency(string $currency): void
     {
         $this->currency = $currency;
-    }
-
-    public function getPreferredPaymentMethods(): string
-    {
-        return $this->preferredPaymentMethods;
-    }
-
-    public function setPreferredPaymentMethods(string $preferredPaymentMethods): void
-    {
-        $this->preferredPaymentMethods = $preferredPaymentMethods;
-    }
-
-    public function getOperationHours(): string
-    {
-        return $this->operationHours;
-    }
-
-    public function setOperationHours(string $operationHours): void
-    {
-        $this->operationHours = $operationHours;
     }
 
     public function getNumberWarehouses(): int

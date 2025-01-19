@@ -67,4 +67,42 @@ class EmailVerificationController
 
         return new Response('YOUR_ACCOUNT_IS_VERIFIED', Response::HTTP_OK);
     }
+
+    #[Route('/verify_client/{token}', name: 'client_verification')]
+    public function verifyClientUserEmail(string $token): Response
+    {
+        $user = $this->userRepository->findOneByVerificationToken($token);
+        if (!$user) {
+            return new Response('INVALID_LINK', Response::HTTP_BAD_REQUEST);
+        }
+
+        if ($user->getVerificationTokenExpiresAt() < new \DateTime()) {
+            $resendEmail = $this->resendEmailVerificationToken->resendEmailVerificationToken($user, $token);
+            if (!$resendEmail) {
+                return new Response('ERROR_RESENDING_EMAIL', Response::HTTP_BAD_REQUEST);
+            }
+
+            return new Response('LINK_TO_VERIFY_EXPIRED.NEW_LINK_SENT', Response::HTTP_BAD_REQUEST);
+        }
+
+        $clients = $user->getClients();
+
+        if ($clients->isEmpty()) {
+            return new Response('NO_CLIENT_ASSOCIATED', Response::HTTP_BAD_REQUEST);
+        }
+
+        $client = $clients->last();
+
+        if (!$client) {
+            return new Response('NO_CLIENT_ASSOCIATED', Response::HTTP_BAD_REQUEST);
+        }
+
+        $this->bus->dispatch(new CreateDockerContainerMessage($client->getUuidClient()));
+        $user->setIsVerified(true);
+        $user->setVerificationToken(null);
+        $user->setVerificationTokenExpiresAt(null);
+        $this->userRepository->save($user);
+
+        return new Response('YOUR_ACCOUNT_IS_VERIFIED', Response::HTTP_OK);
+    }
 }

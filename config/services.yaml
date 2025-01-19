@@ -12,7 +12,7 @@ services:
     # Autoload de los servicios de la aplicación
     App\:
         resource: '../src/*'
-        exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
+        exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php, var}'
 
     # Configuración del LoginUserUseCase
     App\User\Application\UseCases\Auth\LoginUserUseCase:

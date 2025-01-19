@@ -6,6 +6,8 @@ doctrine:
         url: '%env(resolve:DATABASE_URL)%'
   orm:
     default_entity_manager: main
+    # Para entorno dev: creará proxies en var/doctrine/proxies
+    proxy_dir: '%kernel.project_dir%/var/doctrine/proxies'
     auto_generate_proxy_classes: true
     entity_managers:
       main:

@@ -11,7 +11,7 @@ class RegisterClientRequest
     #[Assert\Length(
         max: 36,
     )]
-    #[SerializedName('uuidUser')]
+    #[SerializedName('userId')]
     private string $uuidUser;
 
     #[Assert\NotBlank(message: 'REQUIRED_NAME')]
