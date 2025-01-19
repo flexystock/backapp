@@ -37,12 +37,29 @@ class CreateClientController
     #[Route('/api/client_create', name: 'client_create', methods: ['POST'])]
     #[OA\Post(
         path: '/api/client_create',
-        summary: 'CREATE a new Client',
+        summary: 'Crear un nuevo cliente desde el dashboard del usuario',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'uuidUser', type: 'string', example: '10ec548f-107e-4d58-a8ea-29e516e18e40'),
+                    new OA\Property(property: 'name', type: 'string', example: 'holahola'),
+                    new OA\Property(property: 'companyName', type: 'string', example: 'holahola'),
+                    new OA\Property(property: 'nifCif', type: 'string', example: '25632563T'),
+                    new OA\Property(property: 'foundationDate', type: 'string', format: 'date-time', example: '2024-09-27 00:00:00'),
+                    new OA\Property(property: 'fiscalAddress', type: 'string', example: 'caleruega 87'),
+                    new OA\Property(property: 'physicalAddress', type: 'string', example: 'caleruega 87'),
+                    new OA\Property(property: 'city', type: 'string', example: 'Madrid'),
+                    new OA\Property(property: 'country', type: 'string', example: 'España'),
+                    new OA\Property(property: 'postalCode', type: 'integer', example: 28033),
+                    new OA\Property(property: 'companyPhone', type: 'string', example: '637176578'),
+                    new OA\Property(property: 'companyEmail', type: 'string', format: 'email', example: 'flexystoc@gmail.com'),
+                    new OA\Property(property: 'numberOfEmployees', type: 'integer', example: 2),
+                    new OA\Property(property: 'industrySector', type: 'string', example: 'Hosteleria'),
+                    new OA\Property(property: 'averageInventoryVolume', type: 'integer', example: 50),
+                    new OA\Property(property: 'currency', type: 'string', example: 'euros'),
+                    new OA\Property(property: 'numberWarehouses', type: 'integer', example: 2),
+                    new OA\Property(property: 'annualSalesVolume', type: 'string', example: '4'),
                 ],
                 type: 'object'
             )

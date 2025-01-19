@@ -50,13 +50,23 @@ class CreateClientUseCase implements CreateClientInputPort
         $this->notificationService = $notificationService;
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     * @throws \Exception
+     */
     public function create(CreateClientRequest $request): Client
     {
+        // Buscamos cliente por si ya hay uno con ese nombre
+        $client = $this->clientRepository->findOneBy(['name' => $request->getName()]);
+        if ($client) {
+            throw new \RuntimeException('CLIENT_DUPLICATED');
+        }
+
         $client = new Client(); // uuiCLient y User_id
 
         $client->setName($request->getName());
         $client->setClientName($request->getName());
-        $client->setBusinessType($request->getBusinessType());
+        $client->setBusinessType('HOSTELERIA');
         $client->setFiscalAddress($request->getFiscalAddress());
         $client->setCity($request->getCity());
         $client->setCountry($request->getCountry());
@@ -74,14 +84,14 @@ class CreateClientUseCase implements CreateClientInputPort
         $client->setIndustrySector($request->getIndustrySector());
         $client->setAverageInventoryVolume($request->getAverageInventoryVolume());
         $client->setCurrency($request->getCurrency());
-        $client->setPreferredPaymentMethods($request->getPreferredPaymentMethods());
-        $client->setOperationHours($request->getOperationHours());
-        $client->setHasMultipleWarehouses('si' === $request->getHasMultipleWarehouses());
         $client->setAnnualSalesVolume($request->getAnnualSalesVolume());
+
 
         // Asociar el cliente con el usuario si es necesario
         $user = $this->userRepository->findOneBy(['uuid_user' => $request->getUuidUser()]);
         if ($user) {
+            // 3) Asociar el cliente con el usuario si es necesario
+            $user->addClient($client);
             $client->addUser($user);
         } else {
             // Manejar el caso donde el usuario no existe
@@ -105,30 +115,9 @@ class CreateClientUseCase implements CreateClientInputPort
         return $client;
     }
 
-    //    private function createClientContainer(Client $client, string $clientName, int $port): void
-    //    {
-    //        $scriptPath = '/appdata/www/bin/create_client_container.sh';
-    //        if (!file_exists($scriptPath)) {
-    //            throw new \Exception("Script not found: " . $scriptPath);
-    //        }
-    //
-    //        $command = sprintf(
-    //            'bash %s %s %d 2>&1',
-    //            escapeshellarg($scriptPath),
-    //            escapeshellarg($clientName),
-    //            $port
-    //        );
-    //        exec($command, $output, $return_var);
-    //
-    //        if ($return_var !== 0) {
-    //            error_log('Error creating client container: ' . implode("\n", $output));
-    //            throw new \Exception('Error creating client container: ' . implode("\n", $output));
-    //        }
-    //    }
-
     /**
      * @throws \DateMalformedStringException
-     * @throws RandomException
+     * @throws RandomException|\Random\RandomException
      */
     private function generateVerificationToken(User $user): void
     {
@@ -153,7 +142,7 @@ class CreateClientUseCase implements CreateClientInputPort
         try {
             $this->userRepository->save($user);
 
-            $this->notificationService->sendEmailVerificationToUser($user);
+            $this->notificationService->sendEmailVerificationCreatedClientToUser($user);
             $this->notificationService->sendEmailToBack($user);
 
             // $this->entityManager->commit();
