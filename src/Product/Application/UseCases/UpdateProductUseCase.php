@@ -25,8 +25,11 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
         $uuidClient = $request->getUuidClient();
         $uuidProduct = $request->getUuidProduct();
 
-        if (!$uuidClient || !$uuidProduct) {
-            return new UpdateProductResponse(null, 'Missing required fields: uuid_client or uuid_product', 400);
+        if (!$uuidClient) {
+            throw new \RuntimeException('CLIENT_NOT_FOUND');
+        }
+        if (!$uuidProduct) {
+            throw new \RuntimeException('PRODUCT_NOT_FOUND');
         }
 
         try {
@@ -38,7 +41,7 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
             if (!$product) {
                 $this->logger->warning("UpdateProductUseCase: Producto '$uuidProduct' no encontrado para cliente '$uuidClient'.");
 
-                return new UpdateProductResponse(null, 'Product not found', 404);
+                return new UpdateProductResponse(null, 'PRODUCT_NOT_FOUND', 404);
             }
             // obtenemos campos para guardar el historial
             $beforeData = [
