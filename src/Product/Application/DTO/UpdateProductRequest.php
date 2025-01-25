@@ -2,24 +2,58 @@
 
 namespace App\Product\Application\DTO;
 
+use Symfony\Component\Validator\Constraints as Assert;
 class UpdateProductRequest
 {
+    #[Assert\Uuid(message: 'REQUIRED_CLIENT_ID')]
     private string $uuidClient;
+
+    #[Assert\Uuid(message: 'REQUIRED_PRODUCT_ID')]
     private string $uuidProduct;
-    private ?string $name;
+
+    #[Assert\NotBlank(message: 'REQUIRED_NAME')]
+    private string $name;
+
     private ?string $ean;
+
     private ?float $weightRange;
+
     private ?string $nameUnit1;
+
     private ?float $weightUnit1;
+
     private ?string $nameUnit2;
+
     private ?float $weightUnit2;
-    private ?int $mainUnit;
+
+    #[Assert\Choice(
+        choices: [0, 1, 2],
+        message: 'INVALID_UNIT'
+    )]
+    private int $mainUnit;
+
+    #[Assert\Type(type: 'numeric', message: 'INVALID_TARE')]
+    #[Assert\GreaterThanOrEqual(value: 0, message: 'La tara no puede ser negativa.')]
     private ?float $tare;
-    private ?float $salePrice;
+
+    #[Assert\Type(type: 'numeric', message: 'INVALID_SALE_PRICE')]
+    #[Assert\GreaterThanOrEqual(value: 0, message: 'El precio de venta no puede ser negativo.')]
+    private float $salePrice;
+
+    #[Assert\Type(type: 'numeric', message: 'INVALID_COST_PRICE')]
+    #[Assert\GreaterThanOrEqual(value: 0, message: 'El precio de costo no puede ser negativo.')]
     private ?float $costPrice;
+
     private ?bool $outSystemStock;
+
+    #[Assert\Type(type: 'integer', message: 'INVALID_DAYS_AVERAGE_CONSUMPTION')]
+    #[Assert\GreaterThanOrEqual(value: 1, message: 'Debe haber al menos un día promedio de consumo.')]
     private ?int $daysAverageConsumption;
+
+    #[Assert\Type(type: 'integer', message: 'INVALID_DAYS_SERVE_ORDER')]
+    #[Assert\GreaterThanOrEqual(value: 0, message: 'Los días para servir el pedido no pueden ser negativos.')]
     private ?int $daysServeOrder;
+
     private string $uuidUserModification;
     private \DateTimeInterface $datehourModification;
 
@@ -33,13 +67,13 @@ class UpdateProductRequest
         ?float $weightUnit1 = null,
         ?string $nameUnit2 = null,
         ?float $weightUnit2 = null,
-        ?int $mainUnit = null,
-        ?float $tare = null,
-        ?float $salePrice = null,
-        ?float $costPrice = null,
+        ?int $mainUnit = 0,
+        ?float $tare = 0.00,
+        ?float $salePrice = 0.00,
+        ?float $costPrice = 0.00,
         ?bool $outSystemStock = null,
-        ?int $daysAverageConsumption = null,
-        ?int $daysServeOrder = null,
+        ?int $daysAverageConsumption = 1,
+        ?int $daysServeOrder = 0,
     ) {
         $this->uuidClient = $uuidClient;
         $this->uuidProduct = $uuidProduct;
@@ -51,12 +85,12 @@ class UpdateProductRequest
         $this->nameUnit2 = $nameUnit2;
         $this->weightUnit2 = $weightUnit2;
         $this->mainUnit = $mainUnit ?? 0;
-        $this->tare = $tare;
-        $this->salePrice = $salePrice;
-        $this->costPrice = $costPrice;
+        $this->tare = $tare ?? 0.0;
+        $this->salePrice = $salePrice ?? 0.00;
+        $this->costPrice = $costPrice ?? 0.00;
         $this->outSystemStock = $outSystemStock;
-        $this->daysAverageConsumption = $daysAverageConsumption;
-        $this->daysServeOrder = $daysServeOrder;
+        $this->daysAverageConsumption = $daysAverageConsumption ?? 30;
+        $this->daysServeOrder = $daysServeOrder ?? 0;
     }
 
     public function getUuidClient(): string
@@ -69,7 +103,7 @@ class UpdateProductRequest
         return $this->uuidProduct;
     }
 
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }

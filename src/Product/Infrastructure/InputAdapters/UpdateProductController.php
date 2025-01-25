@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UpdateProductController extends AbstractController
@@ -140,16 +141,7 @@ class UpdateProductController extends AbstractController
                 'json'
             );
 
-            // 2) Verificar usuario autenticado
-            $user = $this->getUser();
-            if (!$user) {
-                return $this->jsonError('USER_NOT_AUTHENTICATED', JsonResponse::HTTP_UNAUTHORIZED);
-            }
-            $updateRequest->setUuidUserModification($user->getUuid());
-            // 3) Asignar fecha de modificacion (si no quieres que venga en el JSON):
-            $updateRequest->setDatehourModification(new \DateTime());
-
-            // 4) Validar el DTO
+            // 2) Validar el DTO con Symfony Validator
             $errors = $this->validator->validate($updateRequest);
             if (count($errors) > 0) {
                 $errorMessages = $this->formatValidationErrors($errors);
@@ -161,24 +153,27 @@ class UpdateProductController extends AbstractController
                 ], JsonResponse::HTTP_BAD_REQUEST);
             }
 
-            // 5) Ejecutar el caso de uso
-            $response = $this->updateProductUseCase->execute($updateRequest);
-
-            // Suponiendo que el Use Case retorna un objeto tipo UpdateProductResponse
-            // con getError(), getProduct(), getStatusCode().
-
-            if ($response->getError()) {
-                // Manejo de error semántico
-                return new JsonResponse([
-                    'status' => 'error',
-                    'message' => $response->getError(),
-                ], $response->getStatusCode());
+            // 3) Asignar manualmente (porque el user no llega en el JSON)
+            $user = $this->getUser();
+            if (!$user) {
+                return $this->jsonError('USER_NOT_AUTHENTICATED', JsonResponse::HTTP_UNAUTHORIZED);
             }
 
-            // 5) Respuesta exitosa
+            // 4) Asignar el userModification
+            $updateRequest->setUuidUserModification($user->getUuid());
+
+            // 5) Asignar fecha de modificación
+            $updateRequest->setDatehourModification(new \DateTime());
+
+
+
+            // 6) Ejecutar el caso de uso
+            $response = $this->updateProductUseCase->execute($updateRequest);
+
+            // 7) Respuesta exitosa
             return new JsonResponse([
                 'status' => 'success',
-                'message' => 'Product updated successfully',
+                'message' => 'PRODUCT_UPDATED_SUCCESSFULLY',
                 'product' => $response->getProduct(), // Por ej. array con uuid, name...
             ], $response->getStatusCode());
         } catch (\RuntimeException $e) {
@@ -189,34 +184,31 @@ class UpdateProductController extends AbstractController
             if ('CLIENT_NOT_FOUND' === $e->getMessage()) {
                 return $this->jsonError('CLIENT_NOT_FOUND', JsonResponse::HTTP_NOT_FOUND);
             }
+            if ('USER_NOT_AUTHENTICATED' === $e->getMessage()) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'USER_NOT_AUTHENTICATED',
+                ], Response::HTTP_UNAUTHORIZED);
+            }
             // etc. Manejo 403, 409, etc.
 
-            return $this->jsonError($e->getMessage(), JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         } catch (\Exception $e) {
             // Errores inesperados
-            $this->logger->error('UpdateProductController: Error al actualizar el producto.', [
-                'exception' => $e,
-            ]);
-
-            return $this->jsonError('Internal Server Error', JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-    }
-
-    /**
-     * Retorna una respuesta de error genérica.
-     */
-    private function jsonError(string $message, int $status): JsonResponse
-    {
-        return new JsonResponse([
-            'status' => 'error',
-            'message' => $message,
-        ], $status);
     }
 
     /**
      * Formatea la lista de errores de validación en un array asociativo.
      */
-    private function formatValidationErrors(\Symfony\Component\Validator\ConstraintViolationListInterface $errors): array
+    private function formatValidationErrors(ConstraintViolationListInterface $errors): array
     {
         $errorMessages = [];
         foreach ($errors as $error) {
