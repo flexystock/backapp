@@ -11,6 +11,7 @@ use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
 use App\User\Application\UseCases\Auth\RegisterUserUseCase;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use OpenApi\Attributes as OA;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -30,6 +31,7 @@ class AuthController
     private SerializerInterface $serializer;
     private SelectClientInputPort $selectClientInputPort;
     private TokenStorageInterface $tokenStorage;
+    private LoggerInterface $logger;
 
     public function __construct(LoginUserInputPort $loginInputPort,
         UserRepositoryInterface $userRepository,
@@ -38,7 +40,8 @@ class AuthController
         ValidatorInterface $validator,
         SerializerInterface $serializer,
         SelectClientInputPort $selectClientInputPort,
-        TokenStorageInterface $tokenStorage)
+        TokenStorageInterface $tokenStorage,
+        LoggerInterface $logger)
     {
         $this->loginInputPort = $loginInputPort;
         $this->jwtManager = $jwtManager;
@@ -48,6 +51,7 @@ class AuthController
         $this->serializer = $serializer;
         $this->selectClientInputPort = $selectClientInputPort;
         $this->tokenStorage = $tokenStorage;
+        $this->logger = $logger;
     }
 
     #[Route('/api/login', name: 'api_login', methods: ['POST'])]
@@ -96,15 +100,24 @@ class AuthController
         $mail = $data['username'] ?? null;
         $password = $data['password'] ?? null;
 
+        // Log: intento de login (sin password)
+        $this->logger->info('Login attempt', [
+            'username' => $mail,
+            'ip' => $request->getClientIp(),
+        ]);
+
         if (!$this->isValidLoginRequest($mail, $password)) {
+            $this->logger->warning('Login request invalid', ['username' => $mail]);
 
             return $this->jsonResponse(['message' => 'INVALID_EMAIL_OR_PASSWORD'], Response::HTTP_BAD_REQUEST);
-
         }
 
         $user = $this->loginInputPort->login($mail, $password, $request->getClientIp());
 
         if (!$user) {
+            $this->logger->notice('Invalid credentials or user not found', [
+                'username' => $mail,
+            ]);
             // Usuario no existe o credenciales incorrectas
             $user = $this->userRepository->findByEmail($mail);
             if ($user) {
@@ -120,17 +133,26 @@ class AuthController
         }
         $verified = $user->isVerified();
         if (!$verified) {
+            $this->logger->info('User not verified', ['username' => $mail, 'userId' => $user->getUuid()]);
             return $this->jsonResponse(['message' => 'USER_NOT_VERIFIED'], Response::HTTP_UNAUTHORIZED);
         }
         // Verificar si la cuenta está bloqueada
         if ($user->getLockedUntil() && $user->getLockedUntil() > new \DateTimeImmutable()) {
             $lockedUntil = $user->getLockedUntil()->format('Y-m-d H:i:s');
+            $this->logger->warning('Account locked', [
+                'username' => $mail,
+                'lockedUntil' => $lockedUntil,
+            ]);
 
             return $this->jsonResponse(['message' => "YOUR_ACCOUNT_IS_LOCKED_UNTIL: $lockedUntil."], Response::HTTP_UNAUTHORIZED);
         }
 
         try {
             $token = $this->jwtManager->create($user);
+            $this->logger->info('User logged in successfully', [
+                'username' => $mail,
+                'userId' => $user->getUuid(),
+            ]);
 
             return $this->jsonResponse(['TOKEN' => $token]);
         } catch (\Exception $e) {

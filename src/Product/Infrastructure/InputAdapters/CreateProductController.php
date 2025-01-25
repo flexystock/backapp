@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class CreateProductController extends AbstractController
@@ -131,15 +132,7 @@ class CreateProductController extends AbstractController
                 CreateProductRequest::class,
                 'json'
             );
-            // 1) Asignar manualmente (porque el user no llega en el JSON)
-            $user = $this->getUser();
-            if (!$user) {
-                return new JsonResponse(['message' => 'USER_NOT_AUTHENTICATED'], Response::HTTP_UNAUTHORIZED);
-            }
-            $createProductRequest->setUuidUserCreation($user->getUuid());
 
-            // 2) Asignar fecha de creación (si no quieres que venga en el JSON):
-            $createProductRequest->setDatehourCreation(new \DateTime());
             // 2) Validar el DTO con Symfony Validator
             $errors = $this->validator->validate($createProductRequest);
             if (count($errors) > 0) {
@@ -151,10 +144,23 @@ class CreateProductController extends AbstractController
                     'errors' => $errorMessages,
                 ], Response::HTTP_BAD_REQUEST);
             }
-            // 3) Ejecutar el caso de uso
+
+            // 3) Asignar manualmente (porque el user no llega en el JSON)
+            $user = $this->getUser();
+            if (!$user) {
+                return new JsonResponse(['message' => 'USER_NOT_AUTHENTICATED'], Response::HTTP_UNAUTHORIZED);
+            }
+
+            // 4) Asignar el userCreation
+            $createProductRequest->setUuidUserCreation($user->getUuid());
+
+            // 5) Asignar fecha de creación
+            $createProductRequest->setDatehourCreation(new \DateTime());
+
+            // 6) Ejecutar el caso de uso
             $product = $this->createProductUseCase->execute($createProductRequest);
 
-            // 4) Devolver la respuesta exitosa con 201
+            // 7) Devolver la respuesta exitosa con 201
             $productArray = $product->getProduct(); // Esto te da el array => ['uuid' => '...', 'name' => '...']
 
             return new JsonResponse([
