@@ -2,23 +2,58 @@
 
 namespace App\Product\Application\DTO;
 
+use Symfony\Component\Validator\Constraints as Assert;
+
 class CreateProductRequest
 {
     private string $uuidUserCreation;
+
     private \DateTimeInterface $datehourCreation;
+
+    #[Assert\NotBlank(message: 'REQUIRED_NAME')]
     private string $name;
+
+    #[Assert\Uuid(message: 'REQUIRED_CLIENT_ID')]
+    private string $uuidClient;
+
     private ?string $ean;
+
     private ?float $weightRange;
+
     private ?string $nameUnit1;
+
     private ?float $weightUnit1;
+
     private ?string $nameUnit2;
+
     private ?float $weightUnit2;
-    private string $mainUnit; // 0,1,2
+
+    #[Assert\Choice(
+        choices: [0, 1, 2],
+        message: 'INVALID_UNIT'
+    )]
+    private int $mainUnit;
+
+    #[Assert\Type(type: 'numeric', message: 'INVALID_TARE')]
+    #[Assert\GreaterThanOrEqual(value: 0, message: 'La tara no puede ser negativa.')]
     private float $tare;
+
+    #[Assert\Type(type: 'numeric', message: 'INVALID_SALE_PRICE')]
+    #[Assert\GreaterThanOrEqual(value: 0, message: 'El precio de venta no puede ser negativo.')]
     private float $salePrice;
+
+    #[Assert\Type(type: 'numeric', message: 'INVALID_COST_PRICE')]
+    #[Assert\GreaterThanOrEqual(value: 0, message: 'El precio de costo no puede ser negativo.')]
     private float $costPrice;
+
     private ?bool $outSystemStock;
+
+    #[Assert\Type(type: 'integer', message: 'INVALID_DAYS_AVERAGE_CONSUMPTION')]
+    #[Assert\GreaterThanOrEqual(value: 1, message: 'Debe haber al menos un día promedio de consumo.')]
     private int $daysAverageConsumption;
+
+    #[Assert\Type(type: 'integer', message: 'INVALID_DAYS_SERVE_ORDER')]
+    #[Assert\GreaterThanOrEqual(value: 0, message: 'Los días para servir el pedido no pueden ser negativos.')]
     private int $daysServeOrder;
 
     // Agrega el resto de campos si es necesario...
@@ -28,14 +63,14 @@ class CreateProductRequest
     public function __construct(
         string $uuidClient,
         string $name,
-        ?int $mainUnit = null,
-        ?float $salePrice = null,
-        ?float $costPrice = null,
-        ?float $tare = null,
-        ?int $daysServeOrder = null,
-        ?int $daysAverageConsumption = null,
+        ?int $mainUnit = 0,
+        ?float $salePrice = 0.00,
+        ?float $costPrice = 0.00,
+        ?float $tare = 0.00,
+        ?int $daysServeOrder = 0,
+        ?int $daysAverageConsumption = 1,
         ?string $ean = null,
-        ?float $weightRange = null,
+        ?float $weightRange = 0.00,
         ?string $nameUnit1 = null,
         ?float $weightUnit1 = null,
         ?string $nameUnit2 = null,
@@ -139,6 +174,7 @@ class CreateProductRequest
     {
         $this->uuidClient = $uuidClient;
     }
+
     public function getUuidUserCreation(): ?string
     {
         return $this->uuidUserCreation;
