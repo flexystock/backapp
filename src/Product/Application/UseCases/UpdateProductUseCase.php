@@ -48,6 +48,7 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
                 'uuid' => $product->getUuid(),
                 'name' => $product->getName(),
                 'ean' => $product->getEan(),
+                'stock' => $product->getStock(),
                 'weight_range' => $product->getWeightRange(),
                 'weight_unit1' => $product->getWeightUnit1(),
                 'weight_unit2' => $product->getWeightUnit2(),
@@ -66,6 +67,9 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
             }
             if (null !== $request->getEan()) {
                 $product->setEan($request->getEan());
+            }
+            if (null !== $request->getStock()) {
+                $product->setStock($request->getStock());
             }
             if (null !== $request->getWeightRange()) {
                 $product->setWeightRange($request->getWeightRange());
@@ -111,6 +115,7 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
                 'uuid' => $product->getUuid(),
                 'name' => $product->getName(),
                 'ean' => $product->getEan(),
+                'stock' => $product->getStock(),
                 'weight_range' => $product->getWeightRange(),
                 'weight_unit1' => $product->getWeightUnit1(),
                 'weight_unit2' => $product->getWeightUnit2(),
