@@ -2,6 +2,7 @@
 
 namespace App\Product\Application\UseCases;
 
+use App\Entity\Client\ScaleHistory;
 use App\Entity\Main\User;
 use App\Product\Application\DTO\DeleteProductRequest;
 use App\Product\Application\DTO\DeleteProductResponse;
@@ -58,9 +59,51 @@ class DeleteProductUseCase implements DeleteProductUseCaseInterface
             $scale = $scaleRepository->findOneByProductId($product->getId());
 
             if ($scale) {
+                // guardar en el historial de Scale
+                $beforeData = [
+                    'uuid' => $scale->getUuid(),
+                    'end_device_id' => $scale->getEndDeviceId(),
+                    'voltage' => $scale->getVoltageMin(),
+                    'last_send' => $scale->getLastSend(),
+                    'battery_die' => $scale->getBatteryDie(),
+                    'product_id' => $scale->getProduct()->getId(),
+                    'posX' => $scale->getPosX(),
+                    'width' => $scale->getWidth(),
+                    'uuid_user_creation' => $scale->getUuidUserCreation(),
+                    'datehour_creation' => $scale->getDatehourCreation(),
+                    'uuid_user_modification' => $scale->getUuidUserModification(),
+                    'datehour_modification' => $scale->getDatehourModification(),
+                ];
+                $beforeJson = json_encode($beforeData);
+
                 $scale->setProduct(null);
                 $scaleRepository->save($scale);
+                $afterData = [
+                    'uuid' => $scale->getUuid(),
+                    'end_device_id' => $scale->getEndDeviceId(),
+                    'voltage' => $scale->getVoltageMin(),
+                    'last_send' => $scale->getLastSend(),
+                    'battery_die' => $scale->getBatteryDie(),
+                    'product_id' => null,
+                    'posX' => $scale->getPosX(),
+                    'width' => $scale->getWidth(),
+                    'uuid_user_creation' => $scale->getUuidUserCreation(),
+                    'datehour_creation' => $scale->getDatehourCreation(),
+                    'uuid_user_modification' => $user->getUuid(),
+                    'datehour_modification' => new \DateTime(),
+                ];
+                $afterJson = json_encode($afterData);
+                $scaleHistory = new ScaleHistory();
+                $scaleHistory->setUuidScale($scale->getUuid());
+                $scaleHistory->setUuidUserModification($user->getUuid());
+                $scaleHistory->setDataScaleBeforeModification($beforeJson);
+                $scaleHistory->setDataScaleAfterModification($afterJson);
+                $scaleHistory->setDateModification(new \DateTime());
+
+                $em->persist($scaleHistory);
+                $em->flush();
             }
+
             $productRepository->remove($product);
 
             return new DeleteProductResponse('PRODUCT_DELETED_SUCCESSFULLY', null, 200);
