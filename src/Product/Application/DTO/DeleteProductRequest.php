@@ -4,7 +4,9 @@ namespace App\Product\Application\DTO;
 
 class DeleteProductRequest
 {
+    #[Assert\Uuid(message: 'REQUIRED_CLIENT_ID')]
     private string $uuidClient;
+    #[Assert\Uuid(message: 'REQUIRED_PRODUCT_ID')]
     private string $uuidProduct;
 
     public function __construct(string $uuidClient, string $uuidProduct)

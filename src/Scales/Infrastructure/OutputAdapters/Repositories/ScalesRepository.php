@@ -34,4 +34,11 @@ class ScalesRepository implements ScalesRepositoryInterface
             'end_device_id' => $endDeviceId,
         ]);
     }
+
+    public function findOneByProductId(int $productId): ?Scales
+    {
+        return $this->em->getRepository(Scales::class)->findOneBy([
+            'product_id' => $productId,
+        ]);
+    }
 }
