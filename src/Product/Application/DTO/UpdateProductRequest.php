@@ -16,6 +16,9 @@ class UpdateProductRequest
 
     private ?string $ean;
 
+    #[Assert\Type(type: 'numeric', message: 'INVALID_STOCK')]
+    private ?float $stock;
+
     private ?float $weightRange;
 
     private ?string $nameUnit1;
@@ -62,6 +65,7 @@ class UpdateProductRequest
         string $uuidProduct,
         string $name,
         ?string $ean = null,
+        ?float $stock = 0.00,
         ?float $weightRange = null,
         ?string $nameUnit1 = null,
         ?float $weightUnit1 = null,
@@ -79,6 +83,7 @@ class UpdateProductRequest
         $this->uuidProduct = $uuidProduct;
         $this->name = $name;
         $this->ean = $ean;
+        $this->stock = $stock ?? 0.00;
         $this->weightRange = $weightRange;
         $this->nameUnit1 = $nameUnit1;
         $this->weightUnit1 = $weightUnit1;
@@ -111,6 +116,11 @@ class UpdateProductRequest
     public function getEan(): ?string
     {
         return $this->ean;
+    }
+
+    public function getStock(): ?float
+    {
+        return $this->stock;
     }
 
     public function getWeightRange(): ?float

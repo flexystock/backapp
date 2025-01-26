@@ -44,6 +44,7 @@ class CreateProductController extends AbstractController
                     new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
                     new OA\Property(property: 'name', type: 'string', example: 'Nuevo producto'),
                     new OA\Property(property: 'ean', type: 'string', example: '1234567890123', nullable: true),
+                    new OA\Property(property: 'stock', type: 'number', format: 'float', example: 0.2, nullable: true),
                     new OA\Property(property: 'weightRange', type: 'number', format: 'float', example: 0.2, nullable: true),
                     new OA\Property(property: 'nameUnit1', type: 'string', example: 'pack', nullable: true),
                     new OA\Property(property: 'weightUnit1', type: 'number', format: 'float', example: 0.5, nullable: true),

@@ -18,6 +18,9 @@ class CreateProductRequest
 
     private ?string $ean;
 
+    #[Assert\Type(type: 'numeric', message: 'INVALID_STOCK')]
+    private ?float $stock;
+
     private ?float $weightRange;
 
     private ?string $nameUnit1;
@@ -70,6 +73,7 @@ class CreateProductRequest
         ?int $daysServeOrder = 0,
         ?int $daysAverageConsumption = 1,
         ?string $ean = null,
+        ?float $stock = 0.00,
         ?float $weightRange = 0.00,
         ?string $nameUnit1 = null,
         ?float $weightUnit1 = null,
@@ -87,6 +91,7 @@ class CreateProductRequest
         $this->daysServeOrder = $daysServeOrder ?? 0;
         $this->daysAverageConsumption = $daysAverageConsumption ?? 30;
         $this->ean = $ean;
+        $this->stock = $stock ?? 0.00;
         $this->weightRange = $weightRange ?? 0.00000;
         $this->nameUnit1 = $nameUnit1;
         $this->weightUnit1 = $weightUnit1 ?? 0.00000;
@@ -103,6 +108,11 @@ class CreateProductRequest
     public function getEan(): ?string
     {
         return $this->ean;
+    }
+
+    public function getStock(): ?float
+    {
+        return $this->stock;
     }
 
     public function getWeightRange(): ?float

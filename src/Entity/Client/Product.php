@@ -22,6 +22,9 @@ class Product
     #[ORM\Column(type: 'string', length: 128, nullable: true)]
     private ?string $ean = null;
 
+    #[ORM\Column(type: 'decimal', precision: 5, scale: 2, nullable: true, options: ['unsigned' => true])]
+    private ?float $stock = null;
+
     #[ORM\Column(type: 'decimal', precision: 8, scale: 5, nullable: true, options: ['unsigned' => true])]
     private ?float $weight_range = null;
 
@@ -109,6 +112,18 @@ class Product
     public function setEan(?string $ean): self
     {
         $this->ean = $ean;
+
+        return $this;
+    }
+
+    public function getStock(): ?float
+    {
+        return $this->stock;
+    }
+
+    public function setStock(?float $stock): self
+    {
+        $this->stock = $stock;
 
         return $this;
     }
