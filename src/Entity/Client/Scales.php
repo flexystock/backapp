@@ -34,7 +34,7 @@ class Scales
 
     /**
      * Voltaje mínimo.
-     * DECIMAL(5,3) UNSIGNED NOT NULL DEFAULT '3.2'
+     * DECIMAL(5,3) UNSIGNED NOT NULL DEFAULT '3.2'.
      */
     #[ORM\Column(name: 'voltage_min', type: 'decimal', precision: 5, scale: 3, options: ['unsigned' => true, 'default' => 3.2])]
     private float $voltage_min;
@@ -47,14 +47,14 @@ class Scales
 
     /**
      * Último envío de la báscula.
-     * Puede ser NULL => por eso ?DateTimeInterface
+     * Puede ser NULL => por eso ?DateTimeInterface.
      */
     #[ORM\Column(name: 'last_send', type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $last_send = null;
 
     /**
      * Fecha estimada de fin de batería.
-     * Puede ser NULL => por eso ?DateTimeInterface
+     * Puede ser NULL => por eso ?DateTimeInterface.
      */
     #[ORM\Column(name: 'battery_die', type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $battery_die = null;
@@ -62,7 +62,7 @@ class Scales
     /**
      * Relación ManyToOne con Product.
      * product_id -> FK
-     * ON DELETE SET NULL => por eso 'nullable' => true
+     * ON DELETE SET NULL => por eso 'nullable' => true.
      */
     #[ORM\ManyToOne(targetEntity: Product::class, inversedBy: 'scales')]
     #[ORM\JoinColumn(name: 'product_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
@@ -70,14 +70,14 @@ class Scales
 
     /**
      * Posición X (posX).
-     * TINYINT(2) UNSIGNED DEFAULT NULL
+     * TINYINT(2) UNSIGNED DEFAULT NULL.
      */
     #[ORM\Column(name: 'posX', type: 'smallint', nullable: true, options: ['unsigned' => true])]
     private ?int $posX = null;
 
     /**
      * Ancho (width).
-     * TINYINT(2) UNSIGNED DEFAULT NULL
+     * TINYINT(2) UNSIGNED DEFAULT NULL.
      */
     #[ORM\Column(name: 'width', type: 'smallint', nullable: true, options: ['unsigned' => true])]
     private ?int $width = null;
@@ -121,6 +121,7 @@ class Scales
     public function setUuid(string $uuid): self
     {
         $this->uuid = $uuid;
+
         return $this;
     }
 
@@ -132,6 +133,7 @@ class Scales
     public function setEndDeviceId(string $endDeviceId): self
     {
         $this->end_device_id = $endDeviceId;
+
         return $this;
     }
 
@@ -143,6 +145,7 @@ class Scales
     public function setVoltageMin(float $voltageMin): self
     {
         $this->voltage_min = $voltageMin;
+
         return $this;
     }
 
@@ -154,6 +157,7 @@ class Scales
     public function setLastSend(?\DateTimeInterface $lastSend): self
     {
         $this->last_send = $lastSend;
+
         return $this;
     }
 
@@ -165,6 +169,7 @@ class Scales
     public function setBatteryDie(?\DateTimeInterface $batteryDie): self
     {
         $this->battery_die = $batteryDie;
+
         return $this;
     }
 
@@ -176,6 +181,7 @@ class Scales
     public function setProduct(?Product $product): self
     {
         $this->product_id = $product;
+
         return $this;
     }
 
@@ -187,6 +193,7 @@ class Scales
     public function setPosX(?int $posX): self
     {
         $this->posX = $posX;
+
         return $this;
     }
 
@@ -198,6 +205,7 @@ class Scales
     public function setWidth(?int $width): self
     {
         $this->width = $width;
+
         return $this;
     }
 
@@ -209,6 +217,7 @@ class Scales
     public function setUuidUserCreation(string $uuidUserCreation): self
     {
         $this->uuid_user_creation = $uuidUserCreation;
+
         return $this;
     }
 
@@ -220,6 +229,7 @@ class Scales
     public function setDatehourCreation(\DateTimeInterface $datehourCreation): self
     {
         $this->datehour_creation = $datehourCreation;
+
         return $this;
     }
 
@@ -231,6 +241,7 @@ class Scales
     public function setUuidUserModification(?string $uuidUserModification): self
     {
         $this->uuid_user_modification = $uuidUserModification;
+
         return $this;
     }
 
@@ -242,6 +253,7 @@ class Scales
     public function setDatehourModification(?\DateTimeInterface $datehourModification): self
     {
         $this->datehour_modification = $datehourModification;
+
         return $this;
     }
 
@@ -253,6 +265,7 @@ class Scales
     public function setVoltagePercentage(float $voltagePercentage): self
     {
         $this->voltage_percentage = $voltagePercentage;
+
         return $this;
     }
 }

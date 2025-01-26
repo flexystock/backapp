@@ -109,44 +109,89 @@ class DeleteProductController extends AbstractController
             ),
         ]
     )]
-    public function deleteProduct(Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-        $uuidClient = $data['uuidClient'] ?? null;
-        $uuidProduct = $data['uuidProduct'] ?? null;
-
-        if (!$uuidClient || !$uuidProduct) {
-            $this->logger->warning('ProductController: uuidClient o uuidProduct no proporcionado.');
-
-            return new JsonResponse(['error' => 'Missing required fields: uuidClient or uuidProduct'], 400);
-        }
-
-        $user = $this->getUser();
-        if (!$user) {
-            return new JsonResponse(['error' => 'Unauthorized'], 401);
-        }
-
-        if (!$user->getClients()->exists(function ($key, $client) use ($uuidClient) {
-            return $client->getUuidClient() === $uuidClient;
-        })) {
-            $this->logger->warning('ProductController: Usuario no tiene acceso al cliente proporcionado.');
-
-            return new JsonResponse(['error' => 'Access denied to the specified client'], 403);
-        }
-
         try {
-            $deleteProductRequest = new DeleteProductRequest($uuidClient, $uuidProduct);
-            $response = $this->deleteProductUseCase->execute($deleteProductRequest);
+            // 1) Deserializar JSON => DTO
+            $deleteProductRequest = $this->serializer->deserialize(
+                $request->getContent(),
+                DeleteProductRequest::class,
+                'json'
+            );
 
-            if ($response->getError()) {
-                return new JsonResponse(['error' => $response->getError()], $response->getStatusCode());
+            // 2) Validar el DTO con Symfony Validator
+            $errors = $this->validator->validate($deleteProductRequest);
+            if (count($errors) > 0) {
+                $errorMessages = $this->formatValidationErrors($errors);
+
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'INVALID_DATA',
+                    'errors' => $errorMessages,
+                ], Response::HTTP_BAD_REQUEST);
             }
 
+            // 3) COMPROBAR SI EL USUARIO HA LOGGEADO
+            $user = $this->getUser();
+            if (!$user) {
+                return new JsonResponse(['message' => 'USER_NOT_AUTHENTICATED'], Response::HTTP_UNAUTHORIZED);
+            }
+
+            // 4) Ejecutar el caso de uso
+            $response = $this->deleteProductUseCase->execute($deleteProductRequest, $user);
+
+            // 5) Devolver la respuesta en caso de éxito
             return new JsonResponse(['message' => $response->getMessage()], $response->getStatusCode());
         } catch (\Exception $e) {
-            $this->logger->error('ProductController: Error al eliminar el producto.', ['exception' => $e]);
+            // Manejo de excepciones esperadas
+            if ('PRODUCT_NOT_FOUND' === $e->getMessage()) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'PRODUCT_NOT_FOUND',
+                ], Response::HTTP_NOT_FOUND);
+            }
+            // Manejo de excepciones esperadas
+            if ('CLIENT_NOT_FOUND' === $e->getMessage()) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'CLIENT_NOT_FOUND',
+                ], Response::HTTP_NOT_FOUND);
+            }
+            // Manejo de excepciones esperadas
+            if ('ACCESS_DENIED' === $e->getMessage()) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'ACCESS_DENIED',
+                ], Response::HTTP_NOT_FOUND);
+            }
 
-            return new JsonResponse(['error' => 'Internal Server Error'], 500);
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], Response::HTTP_BAD_REQUEST);
+        } catch (\Exception $e) {
+            // Manejo de errores inesperados
+            $this->logger->error('Error inesperado al eliminar el producto', ['exception' => $e]);
+
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'Internal Server Error',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+
+    }
+    /**
+     * Formatea la lista de errores de validación en un array asociativo.
+     */
+    private function formatValidationErrors(ConstraintViolationListInterface $errors): array
+    {
+        $errorMessages = [];
+        foreach ($errors as $error) {
+            $field = $error->getPropertyPath();
+            $message = $error->getMessage();
+            $errorMessages[$field] = $message;
+        }
+
+        return $errorMessages;
     }
 }

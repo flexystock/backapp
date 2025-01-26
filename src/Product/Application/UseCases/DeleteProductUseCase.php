@@ -2,6 +2,7 @@
 
 namespace App\Product\Application\UseCases;
 
+use App\Entity\Main\User;
 use App\Product\Application\DTO\DeleteProductRequest;
 use App\Product\Application\DTO\DeleteProductResponse;
 use App\Product\Application\InputPorts\DeleteProductUseCaseInterface;
@@ -19,13 +20,24 @@ class DeleteProductUseCase implements DeleteProductUseCaseInterface
         $this->logger = $logger;
     }
 
-    public function execute(DeleteProductRequest $request): DeleteProductResponse
+    public function execute(DeleteProductRequest $request, User $user): DeleteProductResponse
     {
         $uuidClient = $request->getUuidClient();
         $uuidProduct = $request->getUuidProduct();
 
-        if (!$uuidClient || !$uuidProduct) {
-            return new DeleteProductResponse(null, 'Missing required fields: uuid_client or uuid_product', 400);
+        if (!$uuidClient) {
+            // Lanza \RuntimeException('CLIENT_NOT_FOUND')
+            throw new \RuntimeException('CLIENT_NOT_FOUND');
+        }
+        if (!$uuidProduct) {
+            // Lanza \RuntimeException('PRODUCT_NOT_FOUND')
+            throw new \RuntimeException('PRODUCT_NOT_FOUND');
+        }
+        // Validar acceso del usuario al cliente
+        if (!$user->getClients()->exists(function ($key, $client) use ($uuidClient) {
+            return $client->getUuidClient() === $uuidClient;
+        })) {
+            throw new \RuntimeException('ACCESS_DENIED');
         }
 
         try {
@@ -36,14 +48,22 @@ class DeleteProductUseCase implements DeleteProductUseCaseInterface
 
             if (!$product) {
                 $this->logger->warning("DeleteProductUseCase: Producto '$uuidProduct' no encontrado para cliente '$uuidClient'.");
-                return new DeleteProductResponse(null, 'Product not found', 404);
+                // Lanza \RuntimeException('PRODUCT_NOT_FOUND')
+                throw new \RuntimeException('PRODUCT_NOT_FOUND');
             }
 
-            // Aquí puedes agregar un método en el repositorio para remover el producto, similar a save().
-            // Por ejemplo, en ProductRepository: public function remove(Product $product): void { ... }
+            // antes de liminar el producto hay que poneren la scale (Balanza) el campo product_id = 'free'
+            // y despues elminar el rpoducto
+            $scaleRepository = new \App\Scales\Infrastructure\OutputAdapters\Repositories\ScalesRepository($em);
+            $scale = $scaleRepository->findOneByProductId($product->getId());
+
+            if ($scale) {
+                $scale->setProduct(null);
+                $scaleRepository->save($scale);
+            }
             $productRepository->remove($product);
 
-            return new DeleteProductResponse('Product deleted successfully', null, 200);
+            return new DeleteProductResponse('PRODUCT_DELETED_SUCCESSFULLY', null, 200);
         } catch (\Exception $e) {
             $this->logger->error('DeleteProductUseCase: Error deleting product.', [
                 'uuid_client' => $uuidClient,
