@@ -152,14 +152,13 @@ class WeightsLog
     }
 
 
-    public function getScaleId(): int
+    public function getProductId(): ?int
     {
-        return $this->scale;
+        return $this->product ? $this->product->getId() : null;
     }
 
-
-    public function getProductId(): int
+    public function getScaleId(): ?int
     {
-        return $this->product;
+        return $this->scale ? $this->scale->getId() : null;
     }
 }

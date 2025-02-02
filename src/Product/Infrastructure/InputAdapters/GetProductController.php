@@ -241,7 +241,7 @@ class GetProductController extends AbstractController
         // Verificar que el usuario tiene acceso al cliente
         $user = $this->getUser();
         if (!$user) {
-            return new JsonResponse(['error' => 'Unauthorized'], 401);
+            return new JsonResponse(['message' => 'USER_NOT_AUTHENTICATED'], Response::HTTP_UNAUTHORIZED);
         }
 
         if (!$user->getClients()->exists(function ($key, $client) use ($uuidClient) {

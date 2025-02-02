@@ -149,6 +149,8 @@ services:
     # Registrar la Interfaz del Repositorio (alias)
     App\Product\Application\OutputPorts\Repositories\ProductRepositoryInterface:
         alias: App\Product\Infrastructure\OutputAdapters\Repositories\ProductRepository
+    App\Product\Application\OutputPorts\Repositories\WeightsLogRepositoryInterface:
+        alias: App\Product\Infrastructure\OutputAdapters\Repositories\WeightsLogRepository
 
     # Registrar el Repositorio (no inyectado directamente, se crea dinámicamente)
     # No es necesario registrar aquí ya que se crea en el UseCase
@@ -176,6 +178,9 @@ services:
         arguments:
             $connectionManager: '@App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager'
             $logger: '@logger'
+    App\Product\Application\UseCases\GetInfoToDashboardMainUseCase:
+        arguments:
+            $connectionManager: '@App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager'
 
     # Registrar la Interfaz del Caso de Uso y vincularla con la implementación
     App\Product\Application\InputPorts\GetProductUseCaseInterface:
@@ -193,8 +198,15 @@ services:
     App\Product\Application\InputPorts\UpdateProductUseCaseInterface:
         alias: App\Product\Application\UseCases\UpdateProductUseCase
 
+    App\Product\Application\InputPorts\GetInfoToDashboardMainUseCaseInterface:
+        alias: App\Product\Application\UseCases\GetInfoToDashboardMainUseCase
+
     # Registrar el Repositorio
     App\Product\Infrastructure\OutputAdapters\Repositories\ProductRepository:
+        arguments:
+            $em: '@doctrine.orm.main_entity_manager' # Este EntityManager se reemplazará dinámicamente en el caso de uso
+
+    App\Product\Infrastructure\OutputAdapters\Repositories\WeightsLogRepository:
         arguments:
             $em: '@doctrine.orm.main_entity_manager' # Este EntityManager se reemplazará dinámicamente en el caso de uso
 
