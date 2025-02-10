@@ -64,6 +64,8 @@ class CreateProductUseCase implements CreateProductUseCaseInterface
         $product->setDaysAverageConsumption($request->getDaysAverageConsumption());
         $product->setDaysServeOrder($request->getDaysServeOrder());
         $product->setEan($request->getEan());
+        $product->setExpirationDate($request->getExpirationDate());
+        $product->setPerishable($request->getPerishable());
         $product->setStock($request->getStock());
         $product->setWeightRange($request->getWeightRange());
         $product->setNameUnit1($request->getNameUnit1());

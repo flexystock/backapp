@@ -44,6 +44,8 @@ class UpdateProductController extends AbstractController
                     new OA\Property(property: 'uuidProduct', type: 'string', format: 'uuid', example: '9a6ae1c0-3bc6-41c8-975a-4de5b4357666'),
                     new OA\Property(property: 'name', type: 'string', example: 'Nuevo nombre del producto'),
                     new OA\Property(property: 'ean', type: 'string', example: '1234567890123', nullable: true),
+                    new OA\Property(property: 'expiration_date', type: 'string', format: 'date-time', example: '2023-01-01T00:00:00+00:00', nullable: true),
+                    new OA\Property(property: 'perishable', type: 'boolean', example: true, nullable: true),
                     new OA\Property(property: 'stock', type: 'number', format: 'float', example: 0.2, nullable: true),
                     new OA\Property(property: 'weightRange', type: 'number', format: 'float', example: 0.2, nullable: true),
                     new OA\Property(property: 'nameUnit1', type: 'string', example: 'pack', nullable: true),
