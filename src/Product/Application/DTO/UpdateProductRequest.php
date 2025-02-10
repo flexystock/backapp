@@ -16,6 +16,10 @@ class UpdateProductRequest
 
     private ?string $ean;
 
+    private ?DateTime $expiration_date;
+
+    private ?bool $perishable;
+
     #[Assert\Type(type: 'numeric', message: 'INVALID_STOCK')]
     private ?float $stock;
 
@@ -65,6 +69,8 @@ class UpdateProductRequest
         string $uuidProduct,
         string $name,
         ?string $ean = null,
+        ?DateTime $expiration_date = null,
+        ?bool $perishable = false,
         ?float $stock = 0.00,
         ?float $weightRange = null,
         ?string $nameUnit1 = null,
@@ -83,6 +89,8 @@ class UpdateProductRequest
         $this->uuidProduct = $uuidProduct;
         $this->name = $name;
         $this->ean = $ean;
+        $this->expiration_date = $expiration_date;
+        $this->perishable = $perishable ?? false;
         $this->stock = $stock ?? 0.00;
         $this->weightRange = $weightRange;
         $this->nameUnit1 = $nameUnit1;
@@ -118,6 +126,15 @@ class UpdateProductRequest
         return $this->ean;
     }
 
+    public function getExpirationDate(): ?DateTime
+    {
+        return $this->expiration_date;
+    }
+
+    public function getPerishable(): ?bool
+    {
+        return $this->perishable;
+    }
     public function getStock(): ?float
     {
         return $this->stock;

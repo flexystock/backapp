@@ -22,6 +22,12 @@ class Product
     #[ORM\Column(type: 'string', length: 128, nullable: true)]
     private ?string $ean = null;
 
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?DateTime $expiration_date = null;
+
+    #[ORM\Column(type: 'boolean', nullable: true)]
+    private ?bool $perishable = false;
+
     #[ORM\Column(type: 'decimal', precision: 5, scale: 2, nullable: true, options: ['unsigned' => true])]
     private ?float $stock = null;
 
@@ -108,6 +114,27 @@ class Product
     {
         return $this->ean;
     }
+
+    public function getExpirationDate(): ?DateTime
+    {
+        return $this->expiration_date;
+    }
+
+    public function setExpirationDate(?DateTime $expiration_date): void
+    {
+        $this->expiration_date = $expiration_date;
+    }
+
+    public function getPerishable(): ?bool
+    {
+        return $this->perishable;
+    }
+
+    public function setPerishable(?bool $perishable): void
+    {
+        $this->perishable = $perishable;
+    }
+
 
     public function setEan(?string $ean): self
     {

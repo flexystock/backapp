@@ -48,6 +48,8 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
                 'uuid' => $product->getUuid(),
                 'name' => $product->getName(),
                 'ean' => $product->getEan(),
+                'expiration_date' => $product->getExpirationDate(),
+                'perishable' => $product->getPerishable(),
                 'stock' => $product->getStock(),
                 'weight_range' => $product->getWeightRange(),
                 'weight_unit1' => $product->getWeightUnit1(),
@@ -67,6 +69,12 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
             }
             if (null !== $request->getEan()) {
                 $product->setEan($request->getEan());
+            }
+            if (null !== $request->getExpirationDate()) {
+                $product->setExpirationDate($request->getExpirationDate());
+            }
+            if (null !== $request->getPerishable()) {
+                $product->setPerishable($request->getPerishable());
             }
             if (null !== $request->getStock()) {
                 $product->setStock($request->getStock());
@@ -115,6 +123,8 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
                 'uuid' => $product->getUuid(),
                 'name' => $product->getName(),
                 'ean' => $product->getEan(),
+                'expiration_date' => $product->getExpirationDate(),
+                'perishable' => $product->getPerishable(),
                 'stock' => $product->getStock(),
                 'weight_range' => $product->getWeightRange(),
                 'weight_unit1' => $product->getWeightUnit1(),
