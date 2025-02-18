@@ -3,7 +3,7 @@
 namespace App\EventSubscriber;
 
 use App\Entity\Client\ApiCallsLog;
-use App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager;
+use App\Infrastructure\Services\ClientConnectionManager;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;

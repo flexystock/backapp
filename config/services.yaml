@@ -138,7 +138,7 @@ services:
         autoconfigure: true
         tags: [ 'controller.service_arguments' ]
 
-    App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager:
+    App\Infrastructure\Services\ClientConnectionManager:
         arguments:
             $mainEntityManager: '@doctrine.orm.main_entity_manager'
             $logger: '@logger'
@@ -159,28 +159,28 @@ services:
     # Registrar el Caso de Uso
     App\Product\Application\UseCases\GetProductUseCase:
         arguments:
-            $connectionManager: '@App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager'
+            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
             $logger: '@logger'
     App\Product\Application\UseCases\GetAllProductsUseCase:
         arguments:
-            $connectionManager: '@App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager'
+            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
             $logger: '@logger'
 
     App\Product\Application\UseCases\CreateProductUseCase:
         arguments:
-            $connectionManager: '@App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager'
+            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
             $logger: '@logger'
     App\Product\Application\UseCases\DeleteProductUseCase:
         arguments:
-            $connectionManager: '@App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager'
+            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
             $logger: '@logger'
     App\Product\Application\UseCases\UpdateProductUseCase:
         arguments:
-            $connectionManager: '@App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager'
+            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
             $logger: '@logger'
     App\Product\Application\UseCases\GetInfoToDashboardMainUseCase:
         arguments:
-            $connectionManager: '@App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager'
+            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
 
     # Registrar la Interfaz del Caso de Uso y vincularla con la implementación
     App\Product\Application\InputPorts\GetProductUseCaseInterface:
@@ -337,8 +337,24 @@ services:
     App\Ttn\Application\UseCases\HandleTtnUplinkUseCase:
         arguments:
             $poolTtnDeviceRepo: '@App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface'
-            $connManager: '@App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager'
+            $connManager: '@App\Infrastructure\Services\ClientConnectionManager'
             $ScaleRepository: '@App\Scales\Application\OutputPorts\ScalesRepositoryInterface'
+
+    # Alarm UseCase
+    App\Alarm\Application\UseCases\CreateAlarmUseCase:
+        arguments:
+            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+            $logger: '@logger'
+
+
+    App\Alarm\Infrastructure\OutputAdapters\Repositories\AlarmConfigRepository:
+        arguments:
+            $em: '@doctrine.orm.main_entity_manager' # Este EntityManager se reemplazará dinámicamente en el caso de uso
+    # ...
+    App\Alarm\Application\OutputPorts\Repositories\AlarmTypeRepositoryInterface:
+        alias: App\Alarm\Infrastructure\OutputAdapters\Repositories\AlarmTypeRepository
+
+
 
 
 

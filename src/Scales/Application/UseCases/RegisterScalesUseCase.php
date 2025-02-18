@@ -3,7 +3,7 @@
 namespace App\Scales\Application\UseCases;
 
 use App\Entity\Client\Scales;
-use App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager;
+use App\Infrastructure\Services\ClientConnectionManager;
 use App\Scales\Application\DTO\RegisterScalesRequest;
 use App\Scales\Application\DTO\RegisterScalesResponse;
 use App\Scales\Application\InputPorts\RegisterScalesUseCaseInterface;
