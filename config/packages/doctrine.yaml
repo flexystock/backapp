@@ -4,11 +4,10 @@ doctrine:
     connections:
       main:
         url: '%env(resolve:DATABASE_URL)%'
+      cron:
+        url: '%env(resolve:CRON_DATABASE_URL)%'
   orm:
     default_entity_manager: main
-    # Para entorno dev: creará proxies en var/doctrine/proxies
-    proxy_dir: '%kernel.project_dir%/var/doctrine/proxies'
-    auto_generate_proxy_classes: true
     entity_managers:
       main:
         connection: main
@@ -19,7 +18,21 @@ doctrine:
             dir: '%kernel.project_dir%/src/Entity/Main'
             prefix: 'App\Entity\Main'
             alias: Main
-    # Agregar un logger SQL personalizado
+          Client:
+            is_bundle: false
+            type: attribute
+            dir: '%kernel.project_dir%/src/Entity/Client'
+            prefix: 'App\Entity\Client'
+            alias: Client
+      cron:
+        connection: cron
+        mappings:
+          Cron:
+            is_bundle: false
+            type: attribute
+            dir: '%kernel.project_dir%/src/Entity/Cron'
+            prefix: 'App\Entity\Cron'
+            alias: Cron
 monolog:
   channels: ['doctrine']
   handlers:

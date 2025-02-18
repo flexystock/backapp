@@ -79,6 +79,9 @@ class Product
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $datehourModification = null;
 
+    #[ORM\Column(name: 'min_percentage', type: 'integer', options: ['unsigned' => true, 'default' => 0])]
+    private int $minPercentage = 0;
+
     // Getters y Setters
 
     public function getId(): int
@@ -134,7 +137,6 @@ class Product
     {
         $this->perishable = $perishable;
     }
-
 
     public function setEan(?string $ean): self
     {
@@ -343,6 +345,18 @@ class Product
     public function setDatehourModification(?\DateTimeInterface $datehourModification): self
     {
         $this->datehourModification = $datehourModification;
+
+        return $this;
+    }
+
+    public function getMinPercentage(): int
+    {
+        return $this->minPercentage;
+    }
+
+    public function setMinPercentage(int $minPercentage): self
+    {
+        $this->minPercentage = $minPercentage;
 
         return $this;
     }

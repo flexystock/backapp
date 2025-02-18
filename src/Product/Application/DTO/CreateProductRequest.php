@@ -63,6 +63,10 @@ class CreateProductRequest
     #[Assert\GreaterThanOrEqual(value: 0, message: 'Los días para servir el pedido no pueden ser negativos.')]
     private int $daysServeOrder;
 
+    #[Assert\Type(type: 'integer', message: 'INVALID_MIN_PERCENTAGE')]
+    #[Assert\GreaterThanOrEqual(value: 0, message: 'El porcentaje mínimo debe ser 0 o mayor.')]
+    private int $minPercentage = 0;
+
     // Agrega el resto de campos si es necesario...
     // uuidUserCreation, datehourCreation y demás suelen ser automáticos o proceden de la lógica interna
     // (por ejemplo, uuidUserCreation podría venir del usuario autenticado y datehourCreation del momento actual).
@@ -86,6 +90,7 @@ class CreateProductRequest
         ?string $nameUnit2 = null,
         ?float $weightUnit2 = null,
         ?bool $outSystemStock = null,
+        ?int $minPercentage = 0,
     ) {
         $this->uuidClient = $uuidClient;
         $this->name = $name;
@@ -106,6 +111,7 @@ class CreateProductRequest
         $this->nameUnit2 = $nameUnit2;
         $this->weightUnit2 = $weightUnit2 ?? 0.00000;
         $this->outSystemStock = $outSystemStock ?? false;
+        $this->minPercentage = $minPercentage ?? 0;
     }
 
     public function getName(): string
@@ -221,5 +227,15 @@ class CreateProductRequest
     public function setDatehourCreation(?\DateTimeInterface $datehourCreation): void
     {
         $this->datehourCreation = $datehourCreation;
+    }
+
+    public function getMinPercentage(): int
+    {
+        return $this->minPercentage;
+    }
+
+    public function setMinPercentage(int $minPercentage): void
+    {
+        $this->minPercentage = $minPercentage;
     }
 }

@@ -1,8 +1,8 @@
 <?php
 
-// src/Product/Infrastructure/OutputAdapters/Services/ClientConnectionManager.php
+// src/Infrastructure/Services/ClientConnectionManager.php
 
-namespace App\Product\Infrastructure\OutputAdapters\Services;
+namespace App\Infrastructure\Services;
 
 use App\Entity\Main\Client;
 use Doctrine\DBAL\Configuration as DBALConfiguration;
@@ -80,13 +80,13 @@ class ClientConnectionManager
         $this->logger->info("ClientConnectionManager: Creating EntityManager for client UUID '$uuidClient'.");
 
         // Configuración de Doctrine ORM
-        $proxyDir = __DIR__ . '/../../../../var/doctrine/proxies';
+        $proxyDir = __DIR__.'/../../../../var/doctrine/proxies';
         $config = ORMSetup::createAttributeMetadataConfiguration(
             paths: [__DIR__.'/../../../../Entity/Client'], // Ruta a las entidades del cliente
             isDevMode: true, // Cambia a true en desarrollo
             proxyDir: $proxyDir,
             cache: null,
-            //useSimpleAnnotationReader: false,
+            // useSimpleAnnotationReader: false,
         );
         $absolutePath = __DIR__.'/../../../../Entity/Client';
         $this->logger->info('absolutePath', [
@@ -134,5 +134,52 @@ class ClientConnectionManager
 
         // Para conexiones internas en Docker, usa el puerto interno de MySQL
         return 3306;
+    }
+
+    /**
+     * Obtiene el EntityManager para la base de datos central (usada por el CRON).
+     *
+     * @throws \Exception
+     */
+    public function getCentralEntityManager(): EntityManagerInterface
+    {
+        // Definir directamente los parámetros de conexión para la BBDD central.
+        $connectionParams = [
+            'dbname' => 'central_database',             // Nombre de la base de datos central
+            'user' => 'user',                         // Usuario
+            'password' => 'password',                     // Contraseña
+            'host' => 'docker-symfony-dbCentral',     // Host (puede ser el nombre del contenedor)
+            'port' => 3306,                           // Puerto (3306 para MySQL interno)
+            'driver' => 'pdo_mysql',
+            'charset' => 'utf8mb4',
+        ];
+
+        $this->logger->info('ClientConnectionManager: Creando Central EntityManager con parámetros hardcodeados.');
+
+        // Configuración de Doctrine ORM para las entidades centrales (en src/Entity/Cron)
+        $proxyDir = __DIR__.'/../../../../var/doctrine/proxies';
+        $config = ORMSetup::createAttributeMetadataConfiguration(
+            paths: [__DIR__.'/../../../../Entity/Cron'], // Directorio de entidades para la BBDD central.
+            isDevMode: true,
+            proxyDir: $proxyDir,
+            cache: null
+        );
+
+        $dbalConfig = new DBALConfiguration();
+        $schemaManagerFactory = new DefaultSchemaManagerFactory();
+        $dbalConfig->setSchemaManagerFactory($schemaManagerFactory);
+
+        try {
+            // Crear la conexión
+            $connection = DriverManager::getConnection($connectionParams, $dbalConfig);
+            // Crear el EntityManager usando la configuración de ORM para las entidades centrales
+            $entityManager = new EntityManager($connection, $config);
+            $this->logger->info('ClientConnectionManager: Central EntityManager creado correctamente.');
+
+            return $entityManager;
+        } catch (\Exception $e) {
+            $this->logger->error('ClientConnectionManager: Error creando Central EntityManager.', ['exception' => $e]);
+            throw new \Exception('Error creando Central EntityManager.');
+        }
     }
 }
