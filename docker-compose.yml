@@ -53,7 +53,7 @@ services:
       - ./docker/php/xdebug-linux.ini:/usr/local/etc/php/conf.d/xdebug.ini
       - ~/.ssh/id_rsa:/home/appuser/.ssh/id_rsa
       - /var/run/docker.sock:/var/run/docker.sock
-    command: php bin/console messenger:consume async -vv
+    command: /appdata/www/docker/php/wait-for-db.sh
     networks:
       - docker-symfony-network
     depends_on:
@@ -78,47 +78,8 @@ services:
     networks:
       - docker-symfony-network
 
-  # Contenedor para la base de datos central (para pesos y alarmas)
-  docker-symfony-dbCentral:
-    container_name: docker-symfony-dbCentral
-    image: mysql:8.0
-    ports:
-      - "40100:3306"  # Puedes exponerlo o dejarlo sin puertos si solo lo usas internamente
-    environment:
-      MYSQL_DATABASE: "central_database"
-      MYSQL_USER: "user"
-      MYSQL_PASSWORD: "password"
-      MYSQL_ROOT_PASSWORD: "root"
-      TZ: "Europe/Madrid"
-    command: "mysqld --sql_mode=STRICT_ALL_TABLES,NO_ENGINE_SUBSTITUTION"
-    volumes:
-      - docker-symfony-databaseCentral-data:/var/lib/mysql
-    networks:
-      - docker-symfony-network
-
-  # Contenedor para ejecutar el cron (o comando periódico) en PHP
-  docker-symfony-cron:
-    container_name: docker-symfony-cron
-    build:
-      context: ./docker/php
-      args:
-        UID: 1000
-    environment:
-      APP_ENV: dev
-      # La conexión se dirige a la base de datos central
-      DATABASE_URL: mysql://user:password@docker-symfony-dbCentral:3306/central_database
-    volumes:
-      - ./:/appdata/www
-      #- ./docker/php/xdebug-linux.ini:/usr/local/etc/php/conf.d/xdebug.ini
-    command: sh -c "while true; do php bin/console app:check-alarms && sleep 60; done"
-    networks:
-      - docker-symfony-network
-    depends_on:
-      - docker-symfony-dbCentral
-
 volumes:
   docker-symfony-databaseMain-data:
-  docker-symfony-databaseCentral-data:
 
 networks:
   docker-symfony-network:

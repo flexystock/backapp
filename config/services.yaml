@@ -340,24 +340,6 @@ services:
             $connManager: '@App\Infrastructure\Services\ClientConnectionManager'
             $ScaleRepository: '@App\Scales\Application\OutputPorts\ScalesRepositoryInterface'
 
-    # Alarm UseCase
-    App\Alarm\Application\UseCases\CreateAlarmUseCase:
-        arguments:
-            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-            $logger: '@logger'
-
-
-    App\Alarm\Infrastructure\OutputAdapters\Repositories\AlarmConfigRepository:
-        arguments:
-            $em: '@doctrine.orm.main_entity_manager' # Este EntityManager se reemplazará dinámicamente en el caso de uso
-    # ...
-    App\Alarm\Application\OutputPorts\Repositories\AlarmTypeRepositoryInterface:
-        alias: App\Alarm\Infrastructure\OutputAdapters\Repositories\AlarmTypeRepository
-
-
-
-
-
 
 
 
