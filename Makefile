@@ -11,7 +11,9 @@ run: ## Start the containers
 	docker network create docker-symfony-network || true
 	docker compose up -d
 	@echo "Fixing permissions for var/log"
-	docker exec -it --user root docker-symfony-be bash -c "mkdir -p /appdata/www/var/log && chown -R www-data:www-data /appdata/www/var/log && chmod -R 775 /appdata/www/var/log"
+	docker exec -it --user root ${DOCKER_BE} bash -c "mkdir -p /appdata/www/var/log && chown -R www-data:www-data /appdata/www/var/log && chmod -R 775 /appdata/www/var/log"
+	@echo "Installing PHP dependencies with Composer"
+	docker exec -it ${DOCKER_BE} composer install --no-scripts --no-interaction --optimize-autoloader
 	@CONTAINERS=$$(docker ps -a -q); \
 		if [ -n "$$CONTAINERS" ]; then \
 			docker start $$CONTAINERS; \
@@ -20,7 +22,7 @@ run: ## Start the containers
 		fi
 
 fix-permissions: ## Fix permissions for var/log
-	docker exec -it --user root docker-symfony-be bash -c "mkdir -p /appdata/www/var/cache /appdata/www/var/log && chown -R www-data:www-data /appdata/www/var/cache /appdata/www/var/log && chmod -R 775 /appdata/www/var/cache /appdata/www/var/log && ls -l /appdata/www/var && ls -l /appdata/www/var/cache && ls -l /appdata/www/var/log"
+	docker exec -it --user root ${DOCKER_BE} bash -c "mkdir -p /appdata/www/var/cache /appdata/www/var/log && chown -R www-data:www-data /appdata/www/var/cache /appdata/www/var/log && chmod -R 775 /appdata/www/var/cache /appdata/www/var/log && ls -l /appdata/www/var && ls -l /appdata/www/var/cache && ls -l /appdata/www/var/log"
 
 stop: ## Stop the containers
 	docker compose stop
