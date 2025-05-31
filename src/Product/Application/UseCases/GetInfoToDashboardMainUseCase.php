@@ -8,7 +8,7 @@ use App\Product\Application\DTO\GetInfoToDashboardMainResponse;
 use App\Product\Application\InputPorts\GetInfoToDashboardMainUseCaseInterface;
 use App\Product\Infrastructure\OutputAdapters\Repositories\ProductRepository;
 use App\Product\Infrastructure\OutputAdapters\Repositories\WeightsLogRepository;
-use App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager;
+use App\Infrastructure\Services\ClientConnectionManager;
 use Psr\Log\LoggerInterface;
 
 class GetInfoToDashboardMainUseCase implements GetInfoToDashboardMainUseCaseInterface

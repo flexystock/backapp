@@ -64,7 +64,7 @@ class Scales
      * product_id -> FK
      * ON DELETE SET NULL => por eso 'nullable' => true.
      */
-    #[ORM\ManyToOne(targetEntity: Product::class, inversedBy: 'scales')]
+    #[ORM\ManyToOne(targetEntity: Product::class, fetch: 'EAGER')]
     #[ORM\JoinColumn(name: 'product_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?Product $product_id = null;
 

@@ -27,9 +27,3 @@ controllers_scales:
         path: ../src/Scales/Infrastructure/InputAdapters/
         namespace: App\Scales\Infrastructure\InputAdapters
     type: attribute
-
-controllers_alarm:
-    resource:
-        path: ../src/Alarm/Infrastructure/InputAdapters/
-        namespace: App\Alarm\Infrastructure\InputAdapters
-    type: attribute
