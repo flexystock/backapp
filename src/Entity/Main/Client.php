@@ -127,11 +127,23 @@ class Client
         $this->users = new ArrayCollection();
     }
 
+    /**
+     * Get client UUID.
+     *
+     * @return string UUID of the client
+     */
     public function getUuidClient(): string
     {
         return $this->uuid_client;
     }
 
+    /**
+     * Set client UUID.
+     *
+     * @param string $uuid_client UUID of the client
+     *
+     * @return self
+     */
     public function setUuidClient(string $uuid_client): self
     {
         $this->uuid_client = $uuid_client;
@@ -139,11 +151,23 @@ class Client
         return $this;
     }
 
+    /**
+     * Get public name of the client.
+     *
+     * @return string name of the client
+     */
     public function getName(): string
     {
         return $this->name;
     }
 
+    /**
+     * Set public name of the client.
+     *
+     * @param string $name name of the client
+     *
+     * @return self
+     */
     public function setName(string $name): self
     {
         $this->name = $name;

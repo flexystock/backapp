@@ -136,11 +136,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->businessGroups = new ArrayCollection();
     }
 
+    /**
+     * Get user UUID.
+     *
+     * @return string|null UUID identifier
+     */
     public function getUuid(): ?string
     {
         return $this->uuid_user;
     }
 
+    /**
+     * Set user UUID.
+     *
+     * @param string $uuid UUID identifier
+     *
+     * @return self
+     */
     public function setUuid(string $uuid): self
     {
         $this->uuid_user = $uuid;
@@ -148,11 +160,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /**
+     * Get user name.
+     *
+     * @return string name of the user
+     */
     public function getName(): string
     {
         return $this->name;
     }
 
+    /**
+     * Set user name.
+     *
+     * @param string $name user full name
+     *
+     * @return self
+     */
     public function setName(string $name): self
     {
         $this->name = $name;
@@ -160,11 +184,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /**
+     * Get surnames.
+     *
+     * @return string surnames of the user
+     */
     public function getSurnames(): string
     {
         return $this->surnames;
     }
 
+    /**
+     * Set surnames.
+     *
+     * @param string $surnames user surnames
+     *
+     * @return self
+     */
     public function setSurnames(string $surnames): self
     {
         $this->surnames = $surnames;
@@ -172,11 +208,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /**
+     * Get phone number.
+     *
+     * @return int phone number
+     */
     public function getPhone(): int
     {
         return $this->phone;
     }
 
+    /**
+     * Set phone number.
+     *
+     * @param int $phone contact phone
+     *
+     * @return self
+     */
     public function setPhone(int $phone): self
     {
         $this->phone = $phone;
@@ -184,11 +232,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /**
+     * Get email address.
+     *
+     * @return string email
+     */
     public function getEmail(): string
     {
         return $this->email;
     }
 
+    /**
+     * Set email address.
+     *
+     * @param string $email email address
+     *
+     * @return self
+     */
     public function setEmail(string $email): self
     {
         $this->email = $email;

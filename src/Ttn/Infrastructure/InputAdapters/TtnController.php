@@ -44,6 +44,13 @@ class TtnController extends AbstractController
     }
 
     #[Route('/api/app_register', name: 'api_app_register', methods: ['POST'])]
+    /**
+     * Register a new TTN application for the given client.
+     *
+     * @param Request $request HTTP request containing the client UUID
+     *
+     * @return JsonResponse Result of the registration
+     */
     public function registerTtnApp(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -163,6 +170,13 @@ class TtnController extends AbstractController
             ),
         ]
     )]
+    /**
+     * Register a new TTN device.
+     *
+     * @param Request $request Request containing optional client UUID
+     *
+     * @throws RandomException when random_int fails generating device id
+     */
     public function registerTtnDevice(Request $request): JsonResponse
     {
         $uuidUser = $this->getUser()->getUuid();
@@ -295,6 +309,13 @@ class TtnController extends AbstractController
             ),
         ]
     )]
+    /**
+     * Retrieve a paginated list of TTN devices.
+     *
+     * @param Request $request HTTP request with pagination and filter parameters
+     *
+     * @return JsonResponse Paginated list of devices
+     */
     public function getAllDevices(Request $request): JsonResponse
     {
         // Verificar que el usuario tiene acceso al cliente
@@ -419,6 +440,13 @@ class TtnController extends AbstractController
             ),
         ]
     )]
+    /**
+     * Unassign a TTN device from a client.
+     *
+     * @param Request $request Request containing uuidClient and endDeviceId
+     *
+     * @return JsonResponse Result of the unassignment
+     */
     public function UnassignTtnDevice(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -447,7 +475,11 @@ class TtnController extends AbstractController
     }
 
     /**
-     * Valida el formato UUID.
+     * Validate UUID format.
+     *
+     * @param string $uuid value to validate
+     *
+     * @return bool true when the value matches the UUID pattern
      */
     private function isValidUuid(string $uuid): bool
     {
