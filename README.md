@@ -7,7 +7,7 @@ Este proyecto es parte de una solución completa desarrollada por:
 - 🙋🏻 Santiago Fragio Moreno (**Backend Developer**)
 - 🙋🏻‍♂️ Sergio Correas Rayo (**Frontend Developer**)
 
-El código fuente es privado, ya que es un software propio desarrollado de froma interna y privada.
+El código fuente es privado, ya que es un software propio desarrollado de forma interna y privada.
 
 ## 🚀 Visión General
 
