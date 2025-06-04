@@ -23,6 +23,15 @@ class LoginUserUseCase implements LoginUserInputPort
         $this->entityManager = $entityManager;
     }
 
+    /**
+     * Authenticate a user against stored credentials.
+     *
+     * @param string $email     email address provided by the user
+     * @param string $password  plain password provided by the user
+     * @param string $ipAddress IP address of the login attempt
+     *
+     * @return User|null authenticated user or null on failure
+     */
     public function login(string $email, string $password, string $ipAddress): ?User
     {
         $user = $this->userRepository->findByEmail($email);
@@ -67,6 +76,13 @@ class LoginUserUseCase implements LoginUserInputPort
         $this->entityManager->flush();
     }
 
+    /**
+     * Provide a user friendly error message after a failed login attempt.
+     *
+     * @param User $user the user that attempted to log in
+     *
+     * @return string|null Message to display or null if account is not yet locked
+     */
     public function handleFailedLogin(User $user): ?string
     {
         if ($user->getLockedUntil() && $user->getLockedUntil() > new \DateTimeImmutable()) {
@@ -84,6 +100,13 @@ class LoginUserUseCase implements LoginUserInputPort
         return null;
     }
 
+    /**
+     * Calculate how many attempts are left before locking the account.
+     *
+     * @param int $failedAttempts number of failed attempts so far
+     *
+     * @return int remaining attempts before the next lock threshold
+     */
     private function getRemainingAttempts(int $failedAttempts): int
     {
         $criticalAttempts = [4, 7, 10, 13];

@@ -84,16 +84,33 @@ class Product
 
     // Getters y Setters
 
+    /**
+     * Get identifier of the product.
+     *
+     * @return int product id
+     */
     public function getId(): int
     {
         return $this->id;
     }
 
+    /**
+     * Get UUID of the product.
+     *
+     * @return string product UUID
+     */
     public function getUuid(): string
     {
         return $this->uuid;
     }
 
+    /**
+     * Set UUID of the product.
+     *
+     * @param string $uuid product UUID
+     *
+     * @return self
+     */
     public function setUuid(string $uuid): self
     {
         $this->uuid = $uuid;

@@ -19,10 +19,18 @@ class CreateDockerContainerMessageHandler
     private DockerService $dockerService;
     private LoggerInterface $logger;
 
-    public function __construct(ClientRepositoryInterface $clientRepository,
+    /**
+     * Create the handler with required services.
+     *
+     * @param ClientRepositoryInterface $clientRepository Repository to persist client changes
+     * @param DockerService             $dockerService    Service used to create the docker container
+     * @param LoggerInterface           $logger           Logger instance for debugging
+     */
+    public function __construct(
+        ClientRepositoryInterface $clientRepository,
         DockerService $dockerService,
-        LoggerInterface $logger)
-    {
+        LoggerInterface $logger
+    ) {
         $this->clientRepository = $clientRepository;
         $this->dockerService = $dockerService;
         $this->logger = $logger;
@@ -92,6 +100,17 @@ class CreateDockerContainerMessageHandler
         }
     }
 
+    /**
+     * Try to connect to the database several times until it is available.
+     *
+     * @param string $host         database host
+     * @param int    $port         port where MySQL is listening
+     * @param string $username     username to authenticate
+     * @param string $password     password for the database user
+     * @param string $databaseName name of the database to connect to
+     *
+     * @return bool true if connection succeeds before exhausting retries
+     */
     private function waitForDatabaseToBeReady($host, $port, $username, $password, $databaseName): bool
     {
         $retries = 0;
