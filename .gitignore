@@ -13,7 +13,7 @@
 ###< symfony/framework-bundle ###
 
 ###> lexik/jwt-authentication-bundle ###
-/config/jwt/*.pem
+# config/jwt/*.pem
 
 ###> phpunit/phpunit ###
 /phpunit.xml
