@@ -110,6 +110,15 @@ En nuestro proyecto, Docker se utiliza para ejecutar el servidor PHP, la base de
 
 ### 🧱 Contenedores en uso
 
+### 🔐 Claves JWT de ejemplo
+
+El directorio `config/jwt` contiene un par de claves RSA de ejemplo
+(`private.pem` y `public.pem`) protegidas con la frase de contraseña
+`FlexyStock`. Estas claves permiten que la autenticación JWT funcione en
+entornos locales sin configuración adicional. **No utilices estas claves en
+producción**; genera unas nuevas con el comando de Lexik o `openssl`
+adecuado y actualiza la variable `JWT_PASSPHRASE` en tu entorno.
+
 ## 🚫 Contribución
 
 Este repositorio es privado y no acepta contribuciones, ya que es un software propietario en desarrollo para nuestra futura empresa.
