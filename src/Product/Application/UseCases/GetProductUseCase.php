@@ -8,7 +8,7 @@ use App\Entity\Client\Product;
 use App\Product\Application\DTO\GetProductRequest;
 use App\Product\Application\DTO\GetProductResponse;
 use App\Product\Application\InputPorts\GetProductUseCaseInterface;
-use App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager;
+use App\Infrastructure\Services\ClientConnectionManager;
 use Psr\Log\LoggerInterface;
 
 class GetProductUseCase implements GetProductUseCaseInterface

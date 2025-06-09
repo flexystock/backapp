@@ -7,7 +7,8 @@ use App\Entity\Main\User;
 use App\Product\Application\DTO\DeleteProductRequest;
 use App\Product\Application\DTO\DeleteProductResponse;
 use App\Product\Application\InputPorts\DeleteProductUseCaseInterface;
-use App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager;
+//use App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager;
+use App\Infrastructure\Services\ClientConnectionManager;
 use Psr\Log\LoggerInterface;
 
 class DeleteProductUseCase implements DeleteProductUseCaseInterface
