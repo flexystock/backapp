@@ -1,0 +1,2 @@
+ALTER TABLE products
+MODIFY COLUMN stock DECIMAL(9,5);

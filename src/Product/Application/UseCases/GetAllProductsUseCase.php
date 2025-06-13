@@ -6,7 +6,7 @@ use App\Entity\Client\Product;
 use App\Product\Application\DTO\GetAllProductsRequest;
 use App\Product\Application\DTO\GetProductResponse;
 use App\Product\Application\InputPorts\GetAllProductsUseCaseInterface;
-use App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager;
+use App\Infrastructure\Services\ClientConnectionManager;
 use Psr\Log\LoggerInterface;
 
 class GetAllProductsUseCase implements GetAllProductsUseCaseInterface
