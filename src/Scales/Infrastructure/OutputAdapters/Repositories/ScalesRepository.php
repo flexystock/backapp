@@ -41,4 +41,22 @@ class ScalesRepository implements ScalesRepositoryInterface
             'product_id' => $productId,
         ]);
     }
+
+    public function findByUuidAndClient(string $uuidScale, string $uuidClient): ?Scales
+    {
+        return $this->em->getRepository(Scales::class)->findOneBy([
+            'uuid' => $uuidScale,
+        ]);
+    }
+
+    public function findAllByUuidClient(string $uuidClient): array
+    {
+        return $this->em->getRepository(Scales::class)->findAll();
+    }
+
+    public function remove(Scales $scale): void
+    {
+        $this->em->remove($scale);
+        $this->em->flush();
+    }
 }
