@@ -24,7 +24,7 @@ class GetInfoScalesToDashboardMainController extends AbstractController
         $this->getInfoScalesToDashboardMainUseCase = $getInfoScalesToDashboardMainUseCase;
         $this->logger = $logger;
     }
-    #[Route('/api/scales_dashboard', name: 'api_product_dashboard', methods: ['POST'])]
+    #[Route('/api/scales_dashboard', name: 'api_scales_dashboard', methods: ['POST'])]
     #[OA\Post(
         path: '/api/scales_dashboard',
         summary: 'Obtener información para el dashboard principal',
