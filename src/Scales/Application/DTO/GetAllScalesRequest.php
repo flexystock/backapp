@@ -2,7 +2,7 @@
 
 namespace App\Scales\Application\DTO;
 
-class GetInfoScalesToDashboardMainRequest
+class GetAllScalesRequest
 {
     private string $uuidClient;
 

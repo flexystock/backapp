@@ -2,7 +2,7 @@
 
 namespace App\Scales\Application\DTO;
 
-class GetInfoScalesToDashboardMainResponse
+class GetScaleResponse
 {
     private ?array $scale;
     private ?string $error;

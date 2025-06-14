@@ -2,22 +2,22 @@
 
 namespace App\Scales\Application\DTO;
 
-class GetInfoScalesToDashboardMainResponse
+class DeleteScaleResponse
 {
-    private ?array $scale;
+    private ?string $message;
     private ?string $error;
     private int $statusCode;
 
-    public function __construct(?array $scale, ?string $error, int $statusCode)
+    public function __construct(?string $message, ?string $error, int $statusCode)
     {
-        $this->scale = $scale;
+        $this->message = $message;
         $this->error = $error;
         $this->statusCode = $statusCode;
     }
 
-    public function getScale(): ?array
+    public function getMessage(): ?string
     {
-        return $this->scale;
+        return $this->message;
     }
 
     public function getError(): ?string

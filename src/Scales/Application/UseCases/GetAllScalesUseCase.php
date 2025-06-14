@@ -4,13 +4,13 @@ namespace App\Scales\Application\UseCases;
 
 use App\Entity\Client\Scales;
 use App\Infrastructure\Services\ClientConnectionManager;
-use App\Scales\Application\DTO\GetInfoScalesToDashboardMainRequest;
-use App\Scales\Application\DTO\GetInfoScalesToDashboardMainResponse;
-use App\Scales\Application\InputPorts\GetInfoScalesToDashboardMainUseCaseInterface;
+use App\Scales\Application\DTO\GetAllScalesRequest;
+use App\Scales\Application\DTO\GetScaleResponse;
+use App\Scales\Application\InputPorts\GetAllScalesUseCaseInterface;
 use App\Scales\Infrastructure\OutputAdapters\Repositories\ScalesRepository;
 use Psr\Log\LoggerInterface;
 
-class GetInfoScalesToDashboardMainUseCase implements GetInfoScalesToDashboardMainUseCaseInterface
+class GetAllScalesUseCase implements GetAllScalesUseCaseInterface
 {
     private ClientConnectionManager $connectionManager;
     private LoggerInterface $logger;
@@ -21,7 +21,7 @@ class GetInfoScalesToDashboardMainUseCase implements GetInfoScalesToDashboardMai
         $this->logger = $logger;
     }
 
-    public function execute(GetInfoScalesToDashboardMainRequest $request): GetInfoScalesToDashboardMainResponse
+    public function execute(GetAllScalesRequest $request): GetScaleResponse
     {
         $uuidClient = $request->getUuidClient();
 
@@ -31,11 +31,10 @@ class GetInfoScalesToDashboardMainUseCase implements GetInfoScalesToDashboardMai
             $scales = $repo->findAllByUuidClient($uuidClient);
             $data = array_map(fn(Scales $s) => $this->serializeScale($s), $scales);
 
-            return new GetInfoScalesToDashboardMainResponse($data, null, 200);
+            return new GetScaleResponse($data, null, 200);
         } catch (\Exception $e) {
-            $this->logger->error('GetInfoScalesToDashboardMainUseCase: Error', ['exception' => $e]);
-
-            return new GetInfoScalesToDashboardMainResponse(null, 'Internal Server Error', 500);
+            $this->logger->error('GetAllScalesUseCase: Error', ['exception' => $e]);
+            return new GetScaleResponse(null, 'Internal Server Error', 500);
         }
     }
 
@@ -44,10 +43,9 @@ class GetInfoScalesToDashboardMainUseCase implements GetInfoScalesToDashboardMai
         return [
             'uuid' => $scale->getUuid(),
             'end_device_id' => $scale->getEndDeviceId(),
-            'voltage_min' => $scale->getVoltageMin(),
-            'voltage_percentage' => $scale->getVoltagePercentage(),
-            'last_send' => $scale->getLastSend()?->format('Y-m-d H:i:s'),
-            'product_asociate' => $scale->getProduct()?->getName(),
+            'product_id' => $scale->getProduct()?->getId(),
+            'posX' => $scale->getPosX(),
+            'width' => $scale->getWidth(),
         ];
     }
 }
