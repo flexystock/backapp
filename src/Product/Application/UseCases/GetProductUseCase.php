@@ -67,6 +67,23 @@ class GetProductUseCase implements GetProductUseCaseInterface
         return [
             'uuid' => $product->getUuid(),
             'name' => $product->getName(),
+            'ean' => $product->getEan(),
+            'min_percentage' => $product->getMinPercentage(),
+            'expiration_date' => $product->getExpirationDate() ? $product->getExpirationDate()->format('Y-m-d') : null,
+            'perishable' => $product->getPerishable(),
+            'stock' => $product->getStock(),
+            'weight_range' => $product->getWeightRange(),
+            'name_unit_1' => $product->getNameUnit1(),
+            'weight_unit_1' => $product->getWeightUnit1(),
+            'name_unit_2' => $product->getNameUnit2(),
+            'weight_unit_2' => $product->getWeightUnit2(),
+            'main_unit' => $product->getMainUnit(),
+            'tare' => $product->getTare(),
+            'sale_price' => $product->getSalePrice(),
+            'cost_price' => $product->getCostPrice(),
+            'out_system_stock' => $product->getOutSystemStock(),
+            'days_average_consumption' => $product->getDaysAverageConsumption(),
+            'days_serve_order' => $product->getDaysServeOrder(),
             // ... otros campos según sea necesario
         ];
     }
