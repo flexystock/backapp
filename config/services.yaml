@@ -335,6 +335,11 @@ services:
             $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
             $logger: '@logger'
 
+
+    App\Scales\Application\UseCases\GetInfoScalesToDashboardMainUseCase:
+        arguments:
+            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+            $logger: '@logger'
     App\Scales\Application\InputPorts\GetScaleUseCaseInterface:
         alias: App\Scales\Application\UseCases\GetScaleUseCase
     App\Scales\Application\InputPorts\GetAllScalesUseCaseInterface:
@@ -343,6 +348,9 @@ services:
         alias: App\Scales\Application\UseCases\UpdateScaleUseCase
     App\Scales\Application\InputPorts\DeleteScaleUseCaseInterface:
         alias: App\Scales\Application\UseCases\DeleteScaleUseCase
+    App\Scales\Application\InputPorts\GetInfoScalesToDashboardMainUseCaseInterface:
+        alias: App\Scales\Application\UseCases\GetInfoScalesToDashboardMainUseCase
+
 
     # Controller
     App\Scales\Infrastructure\InputAdapters\ScalesController:
