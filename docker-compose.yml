@@ -23,11 +23,8 @@ services:
         UID: 1000
     environment:
       PHP_IDE_CONFIG: "serverName=Docker"
-      PHP_XDEBUG_ENABLED: "1"
-      XDEBUG_CONFIG: "remote_host=172.17.0.1 remote_port=9005"
     volumes:
       - ./:/appdata/www
-      - ./docker/php/xdebug-linux.ini:/usr/local/etc/php/conf.d/xdebug.ini
       - ~/.ssh/id_rsa:/home/appuser/.ssh/id_rsa
       - /var/run/docker.sock:/var/run/docker.sock
     command: php-fpm
@@ -44,13 +41,10 @@ services:
         UID: 1000
     environment:
       PHP_IDE_CONFIG: "serverName=Docker"
-      PHP_XDEBUG_ENABLED: "1"
-      XDEBUG_CONFIG: "remote_host=172.17.0.1 remote_port=9005"
       APP_ENV: dev
       DATABASE_URL: mysql://user:password@docker-symfony-dbMain:3306/docker_symfony_databaseMain
     volumes:
       - ./:/appdata/www
-      - ./docker/php/xdebug-linux.ini:/usr/local/etc/php/conf.d/xdebug.ini
       - ~/.ssh/id_rsa:/home/appuser/.ssh/id_rsa
       - /var/run/docker.sock:/var/run/docker.sock
     command: /appdata/www/docker/php/wait-for-db.sh
