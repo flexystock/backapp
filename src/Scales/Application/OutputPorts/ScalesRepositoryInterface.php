@@ -17,5 +17,11 @@ interface ScalesRepositoryInterface
     public function findOneBy(string $endDeviceId): ?Scales;
 
     public function findOneByProductId(int $productId): ?Scales;
+
+    public function findByUuidAndClient(string $uuidScale, string $uuidClient): ?Scales;
+
+    public function findAllByUuidClient(string $uuidClient): array;
+
+    public function remove(Scales $scale): void;
     // Otras operaciones (findOneBy..., etc.)
 }
