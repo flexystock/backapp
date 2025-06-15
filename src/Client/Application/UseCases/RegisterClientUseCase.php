@@ -135,7 +135,6 @@ class RegisterClientUseCase implements RegisterClientInputPort
         try {
             $this->userRepository->save($user);
 
-            $this->notificationService->sendEmailVerificationToUser($user);
             $this->notificationService->sendEmailToBack($user);
 
             // $this->entityManager->commit();

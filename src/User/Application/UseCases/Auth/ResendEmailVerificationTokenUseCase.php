@@ -38,7 +38,6 @@ class ResendEmailVerificationTokenUseCase implements ResendEmailVerificationToke
         $user->setVerificationTokenExpiresAt((new \DateTime())->modify('+1 day'));
         $this->userRepository->save($user);
 
-        $this->notificationService->sendEmailVerificationToUser($user);
         $this->notificationService->sendEmailToBack($user);
 
         return true;

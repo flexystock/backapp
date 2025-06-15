@@ -58,8 +58,15 @@ class EmailNotificationService implements NotificationServiceInterface
      */
     public function sendEmailToBack(User $user): void
     {
+        $verificationUrl = $this->urlGenerator->generate(
+            'user_verification',
+            ['token' => $user->getVerificationToken()],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
+
         $userName = $user->getName();
         $userEmail = $user->getEmail();
+
         $email = (new Email())
             ->from('flexystock@gmail.com')
             ->to('flexystock@gmail.com')
@@ -67,10 +74,14 @@ class EmailNotificationService implements NotificationServiceInterface
             ->html(
                 '<p>Se acaba de registrar un nuevo cliente.</p>'.
                 '<p>Nombre de Usuario: '.htmlspecialchars($userName).'.</p>'.
-                '<p>Email de Usuario: '.htmlspecialchars($userEmail).'.</p>'
+                '<p>Email de Usuario: '.htmlspecialchars($userEmail).'.</p>'.
+                '<p><a href="'.$verificationUrl.'">Verificar Cuenta</a></p>'.
+                '<p>Este enlace caducará a las 24 horas.</p>'
             );
 
         $this->mailer->send($email);
+
+        $this->sendEmailAccountPendingVerificationToUser($user);
     }
 
     /**
@@ -211,6 +222,38 @@ class EmailNotificationService implements NotificationServiceInterface
                 '<p>Gracias por registrarte. Por favor,'.htmlspecialchars($userName).' haz clic en el siguiente enlace para verificar el cliente:</p>'.
                 '<p><a href="'.$verificationUrl.'">Verificar Cliente</a></p>'.
                 '<p>Este enlace caducará a las 24 horas.</p>'
+            );
+
+        $this->mailer->send($email);
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function sendEmailAccountPendingVerificationToUser(User $user): void
+    {
+        $email = (new Email())
+            ->from('flexystock@gmail.com')
+            ->to($user->getEmail())
+            ->subject('Cuenta en proceso de verificación')
+            ->html(
+                '<p>Su cuenta está en proceso de verificación y puede tardar unos minutos.</p>'
+            );
+
+        $this->mailer->send($email);
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function sendEmailAccountVerifiedToUser(User $user): void
+    {
+        $email = (new Email())
+            ->from('flexystock@gmail.com')
+            ->to($user->getEmail())
+            ->subject('Cuenta verificada')
+            ->html(
+                '<p>Su cuenta ha sido verificada correctamente.</p>'
             );
 
         $this->mailer->send($email);

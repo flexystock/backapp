@@ -142,7 +142,6 @@ class CreateClientUseCase implements CreateClientInputPort
         try {
             $this->userRepository->save($user);
 
-            $this->notificationService->sendEmailVerificationCreatedClientToUser($user);
             $this->notificationService->sendEmailToBack($user);
 
             // $this->entityManager->commit();
