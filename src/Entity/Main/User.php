@@ -275,8 +275,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        // Define los roles de usuario aquí. Por ejemplo:
-        return ['ROLE_USER'];
+        $roles = ['ROLE_USER'];
+
+        foreach ($this->roles as $role) {
+            $roles[] = 'ROLE_' . strtoupper($role->getName());
+        }
+
+        if ($this->isRoot()) {
+            $roles[] = 'ROLE_ROOT';
+        }
+
+        return array_unique($roles);
     }
 
     public function eraseCredentials(): void
