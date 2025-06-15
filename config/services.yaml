@@ -318,11 +318,50 @@ services:
     App\Scales\Application\InputPorts\RegisterScalesUseCaseInterface:
         alias: App\Scales\Application\UseCases\RegisterScalesUseCase
 
+    App\Scales\Application\UseCases\GetScaleUseCase:
+        arguments:
+            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+            $logger: '@logger'
+    App\Scales\Application\UseCases\GetAllScalesUseCase:
+        arguments:
+            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+            $logger: '@logger'
+    App\Scales\Application\UseCases\UpdateScaleUseCase:
+        arguments:
+            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+            $logger: '@logger'
+    App\Scales\Application\UseCases\DeleteScaleUseCase:
+        arguments:
+            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+            $logger: '@logger'
+
+
+    App\Scales\Application\UseCases\GetInfoScalesToDashboardMainUseCase:
+        arguments:
+            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+            $logger: '@logger'
+    App\Scales\Application\InputPorts\GetScaleUseCaseInterface:
+        alias: App\Scales\Application\UseCases\GetScaleUseCase
+    App\Scales\Application\InputPorts\GetAllScalesUseCaseInterface:
+        alias: App\Scales\Application\UseCases\GetAllScalesUseCase
+    App\Scales\Application\InputPorts\UpdateScaleUseCaseInterface:
+        alias: App\Scales\Application\UseCases\UpdateScaleUseCase
+    App\Scales\Application\InputPorts\DeleteScaleUseCaseInterface:
+        alias: App\Scales\Application\UseCases\DeleteScaleUseCase
+    App\Scales\Application\InputPorts\GetInfoScalesToDashboardMainUseCaseInterface:
+        alias: App\Scales\Application\UseCases\GetInfoScalesToDashboardMainUseCase
+
+
     # Controller
     App\Scales\Infrastructure\InputAdapters\ScalesController:
         arguments:
             $registerScalesUseCase: '@App\Scales\Application\InputPorts\RegisterScalesUseCaseInterface'
             $logger: '@logger'
+        tags: [ 'controller.service_arguments' ]
+        public: true
+
+    App\Scales\Infrastructure\InputAdapters\:
+        resource: '../src/Scales/Infrastructure/InputAdapters'
         tags: [ 'controller.service_arguments' ]
         public: true
 
