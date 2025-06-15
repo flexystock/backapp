@@ -23,11 +23,12 @@ services:
         UID: 1000
     environment:
       PHP_IDE_CONFIG: "serverName=Docker"
+      APP_ENV: dev
     volumes:
       - ./:/appdata/www
       - ~/.ssh/id_rsa:/home/appuser/.ssh/id_rsa
       - /var/run/docker.sock:/var/run/docker.sock
-    command: php-fpm
+    command: /appdata/www/docker/php/run-with-migrations.sh
     networks:
       - docker-symfony-network
     depends_on:
