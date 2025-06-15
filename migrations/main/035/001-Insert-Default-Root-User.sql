@@ -4,8 +4,8 @@
 INSERT INTO users (uuid_user, name, surnames, phone, email, password, is_root, active, uuid_user_creation, date_hour_creation, timezone, language)
 VALUES (
   'a674161a-4d09-4c5a-b0d0-a61224596e44',
-  'Root',
-  'Admin',
+  'root',
+  'admin',
   123456789,
   'root@example.com',
   '$2y$12$uKD5lsf6pGCIZ/RMcVHb0.YBLGxY0EySK/2rlPhzi.6jjy9UB7dV.',
@@ -27,5 +27,5 @@ VALUES (
 INSERT INTO user_profile (uuid_user, profile_id)
 VALUES (
   'a674161a-4d09-4c5a-b0d0-a61224596e44',
-  (SELECT id FROM profiles WHERE name='flexystock_manager')
+  (SELECT id FROM profiles WHERE name='flexy_manager')
 );
