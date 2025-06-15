@@ -5,6 +5,7 @@ namespace App\User\Infrastructure\InputAdapters;
 use App\Message\CreateDockerContainerMessage;
 use App\Service\DockerService;
 use App\User\Application\InputPorts\Auth\ResendEmailVerificationTokenInterface;
+use App\User\Application\OutputPorts\NotificationServiceInterface;
 use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -16,16 +17,19 @@ class EmailVerificationController
     private DockerService $dockerService;
     private MessageBusInterface $bus;
     private ResendEmailVerificationTokenInterface $resendEmailVerificationToken;
+    private NotificationServiceInterface $notificationService;
 
     public function __construct(UserRepositoryInterface $userRepository,
         DockerService $dockerService,
         MessageBusInterface $bus,
-        ResendEmailVerificationTokenInterface $resendEmailVerificationToken)
+        ResendEmailVerificationTokenInterface $resendEmailVerificationToken,
+        NotificationServiceInterface $notificationService)
     {
         $this->userRepository = $userRepository;
         $this->dockerService = $dockerService;
         $this->bus = $bus;
         $this->resendEmailVerificationToken = $resendEmailVerificationToken;
+        $this->notificationService = $notificationService;
     }
 
     #[Route('/verify/{token}', name: 'user_verification')]
@@ -65,6 +69,8 @@ class EmailVerificationController
         $user->setVerificationTokenExpiresAt(null);
         $this->userRepository->save($user);
 
+        $this->notificationService->sendEmailAccountVerifiedToUser($user);
+
         return new Response('YOUR_ACCOUNT_IS_VERIFIED', Response::HTTP_OK);
     }
 
@@ -102,6 +108,8 @@ class EmailVerificationController
         $user->setVerificationToken(null);
         $user->setVerificationTokenExpiresAt(null);
         $this->userRepository->save($user);
+
+        $this->notificationService->sendEmailAccountVerifiedToUser($user);
 
         return new Response('YOUR_ACCOUNT_IS_VERIFIED', Response::HTTP_OK);
     }
