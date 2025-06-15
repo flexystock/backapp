@@ -23,6 +23,7 @@ VALUES (
   (SELECT id FROM roles WHERE name='root')
 );
 
+
 INSERT INTO user_profile (uuid_user, profile_id)
 VALUES (
   'a674161a-4d09-4c5a-b0d0-a61224596e44',
