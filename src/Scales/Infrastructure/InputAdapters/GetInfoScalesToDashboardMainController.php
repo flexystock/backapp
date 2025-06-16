@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class GetInfoScalesToDashboardMainController extends AbstractController
 {
@@ -147,6 +148,7 @@ class GetInfoScalesToDashboardMainController extends AbstractController
             ),
         ]
     )]
+    #[IsGranted('PERMISSION_scales')]
     public function getScalesInfoToDashboardMain(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
