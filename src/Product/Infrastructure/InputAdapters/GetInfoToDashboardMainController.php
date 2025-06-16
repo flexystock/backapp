@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class GetInfoToDashboardMainController extends AbstractController
 {
@@ -174,6 +175,7 @@ class GetInfoToDashboardMainController extends AbstractController
             ),
         ]
     )]
+    #[IsGranted('PERMISSION_PRODUCT_VIEW')]
     public function getProductsInfoToDashboardMain(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
