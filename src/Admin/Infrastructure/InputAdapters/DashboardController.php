@@ -10,7 +10,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class DashboardController extends AbstractController
 {
-    #[Route('/admin', name: 'admin_dashboard', methods: ['GET'])]
+    #[Route('/api/admin', name: 'admin_dashboard', methods: ['GET'])]
     public function dashboard(): JsonResponse
     {
         return new JsonResponse(['message' => 'Admin dashboard']);

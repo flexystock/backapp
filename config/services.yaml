@@ -379,6 +379,29 @@ services:
             $connManager: '@App\Infrastructure\Services\ClientConnectionManager'
             $ScaleRepository: '@App\Scales\Application\OutputPorts\ScalesRepositoryInterface'
 
+    App\Admin\Role\Application\InputPorts\AssignRoleUseCaseInterface:
+        alias: App\Admin\Role\Application\UseCases\AssignRoleUseCase
+
+    App\Admin\Role\Infrastructure\OutputAdapters\Repositories\RoleRepository:
+        arguments:
+            $registry: '@doctrine'
+        tags:
+            - { name: 'doctrine.repository_service' }
+
+    App\Admin\Role\Application\OutputPorts\Repositories\RoleRepositoryInterface:
+        alias: App\Admin\Role\Infrastructure\OutputAdapters\Repositories\RoleRepository
+
+    App\Admin\Role\Infrastructure\InputAdapters\AssignRoleController:
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Admin\Infrastructure\InputAdapters\DashboardController:
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Security\PermissionVoter:
+        tags: ['security.voter']
+
 
 
 
