@@ -395,6 +395,12 @@ services:
         tags: ['controller.service_arguments']
         public: true
 
+
+    App\Admin\Infrastructure\InputAdapters\DashboardController:
+        tags: ['controller.service_arguments']
+        public: true
+
+
     App\Security\PermissionVoter:
         tags: ['security.voter']
 

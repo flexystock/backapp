@@ -18,7 +18,8 @@ class AssignRoleController extends AbstractController
         $this->useCase = $useCase;
     }
 
-    #[Route('/admin/users/{uuid}/roles', name: 'admin_assign_role', methods: ['POST'])]
+
+    #[Route('/api/admin/users/{uuid}/roles', name: 'admin_assign_role', methods: ['POST'])]
     public function __invoke(Request $request, string $uuid): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
