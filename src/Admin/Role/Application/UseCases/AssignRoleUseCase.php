@@ -31,7 +31,8 @@ class AssignRoleUseCase implements AssignRoleUseCaseInterface
             return new AssignRoleResponse(false, 'ROLE_NOT_FOUND');
         }
 
-        $user->getRoles()->add($role);
+        $user->addRole($role);
+
         $this->userRepository->save($user);
 
         return new AssignRoleResponse(true);
