@@ -108,7 +108,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     private ?string $selectedClientUuid = null;
 
-    #[ORM\ManyToMany(targetEntity: Role::class, inversedBy: 'users')]
+    #[ORM\ManyToMany(targetEntity: Role::class, inversedBy: 'users', fetch: 'EAGER')]
     #[ORM\JoinTable(name: 'user_role',
         joinColumns: [new ORM\JoinColumn(name: 'uuid_user', referencedColumnName: 'uuid_user')],
         inverseJoinColumns: [new ORM\JoinColumn(name: 'role_id', referencedColumnName: 'id')]
@@ -277,7 +277,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        $roles = ['ROLE_USER'];
+        // Roles asociados vía la tabla user_role
+        $roles = [];
 
         foreach ($this->roles as $role) {
             $roles[] = 'ROLE_' . strtoupper($role->getName());
@@ -285,6 +286,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         if ($this->isRoot()) {
             $roles[] = 'ROLE_ROOT';
+        }
+
+        // Si no tiene ningún rol asociado, se asigna el rol por defecto
+        if (empty($roles)) {
+            $roles[] = 'ROLE_USER';
         }
 
         return array_unique($roles);

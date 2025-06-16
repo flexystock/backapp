@@ -176,6 +176,9 @@ class GetInfoToDashboardMainController extends AbstractController
         ]
     )]
 
+
+
+
     #[IsGranted('PERMISSION_product')]
     public function getProductsInfoToDashboardMain(Request $request): JsonResponse
     {
