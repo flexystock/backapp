@@ -288,6 +288,25 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return array_unique($roles);
     }
 
+    public function hasPermission(string $permissionName): bool
+    {
+        if ($this->isRoot()) {
+            return true;
+        }
+
+        if ($this->profile === null) {
+            return false;
+        }
+
+        foreach ($this->profile->getProfilePermissions() as $pp) {
+            if ($pp->getPermission()->getName() === $permissionName) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function eraseCredentials(): void
     {
         // Si almacenas datos sensibles temporales, límpialos aquí.
