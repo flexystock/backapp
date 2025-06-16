@@ -23,7 +23,7 @@ class GetAllScalesController extends AbstractController
     }
 
     #[Route('/api/scales', name: 'api_scales', methods: ['POST'])]
-    #[IsGranted('PERMISSION_SCALE_VIEW')]
+    #[IsGranted('PERMISSION_scales')]
     public function __invoke(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
