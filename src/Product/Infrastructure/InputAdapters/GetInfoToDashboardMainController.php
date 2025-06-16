@@ -176,9 +176,14 @@ class GetInfoToDashboardMainController extends AbstractController
         ]
     )]
 
-    #[IsGranted('PERMISSION_product')]
     public function getProductsInfoToDashboardMain(Request $request): JsonResponse
     {
+        if (
+            !$this->isGranted('ROLE_SUPERADMIN')
+            && !$this->isGranted('ROLE_ROOT')
+        ) {
+            throw $this->createAccessDeniedException('No tienes permiso.');
+        }
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;
 
