@@ -281,10 +281,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // Roles asociados vía la tabla user_role
         $roles = [];
 
+
         // Garantizamos que la colección esté inicializada por si Doctrine la cargó de forma perezosa
         if ($this->roles instanceof PersistentCollection && !$this->roles->isInitialized()) {
             $this->roles->initialize();
         }
+
 
         foreach ($this->roles as $role) {
             $roles[] = 'ROLE_' . strtoupper($role->getName());
