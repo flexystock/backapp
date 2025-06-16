@@ -32,6 +32,7 @@ class AssignRoleUseCase implements AssignRoleUseCaseInterface
         }
 
         $user->addRole($role);
+
         $this->userRepository->save($user);
 
         return new AssignRoleResponse(true);
