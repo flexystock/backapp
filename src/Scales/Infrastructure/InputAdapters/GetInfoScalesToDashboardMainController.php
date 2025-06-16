@@ -148,7 +148,7 @@ class GetInfoScalesToDashboardMainController extends AbstractController
             ),
         ]
     )]
-    #[IsGranted('PERMISSION_SCALE_VIEW')]
+    #[IsGranted('PERMISSION_scales')]
     public function getScalesInfoToDashboardMain(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
