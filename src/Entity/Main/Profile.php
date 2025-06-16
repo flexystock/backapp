@@ -26,9 +26,13 @@ class Profile
     #[ORM\OneToMany(targetEntity: User::class, mappedBy: 'profile')]
     private Collection $users;
 
+    #[ORM\OneToMany(targetEntity: ProfilePermission::class, mappedBy: 'profile')]
+    private Collection $profilePermissions;
+
     public function __construct()
     {
         $this->users = new ArrayCollection();
+        $this->profilePermissions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -58,5 +62,15 @@ class Profile
         $this->description = $description;
 
         return $this;
+    }
+
+    public function getProfilePermissions(): Collection
+    {
+        return $this->profilePermissions;
+    }
+
+    public function setProfilePermissions(Collection $profilePermissions): void
+    {
+        $this->profilePermissions = $profilePermissions;
     }
 }
