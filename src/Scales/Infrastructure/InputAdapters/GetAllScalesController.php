@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class GetAllScalesController extends AbstractController
 {
@@ -22,6 +23,7 @@ class GetAllScalesController extends AbstractController
     }
 
     #[Route('/api/scales', name: 'api_scales', methods: ['POST'])]
+    #[IsGranted('PERMISSION_SCALE_VIEW')]
     public function __invoke(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);

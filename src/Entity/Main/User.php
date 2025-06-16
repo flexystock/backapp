@@ -6,6 +6,7 @@ namespace App\Entity\Main;
 
 use App\User\Application\DTO\Auth\CreateUserRequest;
 use App\User\Repository\UserRepository;
+use App\Entity\Main\Role;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -275,8 +276,60 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        // Define los roles de usuario aquí. Por ejemplo:
-        return ['ROLE_USER'];
+        $roles = ['ROLE_USER'];
+
+        foreach ($this->roles as $role) {
+            $roles[] = 'ROLE_' . strtoupper($role->getName());
+        }
+
+        if ($this->isRoot()) {
+            $roles[] = 'ROLE_ROOT';
+        }
+
+        return array_unique($roles);
+    }
+
+    public function getRoleEntities(): Collection
+    {
+        return $this->roles;
+    }
+
+    public function addRole(Role $role): self
+    {
+        if (!$this->roles->contains($role)) {
+            $this->roles[] = $role;
+            $role->addUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRole(Role $role): self
+    {
+        if ($this->roles->removeElement($role)) {
+            $role->removeUser($this);
+        }
+
+        return $this;
+    }
+
+    public function hasPermission(string $permissionName): bool
+    {
+        if ($this->isRoot()) {
+            return true;
+        }
+
+        if ($this->profile === null) {
+            return false;
+        }
+
+        foreach ($this->profile->getProfilePermissions() as $pp) {
+            if ($pp->getPermission()->getName() === $permissionName) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function eraseCredentials(): void

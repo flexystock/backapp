@@ -1,15 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity\Main;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Main\User;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'roles')]
-class Role
+#[ORM\Table(name: 'permissions')]
+class Permission
 {
     #[ORM\Id]
     #[ORM\Column(type: 'integer', options: ['unsigned' => true])]
@@ -19,12 +20,12 @@ class Role
     #[ORM\Column(type: 'string', length: 50, unique: true)]
     private string $name;
 
-    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'roles')]
-    private Collection $users;
+    #[ORM\OneToMany(targetEntity: ProfilePermission::class, mappedBy: 'permission')]
+    private Collection $profilePermissions;
 
     public function __construct()
     {
-        $this->users = new ArrayCollection();
+        $this->profilePermissions = new ArrayCollection();
     }
 
     public function getId(): int
@@ -47,31 +48,13 @@ class Role
         $this->name = $name;
     }
 
-    public function getUsers(): Collection
+    public function getProfilePermissions(): Collection
     {
-        return $this->users;
+        return $this->profilePermissions;
     }
 
-    public function setUsers(Collection $users): void
+    public function setProfilePermissions(Collection $profilePermissions): void
     {
-        $this->users = $users;
+        $this->profilePermissions = $profilePermissions;
     }
-
-    public function addUser(User $user): self
-    {
-        if (!$this->users->contains($user)) {
-            $this->users[] = $user;
-        }
-
-        return $this;
-    }
-
-    public function removeUser(User $user): self
-    {
-        $this->users->removeElement($user);
-
-        return $this;
-    }
-
-    // Getters y setters...
 }
