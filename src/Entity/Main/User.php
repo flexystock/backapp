@@ -7,6 +7,7 @@ namespace App\Entity\Main;
 use App\User\Application\DTO\Auth\CreateUserRequest;
 use App\User\Repository\UserRepository;
 use App\Entity\Main\Role;
+use App\Entity\Main\Profile;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -309,6 +310,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if ($this->roles->removeElement($role)) {
             $role->removeUser($this);
         }
+
+        return $this;
+    }
+
+    public function getProfile(): ?Profile
+    {
+        return $this->profile;
+    }
+
+    public function setProfile(?Profile $profile): self
+    {
+        $this->profile = $profile;
 
         return $this;
     }
