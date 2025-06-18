@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity\Main;
 
+use App\Admin\Role\Infrastructure\OutputAdapters\Repositories\RoleRepository;
 use App\User\Application\DTO\Auth\CreateUserRequest;
 use App\User\Repository\UserRepository;
 use App\Entity\Main\Role;
@@ -629,7 +630,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     // En la entidad User
-    public static function fromCreateUserRequest(CreateUserRequest $request, UserPasswordHasherInterface $passwordHasher): self
+    public static function fromCreateUserRequest(CreateUserRequest $request, UserPasswordHasherInterface $passwordHasher
+    ,RoleRepository $roleRepository): self
     {
         $user = new self();
         $user->setEmail($request->getEmail());
@@ -647,6 +649,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $user->setTwoFactorEnabled($request->isTwoFactorEnabled());
         $user->setUuidUserCreation($user->getUuid());
         $user->setDatehourCreation(new \DateTime());
+        // Crear un nuevo objeto Role
+        $adminRole = $roleRepository->findByName('admin');
+        if ($adminRole) {
+            $user->addRole($adminRole);
+        }
+
 
         return $user;
     }

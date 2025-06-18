@@ -148,9 +148,15 @@ class GetInfoScalesToDashboardMainController extends AbstractController
             ),
         ]
     )]
-    #[IsGranted('PERMISSION_scales')]
+
     public function getScalesInfoToDashboardMain(Request $request): JsonResponse
     {
+        if (
+            !$this->isGranted('ROLE_SUPERADMIN')
+            && !$this->isGranted('ROLE_ROOT')
+        ) {
+            throw $this->createAccessDeniedException('No tienes permiso.');
+        }
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;
 

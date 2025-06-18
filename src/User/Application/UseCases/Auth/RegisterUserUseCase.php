@@ -7,6 +7,7 @@ use App\User\Application\DTO\Auth\CreateUserRequest;
 use App\User\Application\InputPorts\Auth\RegisterUserInputPort;
 use App\User\Application\OutputPorts\NotificationServiceInterface;
 use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
+use App\Admin\Role\Infrastructure\OutputAdapters\Repositories\RoleRepository;
 use App\User\Application\RandomException;
 use Cassandra\Exception\ValidationException;
 use Symfony\Component\Mailer\MailerInterface;
@@ -22,13 +23,16 @@ class RegisterUserUseCase implements RegisterUserInputPort
     private MailerInterface $mailer;
     private UrlGeneratorInterface $urlGenerator;
     private NotificationServiceInterface $notificationService;
+    private RoleRepository $roleRepository;
+
 
     public function __construct(UserRepositoryInterface $userRepositoryInterface,
         UserPasswordHasherInterface $passwordHasher,
         ValidatorInterface $validator,
         MailerInterface $mailer,
         UrlGeneratorInterface $urlGenerator,
-        NotificationServiceInterface $notificationService)
+        NotificationServiceInterface $notificationService,
+        RoleRepository $roleRepository)
     {
         $this->userRepositoryInterface = $userRepositoryInterface;
         $this->passwordHasher = $passwordHasher;
@@ -36,6 +40,7 @@ class RegisterUserUseCase implements RegisterUserInputPort
         $this->mailer = $mailer;
         $this->urlGenerator = $urlGenerator;
         $this->notificationService = $notificationService;
+        $this->roleRepository = $roleRepository;
     }
 
     /**
@@ -52,7 +57,7 @@ class RegisterUserUseCase implements RegisterUserInputPort
             // Puedes lanzar una excepción controlada o devolver un error 400
             throw new \RuntimeException('EMAIL_IN_USE');
         }
-        $user = User::fromCreateUserRequest($data, $this->passwordHasher);
+        $user = User::fromCreateUserRequest($data, $this->passwordHasher,$this->roleRepository);
         $this->userRepositoryInterface->save($user);
 
         return $user;
