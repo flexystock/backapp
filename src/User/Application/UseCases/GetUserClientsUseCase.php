@@ -32,7 +32,7 @@ class GetUserClientsUseCase implements GetUserClientsInterface
         }
 
         // Si el usuario es root, obtiene todos los clientes
-        if ($user->isRoot()) {
+        if (in_array('ROLE_ROOT', $user->getRoles())) {
             $clients = $this->clientRepository->findAll();
         } else {
             // Obtener los clientes asociados al usuario

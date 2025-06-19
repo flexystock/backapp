@@ -32,6 +32,7 @@ class DashboardController extends AbstractController
             static function (User $user): array {
                 return [
                     'uuid' => $user->getUuid(),
+                    'name' => $user->getName(),
                     'email' => $user->getEmail(),
                     'roles' => $user->getRoles(),
                 ];
