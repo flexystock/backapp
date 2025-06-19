@@ -69,6 +69,40 @@ class GetUserClientsUseCaseTest extends TestCase
         $this->assertEquals('Client 2', $clientDTOs[1]->name);
     }
 
+    public function testGetUserClients_RootUser_ReturnsAllClients()
+    {
+        $userId = 'root-uuid';
+        $user = new User();
+        $user->setUuid($userId);
+        $user->setIsRoot(true);
+
+        $client1 = new Client();
+        $client1->setUuidClient('client-uuid-1');
+        $client1->setName('Client 1');
+
+        $client2 = new Client();
+        $client2->setUuidClient('client-uuid-2');
+        $client2->setName('Client 2');
+
+        $this->userRepositoryMock->method('findByUuid')
+            ->with($userId)
+            ->willReturn($user);
+
+        $this->clientRepositoryMock->method('findAll')
+            ->willReturn([$client1, $client2]);
+
+        $result = $this->getUserClientsUseCase->getUserClients($userId);
+
+        $this->assertInstanceOf(ClientDTOCollection::class, $result);
+        $this->assertCount(2, $result);
+
+        $clientDTOs = $result->toArray();
+        $this->assertEquals('client-uuid-1', $clientDTOs[0]->uuid);
+        $this->assertEquals('Client 1', $clientDTOs[0]->name);
+        $this->assertEquals('client-uuid-2', $clientDTOs[1]->uuid);
+        $this->assertEquals('Client 2', $clientDTOs[1]->name);
+    }
+
     public function testGetUserClients_UserExistsWithoutClients_ReturnsEmptyCollection()
     {
         // Preparar datos de prueba
