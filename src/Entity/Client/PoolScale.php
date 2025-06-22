@@ -9,9 +9,8 @@ use Doctrine\ORM\Mapping as ORM;
 class PoolScale
 {
     #[ORM\Id]
-    #[ORM\Column(type: 'integer', options: ['unsigned' => true])]
-    #[ORM\GeneratedValue(strategy: 'AUTO')]
-    private int $id;
+    #[ORM\Column(type: 'string', length: 36)]
+    private string $uuid;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     private bool $available = true;
@@ -43,9 +42,16 @@ class PoolScale
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $datehour_modification = null;
 
-    public function getId(): int
+    public function getUuid(): string
     {
-        return $this->id;
+        return $this->uuid;
+    }
+
+    public function setUuid(string $uuid): self
+    {
+        $this->uuid = $uuid;
+
+        return $this;
     }
 
     public function isAvailable(): bool
