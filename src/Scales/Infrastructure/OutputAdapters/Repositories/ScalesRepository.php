@@ -6,6 +6,7 @@ use App\Entity\Client\Scales;
 use App\Scales\Application\OutputPorts\ScalesRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
+
 class ScalesRepository implements ScalesRepositoryInterface
 {
     private EntityManagerInterface $em;
@@ -58,5 +59,20 @@ class ScalesRepository implements ScalesRepositoryInterface
     {
         $this->em->remove($scale);
         $this->em->flush();
+    }
+
+    public function savePoolScale(\App\Scales\Application\OutputPorts\Scales $scales): void
+    {
+        // TODO: Implement savePoolScale() method.
+    }
+
+    public function findAvailableByEndDeviceId(string $endDeviceId): ?\App\Scales\Application\OutputPorts\Scales
+    {
+        // TODO: Implement findAvailableByEndDeviceId() method.
+    }
+
+    public function findAllIsAvailable(string $available): array
+    {
+        // TODO: Implement findAllIsAvailable() method.
     }
 }

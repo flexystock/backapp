@@ -269,6 +269,7 @@ services:
         arguments:
             $ttnService: '@App\Ttn\Application\OutputPorts\TtnServiceInterface'
             $deviceRepository: '@App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface'
+            $poolScaleRepository: '@App\Scales\Application\OutputPorts\PoolScalesRepositoryInterface'
 
     App\Ttn\Application\InputPorts\RegisterTtnDeviceUseCaseInterface:
         alias: App\Ttn\Application\UseCases\RegisterTtnDeviceUseCase
@@ -316,6 +317,9 @@ services:
     # Alias OutputPort
     App\Scales\Application\OutputPorts\ScalesRepositoryInterface:
         alias: App\Scales\Infrastructure\OutputAdapters\Repositories\ScalesRepository
+
+    App\Scales\Application\OutputPorts\PoolScalesRepositoryInterface:
+        alias: App\Scales\Infrastructure\OutputAdapters\Repositories\PoolScalesRepository
 
     # Alias InputPort
     App\Scales\Application\InputPorts\RegisterScalesUseCaseInterface:
