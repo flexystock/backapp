@@ -11,6 +11,7 @@ use App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface;
 use App\Ttn\Application\OutputPorts\TtnServiceInterface;
 use App\Scales\Application\OutputPorts\PoolScalesRepositoryInterface;
 use App\Infrastructure\Services\ClientConnectionManager;
+use Symfony\Component\Uid\Uuid;
 
 class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
 {
@@ -72,6 +73,7 @@ class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
             // 6) Si viene uuidClient, actualizar PoolScale
             if ($request->getUuidClient()) {
                 $poolScale = new PoolScale();
+                $poolScale->setUuid(Uuid::v4()->toRfc4122());
                 $poolScale->setEndDeviceId($request->getDeviceId());
                 $poolScale->setAvailable(true);
                 $poolScale->setEndDeviceName($request->getUuidClient());

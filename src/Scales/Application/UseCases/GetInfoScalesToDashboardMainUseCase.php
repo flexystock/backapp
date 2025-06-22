@@ -70,7 +70,7 @@ class GetInfoScalesToDashboardMainUseCase implements GetInfoScalesToDashboardMai
     private function serializePoolScale(PoolScale $p): array
     {
         return [
-            'id' => $p->getId(),
+            'uuid' => $p->getUuid(),
             'available' => $p->isAvailable(),
             'end_device_id' => $p->getEndDeviceId(),
             // ...otros campos...
