@@ -17,4 +17,10 @@ interface UserRepositoryInterface
     public function findOneByVerificationToken(string $token): ?User;
 
     public function findByUuid(string $uuid): ?User;
+
+    /**
+     * @param string $uuidClient
+     * @return array
+     */
+    public function findByClientUuid(string $uuidClient): array;
 }

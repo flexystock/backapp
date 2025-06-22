@@ -115,6 +115,9 @@ services:
     App\User\Application\InputPorts\GetUserClientsInterface:
         alias: App\User\Application\UseCases\GetUserClientsUseCase
 
+    App\User\Application\InputPorts\GetUsersByClientInputPort:
+        alias: App\User\Application\UseCases\GetUsersByClientUseCase
+
     # Controlador
     App\User\Infrastructure\InputAdapters\GenericUserController:
         tags: [ 'controller.service_arguments' ]

@@ -60,4 +60,14 @@ class UserRepository extends ServiceEntityRepository implements UserRepositoryIn
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    public function findByClientUuid(string $uuidClient): array
+    {
+        return $this->createQueryBuilder('u')
+            ->innerJoin('u.clients', 'c')
+            ->where('c.uuid_client = :uuidClient')
+            ->setParameter('uuidClient', $uuidClient)
+            ->getQuery()
+            ->getResult();
+    }
 }
