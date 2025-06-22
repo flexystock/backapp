@@ -26,12 +26,14 @@ class GenericUserController extends AbstractController
     private Security $security;
     private UserRepositoryInterface $userRepository;
 
-    public function __construct(GetAllUsersInputPort $getAllUsersInputPort, Security $security,
+    public function __construct(
+        GetAllUsersInputPort $getAllUsersInputPort,
+        Security $security,
         GetUserClientsInterface $getUserClientsUseCase,
         GetUsersByClientInputPort $getUsersByClientUseCase,
         SerializerInterface $serializer,
-        UserRepositoryInterface $userRepository)
-    {
+        UserRepositoryInterface $userRepository
+    ) {
         $this->getAllUsersInputPort = $getAllUsersInputPort;
         $this->security = $security;
         $this->getUserClientsUseCase = $getUserClientsUseCase;
@@ -56,9 +58,11 @@ class GenericUserController extends AbstractController
                             new OA\Property(
                                 property: 'email',
                                 type: 'string',
-                                example: 'john.doe@example.com'),
+                                example: 'john.doe@example.com'
+                            ),
                         ],
-                        type: 'object')
+                        type: 'object'
+                    )
                 )
             ),
             new OA\Response(
@@ -169,13 +173,13 @@ class GenericUserController extends AbstractController
         }
     }
 
-    #[Route('/api/users_client', name: 'get_users_by_client', methods: ['GET'])]
+    #[Route('/api/users_client', name: 'get_users_by_client', methods: ['POST'])]
     #[OA\Get(
         path: '/api/users_client',
         summary: 'Get Users for a client',
         tags: ['User'],
         parameters: [
-            new OA\Parameter(name: 'client_uuid', in: 'query', required: true, schema: new OA\Schema(type: 'string'))
+            new OA\Parameter(name: 'uuidClient', in: 'query', required: true, schema: new OA\Schema(type: 'string'))
         ],
         responses: [
             new OA\Response(response: 200, description: 'List of users'),
@@ -189,16 +193,19 @@ class GenericUserController extends AbstractController
             throw $this->createAccessDeniedException('No tienes permiso.');
         }
 
-        $clientUuid = $request->query->get('client_uuid');
+        $data = json_decode($request->getContent(), true);
+        $uuidClient = $data['uuidClient'] ?? null;
 
-        if (!$clientUuid) {
+        if (!$uuidClient) {
             return $this->jsonResponse(['message' => 'CLIENT_UUID_REQUIRED'], Response::HTTP_BAD_REQUEST);
         }
 
-        $users = $this->getUsersByClientUseCase->getUsersByClient($clientUuid);
+        $users = $this->getUsersByClientUseCase->getUsersByClient($uuidClient);
 
         $usersArray = array_map(function ($user) {
-            return ['email' => $user->getEmail()];
+            return ['email' => $user->getEmail(),
+                    'name' => $user->getName(),
+                    'role' => $user->getRoles()];
         }, $users);
 
         if (empty($users)) {

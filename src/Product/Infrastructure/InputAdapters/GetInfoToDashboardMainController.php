@@ -178,9 +178,7 @@ class GetInfoToDashboardMainController extends AbstractController
 
     public function getProductsInfoToDashboardMain(Request $request): JsonResponse
     {
-        if (
-            !$this->isGranted('ROLE_SUPERADMIN')
-            && !$this->isGranted('ROLE_ROOT')
+        if (!$this->isGranted('ROLE_ROOT') && !$this->isGranted('ROLE_SUPERADMIN') && !$this->isGranted('ROLE_ADMIN')
         ) {
             return new JsonResponse(['error' => 'No tienes permisos'], 455);
         }

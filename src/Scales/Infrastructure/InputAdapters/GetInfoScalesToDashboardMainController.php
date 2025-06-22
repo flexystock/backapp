@@ -151,9 +151,7 @@ class GetInfoScalesToDashboardMainController extends AbstractController
 
     public function getScalesInfoToDashboardMain(Request $request): JsonResponse
     {
-        if (
-            !$this->isGranted('ROLE_SUPERADMIN')
-            && !$this->isGranted('ROLE_ROOT')
+        if (!$this->isGranted('ROLE_ROOT') && !$this->isGranted('ROLE_SUPERADMIN') && !$this->isGranted('ROLE_ADMIN')
         ) {
             throw $this->createAccessDeniedException('No tienes permiso.');
         }
