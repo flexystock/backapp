@@ -28,16 +28,21 @@ class AssignScaleToProduct extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;
-        if (!$uuidClient) {
-            return new JsonResponse(['error' => 'uuidClient is required'], 400);
+        $endDeviceId = $data['end_device_id'] ?? null;
+        $productId = $data['productId'] ?? null;
+
+        if (!$uuidClient || !$endDeviceId || null === $productId) {
+            return new JsonResponse(['error' => 'INVALID_DATA'], 400);
         }
 
-        $dto = new AssignScaleToProductRequest($uuidClient, $data);
+        $dto = new AssignScaleToProductRequest($uuidClient, $endDeviceId, (int) $productId);
 
         $response = $this->assignScaleToProductUseCase->execute($dto);
-        if ($response->getError()) {
-            return new JsonResponse(['error' => $response->getError()], $response->getStatusCode());
+
+        if (!$response->isSuccess()) {
+            return new JsonResponse(['error' => $response->getError()], 400);
         }
-        return new JsonResponse(['scale' => $response->getScale()], $response->getStatusCode());
+
+        return new JsonResponse(['status' => 'ok']);
     }
 }
