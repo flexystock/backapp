@@ -5,13 +5,13 @@ namespace App\Scales\Application\DTO;
 class AssignScaleToProductRequest
 {
     private string $uuidClient;
-    private string $uuidScale;
+    private string $endDeviceId;
     private int $productId;
 
-    public function __construct(string $uuidClient, string $uuidScale, int $productId)
+    public function __construct(string $uuidClient, string $endDeviceId, int $productId)
     {
         $this->uuidClient = $uuidClient;
-        $this->uuidScale = $uuidScale;
+        $this->endDeviceId = $endDeviceId;
         $this->productId = $productId;
     }
 
@@ -20,9 +20,9 @@ class AssignScaleToProductRequest
         return $this->uuidClient;
     }
 
-    public function getUuidScale(): string
+    public function getEndDeviceId(): string
     {
-        return $this->uuidScale;
+        return $this->endDeviceId;
     }
 
     public function getProductId(): int
