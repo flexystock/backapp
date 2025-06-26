@@ -22,9 +22,13 @@ class Scales
 
     /**
      * UUID de la balanza (único).
+     *
+     * Se corresponde con el campo `uuid` de la tabla `pool_scales`.
+     * En base de datos existe una clave foránea que garantiza esta
+     * relación.
      */
     #[ORM\Column(type: 'string', length: 36, unique: true)]
-    private string $uuid;
+    private string $uuid_scale;
 
     /**
      * ID del dispositivo en TTN (end_device_id).
@@ -115,12 +119,12 @@ class Scales
 
     public function getUuid(): string
     {
-        return $this->uuid;
+        return $this->uuid_scale;
     }
 
     public function setUuid(string $uuid): self
     {
-        $this->uuid = $uuid;
+        $this->uuid_scale = $uuid;
 
         return $this;
     }

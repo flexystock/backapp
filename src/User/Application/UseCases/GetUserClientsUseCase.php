@@ -31,8 +31,13 @@ class GetUserClientsUseCase implements GetUserClientsInterface
             throw new \Exception('USER_NOT_FOUND');
         }
 
-        // Obtener los clientes asociados al usuario
-        $clients = $user->getClients(); // Asumiendo que tienes una relación en la entidad User
+        // Si el usuario es root, obtiene todos los clientes
+        if (in_array('ROLE_ROOT', $user->getRoles())) {
+            $clients = $this->clientRepository->findAll();
+        } else {
+            // Obtener los clientes asociados al usuario
+            $clients = $user->getClients(); // Asumiendo que tienes una relación en la entidad User
+        }
 
         // Convertir los clientes a DTOs
         $clientDTOs = new ClientDTOCollection();

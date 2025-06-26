@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Entity\Main;
 
+use App\Admin\Role\Infrastructure\OutputAdapters\Repositories\RoleRepository;
 use App\User\Application\DTO\Auth\CreateUserRequest;
 use App\User\Repository\UserRepository;
 use App\Entity\Main\Role;
+use App\Entity\Main\Profile;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\PersistentCollection;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -107,7 +110,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     private ?string $selectedClientUuid = null;
 
-    #[ORM\ManyToMany(targetEntity: Role::class, inversedBy: 'users')]
+    #[ORM\ManyToMany(targetEntity: Role::class, inversedBy: 'users', fetch: 'EAGER')]
     #[ORM\JoinTable(name: 'user_role',
         joinColumns: [new ORM\JoinColumn(name: 'uuid_user', referencedColumnName: 'uuid_user')],
         inverseJoinColumns: [new ORM\JoinColumn(name: 'role_id', referencedColumnName: 'id')]
@@ -276,7 +279,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        $roles = ['ROLE_USER'];
+        // Roles asociados vía la tabla user_role
+        $roles = [];
+
+
+        // Garantizamos que la colección esté inicializada por si Doctrine la cargó de forma perezosa
+        if ($this->roles instanceof PersistentCollection && !$this->roles->isInitialized()) {
+            $this->roles->initialize();
+        }
+
 
         foreach ($this->roles as $role) {
             $roles[] = 'ROLE_' . strtoupper($role->getName());
@@ -284,6 +295,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         if ($this->isRoot()) {
             $roles[] = 'ROLE_ROOT';
+        }
+
+        // Si no tiene ningún rol asociado, se asigna el rol por defecto
+        if (empty($roles)) {
+            $roles[] = 'ROLE_USER';
         }
 
         return array_unique($roles);
@@ -309,6 +325,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if ($this->roles->removeElement($role)) {
             $role->removeUser($this);
         }
+
+        return $this;
+    }
+
+    public function getProfile(): ?Profile
+    {
+        return $this->profile;
+    }
+
+    public function setProfile(?Profile $profile): self
+    {
+        $this->profile = $profile;
 
         return $this;
     }
@@ -602,7 +630,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     // En la entidad User
-    public static function fromCreateUserRequest(CreateUserRequest $request, UserPasswordHasherInterface $passwordHasher): self
+    public static function fromCreateUserRequest(CreateUserRequest $request, UserPasswordHasherInterface $passwordHasher
+    ,RoleRepository $roleRepository): self
     {
         $user = new self();
         $user->setEmail($request->getEmail());
@@ -620,6 +649,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $user->setTwoFactorEnabled($request->isTwoFactorEnabled());
         $user->setUuidUserCreation($user->getUuid());
         $user->setDatehourCreation(new \DateTime());
+        // Crear un nuevo objeto Role
+        $adminRole = $roleRepository->findByName('admin');
+        if ($adminRole) {
+            $user->addRole($adminRole);
+        }
+
 
         return $user;
     }

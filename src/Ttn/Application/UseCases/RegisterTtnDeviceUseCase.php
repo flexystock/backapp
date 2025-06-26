@@ -3,21 +3,33 @@
 namespace App\Ttn\Application\UseCases;
 
 use App\Entity\Main\PoolTtnDevice;
+use App\Entity\Client\PoolScale;
 use App\Ttn\Application\DTO\RegisterTtnDeviceRequest;
 use App\Ttn\Application\DTO\RegisterTtnDeviceResponse;
 use App\Ttn\Application\InputPorts\RegisterTtnDeviceUseCaseInterface;
 use App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface;
 use App\Ttn\Application\OutputPorts\TtnServiceInterface;
+use App\Scales\Application\OutputPorts\PoolScalesRepositoryInterface;
+use App\Infrastructure\Services\ClientConnectionManager;
+use Symfony\Component\Uid\Uuid;
 
 class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
 {
     private TtnServiceInterface $ttnService;
     private PoolTtnDeviceRepositoryInterface $deviceRepository;
+    private PoolScalesRepositoryInterface $poolScaleRepository;
+    private ClientConnectionManager $connectionManager;
 
-    public function __construct(TtnServiceInterface $ttnService, PoolTtnDeviceRepositoryInterface $deviceRepository)
-    {
+    public function __construct(
+        TtnServiceInterface $ttnService,
+        PoolTtnDeviceRepositoryInterface $deviceRepository,
+        PoolScalesRepositoryInterface $poolScaleRepository,
+        ClientConnectionManager $connectionManager
+    ) {
         $this->ttnService = $ttnService;
         $this->deviceRepository = $deviceRepository;
+        $this->poolScaleRepository = $poolScaleRepository;
+        $this->connectionManager = $connectionManager;
     }
 
     public function execute(RegisterTtnDeviceRequest $request): RegisterTtnDeviceResponse
@@ -57,6 +69,25 @@ class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
 
             // 5) Guardar en BBDD
             $this->deviceRepository->save($ttnDevice);
+
+            // 6) Si viene uuidClient, actualizar PoolScale
+            if ($request->getUuidClient()) {
+                $poolScale = new PoolScale();
+                $poolScale->setUuid(Uuid::v4()->toRfc4122());
+                $poolScale->setEndDeviceId($request->getDeviceId());
+                $poolScale->setAvailable(true);
+                $poolScale->setEndDeviceName($request->getUuidClient());
+                $poolScale->setAppEUI($devEui);
+                $poolScale->setDevEUI($joinEui);
+                $poolScale->setAppKey($appKey);
+                $poolScale->setDatehourCreation($request->getDatehourCreation());
+                $poolScale->setUuidUserCreation($request->getUuidUser());
+
+                // Guardar PoolScale
+                $emCliente = $this->connectionManager->getEntityManager($request->getUuidClient());
+                $poolScalesRepo = new \App\Scales\Infrastructure\OutputAdapters\Repositories\PoolScalesRepository($emCliente);
+                $poolScalesRepo->savePoolScale($poolScale);
+            }
 
             return new RegisterTtnDeviceResponse(true);
         } catch (\Exception $e) {

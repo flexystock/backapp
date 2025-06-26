@@ -6,11 +6,13 @@ namespace App\User\Infrastructure\InputAdapters;
 
 use App\User\Application\InputPorts\GetAllUsersInputPort;
 use App\User\Application\InputPorts\GetUserClientsInterface;
+use App\User\Application\InputPorts\GetUsersByClientInputPort;
 use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -19,18 +21,23 @@ class GenericUserController extends AbstractController
 {
     private GetAllUsersInputPort $getAllUsersInputPort;
     private GetUserClientsInterface $getUserClientsUseCase;
+    private GetUsersByClientInputPort $getUsersByClientUseCase;
     private SerializerInterface $serializer;
     private Security $security;
     private UserRepositoryInterface $userRepository;
 
-    public function __construct(GetAllUsersInputPort $getAllUsersInputPort, Security $security,
+    public function __construct(
+        GetAllUsersInputPort $getAllUsersInputPort,
+        Security $security,
         GetUserClientsInterface $getUserClientsUseCase,
+        GetUsersByClientInputPort $getUsersByClientUseCase,
         SerializerInterface $serializer,
-        UserRepositoryInterface $userRepository)
-    {
+        UserRepositoryInterface $userRepository
+    ) {
         $this->getAllUsersInputPort = $getAllUsersInputPort;
         $this->security = $security;
         $this->getUserClientsUseCase = $getUserClientsUseCase;
+        $this->getUsersByClientUseCase = $getUsersByClientUseCase;
         $this->serializer = $serializer;
         $this->userRepository = $userRepository;
     }
@@ -51,9 +58,11 @@ class GenericUserController extends AbstractController
                             new OA\Property(
                                 property: 'email',
                                 type: 'string',
-                                example: 'john.doe@example.com'),
+                                example: 'john.doe@example.com'
+                            ),
                         ],
-                        type: 'object')
+                        type: 'object'
+                    )
                 )
             ),
             new OA\Response(
@@ -162,5 +171,47 @@ class GenericUserController extends AbstractController
         } catch (\Exception $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    #[Route('/api/users_client', name: 'get_users_by_client', methods: ['POST'])]
+    #[OA\Get(
+        path: '/api/users_client',
+        summary: 'Get Users for a client',
+        tags: ['User'],
+        parameters: [
+            new OA\Parameter(name: 'uuidClient', in: 'query', required: true, schema: new OA\Schema(type: 'string'))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'List of users'),
+            new OA\Response(response: 403, description: 'Access denied'),
+            new OA\Response(response: 404, description: 'No Users Found')
+        ]
+    )]
+    public function getUsersByClient(Request $request): JsonResponse
+    {
+        if (!$this->isGranted('ROLE_ROOT') && !$this->isGranted('ROLE_SUPERADMIN') && !$this->isGranted('ROLE_ADMIN')) {
+            throw $this->createAccessDeniedException('No tienes permiso.');
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $uuidClient = $data['uuidClient'] ?? null;
+
+        if (!$uuidClient) {
+            return $this->jsonResponse(['message' => 'CLIENT_UUID_REQUIRED'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $users = $this->getUsersByClientUseCase->getUsersByClient($uuidClient);
+
+        $usersArray = array_map(function ($user) {
+            return ['email' => $user->getEmail(),
+                    'name' => $user->getName(),
+                    'role' => $user->getRoles()];
+        }, $users);
+
+        if (empty($users)) {
+            return $this->jsonResponse(['message' => 'NOT_FOUND_ANY_USER'], Response::HTTP_OK);
+        }
+
+        return $this->jsonResponse($usersArray, Response::HTTP_OK);
     }
 }
