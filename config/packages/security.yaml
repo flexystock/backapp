@@ -61,6 +61,8 @@ security:
         - { path: ^/api/scale_register, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/ttn-uplink, roles: PUBLIC_ACCESS }
         - { path: ^/api/product_dashboard, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/admin, roles: ROLE_ROOT }
+        - { path: ^/api/assign_sacale_product, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:

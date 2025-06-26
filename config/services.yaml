@@ -115,6 +115,9 @@ services:
     App\User\Application\InputPorts\GetUserClientsInterface:
         alias: App\User\Application\UseCases\GetUserClientsUseCase
 
+    App\User\Application\InputPorts\GetUsersByClientInputPort:
+        alias: App\User\Application\UseCases\GetUsersByClientUseCase
+
     # Controlador
     App\User\Infrastructure\InputAdapters\GenericUserController:
         tags: [ 'controller.service_arguments' ]
@@ -266,6 +269,7 @@ services:
         arguments:
             $ttnService: '@App\Ttn\Application\OutputPorts\TtnServiceInterface'
             $deviceRepository: '@App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface'
+            $poolScaleRepository: '@App\Scales\Application\OutputPorts\PoolScalesRepositoryInterface'
 
     App\Ttn\Application\InputPorts\RegisterTtnDeviceUseCaseInterface:
         alias: App\Ttn\Application\UseCases\RegisterTtnDeviceUseCase
@@ -313,6 +317,9 @@ services:
     # Alias OutputPort
     App\Scales\Application\OutputPorts\ScalesRepositoryInterface:
         alias: App\Scales\Infrastructure\OutputAdapters\Repositories\ScalesRepository
+
+    App\Scales\Application\OutputPorts\PoolScalesRepositoryInterface:
+        alias: App\Scales\Infrastructure\OutputAdapters\Repositories\PoolScalesRepository
 
     # Alias InputPort
     App\Scales\Application\InputPorts\RegisterScalesUseCaseInterface:
@@ -378,6 +385,31 @@ services:
             $poolTtnDeviceRepo: '@App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface'
             $connManager: '@App\Infrastructure\Services\ClientConnectionManager'
             $ScaleRepository: '@App\Scales\Application\OutputPorts\ScalesRepositoryInterface'
+
+    App\Admin\Role\Application\InputPorts\AssignRoleUseCaseInterface:
+        alias: App\Admin\Role\Application\UseCases\AssignRoleUseCase
+
+    App\Admin\Role\Infrastructure\OutputAdapters\Repositories\RoleRepository:
+        arguments:
+            $registry: '@doctrine'
+        tags:
+            - { name: 'doctrine.repository_service' }
+
+    App\Admin\Role\Application\OutputPorts\Repositories\RoleRepositoryInterface:
+        alias: App\Admin\Role\Infrastructure\OutputAdapters\Repositories\RoleRepository
+
+    App\Admin\Role\Infrastructure\InputAdapters\AssignRoleController:
+        tags: ['controller.service_arguments']
+        public: true
+
+
+    App\Admin\Infrastructure\InputAdapters\DashboardController:
+        tags: ['controller.service_arguments']
+        public: true
+
+
+    App\Security\PermissionVoter:
+        tags: ['security.voter']
 
 
 

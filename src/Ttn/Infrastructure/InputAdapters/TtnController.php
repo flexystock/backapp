@@ -183,10 +183,9 @@ class TtnController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;
 
-        if (!$this->getUser()->isRoot()) {
-            $this->logger->warning('TtnController: Rol sin permisos.');
-
-            return new JsonResponse(['error' => 'Root are required'], 400);
+        if (!$this->isGranted('ROLE_ROOT') && !$this->isGranted('ROLE_SUPERADMIN') && !$this->isGranted('ROLE_ADMIN')
+        ) {
+            return new JsonResponse(['error' => 'No tienes permisos'], 455);
         }
 
         // Validar formato de UUID

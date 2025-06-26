@@ -117,6 +117,11 @@ class RequestLogSubscriber implements EventSubscriberInterface
 
             return;
         }
+        if ('/api/admin' === $request->getPathInfo()) {
+            $this->logger->info('onKernelTerminate: La ruta es /api/admin, no se registra.');
+
+            return;
+        }
         // Calcular tiempo de procesamiento
         $startTime = $request->attributes->get('_start_time');
         if (!$startTime) {

@@ -15,12 +15,15 @@ RUN adduser --disabled-password --gecos "" --uid ${UID} appuser \
 COPY ./php.ini /usr/local/etc/php/php.ini
 
 # Instalar dependencias y extensiones de PHP
-RUN apt-get update \
-    && apt-get install -y git acl openssl openssh-client wget zip vim libssh-dev \
-    && apt-get install -y libpng-dev zlib1g-dev libzip-dev libxml2-dev libicu-dev \
-    && docker-php-ext-install intl pdo pdo_mysql mysqli zip gd soap bcmath sockets \
-    && docker-php-ext-enable mysqli \
-    && docker-php-ext-enable --ini-name 05-opcache.ini opcache
+RUN find /etc/apt/ -name '*.list' -exec sed -i 's|http://deb.debian.org|http://ftp.es.debian.org|g' {} + && \
+    apt-get update && \
+    apt-get install -y --fix-missing \
+        git acl openssl openssh-client wget zip vim libssh-dev \
+        libpng-dev zlib1g-dev libzip-dev libxml2-dev libicu-dev && \
+    docker-php-ext-install intl pdo pdo_mysql mysqli zip gd soap bcmath sockets && \
+    docker-php-ext-enable mysqli && \
+    docker-php-ext-enable --ini-name 05-opcache.ini opcache
+
 
 # Instalar Composer
 RUN curl https://getcomposer.org/composer.phar -o /usr/bin/composer \

@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class GetInfoScalesToDashboardMainController extends AbstractController
 {
@@ -147,8 +148,13 @@ class GetInfoScalesToDashboardMainController extends AbstractController
             ),
         ]
     )]
+
     public function getScalesInfoToDashboardMain(Request $request): JsonResponse
     {
+        if (!$this->isGranted('ROLE_ROOT') && !$this->isGranted('ROLE_SUPERADMIN') && !$this->isGranted('ROLE_ADMIN')
+        ) {
+            throw $this->createAccessDeniedException('No tienes permiso.');
+        }
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;
 

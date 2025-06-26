@@ -35,6 +35,19 @@ class JWTCreatedListener
             'surname' => $user->getSurnames(),
         ];
 
+        // Incluimos los roles obtenidos de la base de datos
+        $payload['roles'] = $user->getRoles();
+
+        // Añadimos los permisos asociados al perfil
+        $permissions = [];
+        if (method_exists($user, 'getProfile') && $user->getProfile()) {
+            foreach ($user->getProfile()->getProfilePermissions() as $profilePermission) {
+                $perm = $profilePermission->getPermission()->getName();
+                $permissions[] = 'PERMISSION_' . strtolower($perm);
+            }
+        }
+        $payload['permissions'] = $permissions;
+
         // (Opcional) Eliminar 'username'
         // unset($payload['username']);
 
