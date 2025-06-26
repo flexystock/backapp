@@ -66,6 +66,7 @@ class GetAllProductsUseCase implements GetAllProductsUseCaseInterface
         return [
             'uuid' => $product->getUuid(),
             'name' => $product->getName(),
+            'productId' => $product->getId(),
             // ... otros campos según sea necesario
         ];
     }

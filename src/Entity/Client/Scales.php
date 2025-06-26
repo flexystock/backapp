@@ -28,7 +28,7 @@ class Scales
      * relación.
      */
     #[ORM\Column(type: 'string', length: 36, unique: true)]
-    private string $uuid;
+    private string $uuid_scale;
 
     /**
      * ID del dispositivo en TTN (end_device_id).
@@ -119,12 +119,12 @@ class Scales
 
     public function getUuid(): string
     {
-        return $this->uuid;
+        return $this->uuid_scale;
     }
 
     public function setUuid(string $uuid): self
     {
-        $this->uuid = $uuid;
+        $this->uuid_scale = $uuid;
 
         return $this;
     }

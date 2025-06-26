@@ -23,7 +23,7 @@ class AssignScaleToProduct extends AbstractController
         $this->assignScaleToProductUseCase = $assignScaleToProductUseCase;
     }
 
-    #[Route('/api/assign_sacale_product', name: 'api_assig_scales', methods: ['POST'])]
+    #[Route('/api/assign_sacale_product', name: 'api_assign_scales', methods: ['POST'])]
     public function __invoke(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -34,8 +34,11 @@ class AssignScaleToProduct extends AbstractController
         if (!$uuidClient || !$endDeviceId || null === $productId) {
             return new JsonResponse(['error' => 'INVALID_DATA'], 400);
         }
-
-        $dto = new AssignScaleToProductRequest($uuidClient, $endDeviceId, (int) $productId);
+        $uuidUser = $this->getUser()->getUuid();
+        if (!$uuidUser) {
+            return new JsonResponse(['error' => 'USER_NOT_FOUND'], 400);
+        }
+        $dto = new AssignScaleToProductRequest($uuidClient, $endDeviceId, (int) $productId, $uuidUser);
 
         $response = $this->assignScaleToProductUseCase->execute($dto);
 

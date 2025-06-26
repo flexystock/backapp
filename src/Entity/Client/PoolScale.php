@@ -10,7 +10,7 @@ class PoolScale
 {
     #[ORM\Id]
     #[ORM\Column(type: 'string', length: 36)]
-    private string $uuid;
+    private string $uuid_scale;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     private bool $available = true;
@@ -44,12 +44,12 @@ class PoolScale
 
     public function getUuid(): string
     {
-        return $this->uuid;
+        return $this->uuid_scale;
     }
 
     public function setUuid(string $uuid): self
     {
-        $this->uuid = $uuid;
+        $this->uuid_scale = $uuid;
 
         return $this;
     }

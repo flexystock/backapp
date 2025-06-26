@@ -7,12 +7,14 @@ class AssignScaleToProductRequest
     private string $uuidClient;
     private string $endDeviceId;
     private int $productId;
+    private string $uuidUser;
 
-    public function __construct(string $uuidClient, string $endDeviceId, int $productId)
+    public function __construct(string $uuidClient, string $endDeviceId, int $productId, string $uuidUser)
     {
         $this->uuidClient = $uuidClient;
         $this->endDeviceId = $endDeviceId;
         $this->productId = $productId;
+        $this->uuidUser = $uuidUser;
     }
 
     public function getUuidClient(): string
@@ -28,5 +30,9 @@ class AssignScaleToProductRequest
     public function getProductId(): int
     {
         return $this->productId;
+    }
+    public function getUuidUserCreation(): string
+    {
+        return $this->uuidUser;
     }
 }

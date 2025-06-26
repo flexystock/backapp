@@ -11,7 +11,6 @@ use App\Scales\Infrastructure\OutputAdapters\Repositories\ScalesRepository;
 use App\Entity\Client\Scales as ScaleEntity;
 use Psr\Log\LoggerInterface;
 
-
 class AssignScaleToProductUseCase implements AssignScaleToProductUseCaseInterface
 {
     private ClientConnectionManager $connectionManager;
@@ -29,8 +28,9 @@ class AssignScaleToProductUseCase implements AssignScaleToProductUseCaseInterfac
 
             $poolRepo = new PoolScalesRepository($em);
             $scaleRepo = new ScalesRepository($em);
-
-            $poolScale = $poolRepo->findAvailableByEndDeviceId($request->getEndDeviceId());
+            //var_dump($poolRepo);
+            //die();
+            $poolScale = $poolRepo->findOneBy($request->getEndDeviceId());
             if (!$poolScale) {
                 return new AssignScaleToProductResponse(false, 'POOL_SCALE_NOT_FOUND');
             }
@@ -49,7 +49,8 @@ class AssignScaleToProductUseCase implements AssignScaleToProductUseCaseInterfac
                 $scale->setUuid($poolScale->getUuid());
                 $scale->setEndDeviceId($request->getEndDeviceId());
                 $scale->setVoltageMin(3.2);
-                $scale->setUuidUserCreation('system');
+                $scale->setVoltagePercentage(0);
+                $scale->setUuidUserCreation($request->getUuidUserCreation());
                 $scale->setDatehourCreation(new \DateTime());
             }
 

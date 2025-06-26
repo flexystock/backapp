@@ -29,7 +29,7 @@ class PoolScalesRepository implements PoolScalesRepositoryInterface
     }
     public function findOneBy(string $endDeviceId): ?PoolScale
     {
-        return $this->em->getRepository(Scales::class)->findOneBy([
+        return $this->em->getRepository(PoolScale::class)->findOneBy([
             'end_device_id' => $endDeviceId,
         ]);
     }
