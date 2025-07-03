@@ -80,18 +80,19 @@ class ClientConnectionManager
         $this->logger->info("ClientConnectionManager: Creating EntityManager for client UUID '$uuidClient'.");
 
         // Configuración de Doctrine ORM
-        $proxyDir = __DIR__.'/../../../../var/doctrine/proxies';
+        $projectDir = $this->params->get('kernel.project_dir');
+        $proxyDir = $projectDir.'/var/doctrine/proxies';
+        if (!is_dir($proxyDir)) {
+            if (!mkdir($proxyDir, 0777, true) && !is_dir($proxyDir)) {
+                $this->logger->error("ClientConnectionManager: Unable to create proxy directory '$proxyDir'");
+            }
+        }
         $config = ORMSetup::createAttributeMetadataConfiguration(
-            paths: [__DIR__.'/../../../../Entity/Client'], // Ruta a las entidades del cliente
+            paths: [$projectDir.'/src/Entity/Client'], // Ruta a las entidades del cliente
             isDevMode: true, // Cambia a true en desarrollo
             proxyDir: $proxyDir,
             cache: null,
-            // useSimpleAnnotationReader: false,
         );
-        $absolutePath = __DIR__.'/../../../../Entity/Client';
-        $this->logger->info('absolutePath', [
-            'absolutePath' => $absolutePath,
-        ]);
         // Configuración de DBAL
         $dbalConfig = new DBALConfiguration();
         // Configurar el Schema Manager Factory
