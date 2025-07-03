@@ -12,4 +12,6 @@ interface PoolScalesRepositoryInterface
     public function findAvailableByEndDeviceId(string $endDeviceId): ?PoolScale;
     public function findAllIsAvailable(string $available): array;
     public function remove(PoolScale $poolScale): void;
+
+    public function findOneByUuidScale(string $uuidScale): ?PoolScale;
 }

@@ -53,4 +53,11 @@ class PoolScalesRepository implements PoolScalesRepositoryInterface
         $this->em->remove($scale);
         $this->em->flush();
     }
+
+    public function findOneByUuidScale(string $uuidScale): ?PoolScale
+    {
+        return $this->em->getRepository(PoolScale::class)->findOneBy([
+            'uuid_scale' => $uuidScale,
+        ]);
+    }
 }

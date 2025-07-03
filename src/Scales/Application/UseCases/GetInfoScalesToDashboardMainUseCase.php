@@ -26,14 +26,18 @@ class GetInfoScalesToDashboardMainUseCase implements GetInfoScalesToDashboardMai
     public function execute(GetInfoScalesToDashboardMainRequest $request): GetInfoScalesToDashboardMainResponse
     {
         $uuidClient = $request->getUuidClient();
-
+        //die("lsndfosnfd");
         try {
             $em = $this->connectionManager->getEntityManager($uuidClient);
 
             // 1. Escalas asignadas
             $repo = new ScalesRepository($em);
             $scales = $repo->findAllByUuidClient($uuidClient);
-            $assignedScales = array_map(fn (Scales $s) => $this->serializeScale($s), $scales);
+            //die("lsndfosnfd");
+            $scales2 = $repo->findAllAssignedToProduct();
+
+
+            $assignedScales = array_map(fn (Scales $s) => $this->serializeScale($s), $scales2);
 
             // 2. Pool de balanzas disponibles
             $pool = new PoolScalesRepository($em);
