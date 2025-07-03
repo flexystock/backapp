@@ -43,10 +43,10 @@ class ScalesRepository implements ScalesRepositoryInterface
         ]);
     }
 
-    public function findByUuidAndClient(string $uuidScale, string $uuidClient): ?Scales
+    public function findByUuid(string $uuidScale): ?Scales
     {
         return $this->em->getRepository(Scales::class)->findOneBy([
-            'uuid' => $uuidScale,
+            'uuid_scale' => $uuidScale
         ]);
     }
 
@@ -74,5 +74,22 @@ class ScalesRepository implements ScalesRepositoryInterface
     public function findAllIsAvailable(string $available): array
     {
         // TODO: Implement findAllIsAvailable() method.
+    }
+    public function findUuidByEndDeviceId(string $endDeviceId): ?string
+    {
+        $scale = $this->em->getRepository(Scales::class)->findOneBy([
+            'end_device_id' => $endDeviceId,
+        ]);
+
+        return $scale ? $scale->getUuid() : null;
+    }
+
+    public function findAllAssignedToProduct(): array
+    {
+        $qb = $this->em->createQueryBuilder();
+        $qb->select('s')
+            ->from(\App\Entity\Client\Scales::class, 's')
+            ->where('s.product_id IS NOT NULL');
+        return $qb->getQuery()->getResult();
     }
 }
