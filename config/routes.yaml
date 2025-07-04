@@ -32,3 +32,8 @@ controllers_admin:
         path: ../src/Admin/Infrastructure/InputAdapters/
         namespace: App\Admin\Infrastructure\InputAdapters
     type: attribute
+controllers_weight_analytics:
+    resource:
+        path: ../src/WeightAnalytics/Infrastructure/InputAdapters/
+        namespace: App\WeightAnalytics\Infrastructure\InputAdapters
+    type: attribute
