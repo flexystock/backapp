@@ -23,4 +23,6 @@ interface UserRepositoryInterface
      * @return array
      */
     public function findByClientUuid(string $uuidClient): array;
+
+    public function findOneByUuid(string $uuidUser): ?User;
 }

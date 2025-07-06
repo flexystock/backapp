@@ -105,6 +105,10 @@ services:
     App\User\Application\OutputPorts\Repositories\UserRepositoryInterface:
         alias: App\User\Infrastructure\OutputAdapters\Repositories\UserRepository
 
+    App\User\Application\InputPorts\Profile\GetUserInfoUseCaseInterface:
+        alias: App\User\Application\UseCases\Profile\GetUserInfoUseCase
+
+
     # Controladores
     App\User\Infrastructure\InputAdapters\PasswordResetController:
         tags: [ 'controller.service_arguments' ]
@@ -357,6 +361,7 @@ services:
         alias: App\Scales\Application\UseCases\DeleteScaleUseCase
     App\Scales\Application\InputPorts\GetInfoScalesToDashboardMainUseCaseInterface:
         alias: App\Scales\Application\UseCases\GetInfoScalesToDashboardMainUseCase
+
 
 
     # Controller
