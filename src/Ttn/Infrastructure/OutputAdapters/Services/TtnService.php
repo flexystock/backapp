@@ -113,7 +113,6 @@ class TtnService implements TtnServiceInterface
         $devEui = $request->getDevEui();   // Generar EUI si no lo proporciona el front
         $joinEui = $request->getJoinEui();
         $appKey = $request->getAppKey();
-        $nameDevice = $request->getUuidClient() ?? 'free';
 
         try {
             // 1. Identity Server
@@ -124,7 +123,6 @@ class TtnService implements TtnServiceInterface
                         'dev_eui' => $devEui,
                         'join_eui' => $joinEui,
                     ],
-                    'name' => $nameDevice,
                     'join_server_address' => $this->joinServerAddress,
                     'network_server_address' => $this->networkServerAddress,
                     'application_server_address' => $this->applicationServerAddress,
@@ -136,7 +134,6 @@ class TtnService implements TtnServiceInterface
                         'application_server_address',
                         'ids.dev_eui',
                         'ids.join_eui',
-                        'name',
                     ],
                 ],
             ];
