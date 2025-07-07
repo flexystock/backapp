@@ -58,4 +58,10 @@ class PoolTtnDeviceRepository implements PoolTtnDeviceRepositoryInterface
         $this->em->persist($device);
         $this->em->flush();
     }
+
+    public function findLastDevice(): ?PoolTtnDevice
+    {
+        return $this->em->getRepository(PoolTtnDevice::class)
+            ->findOneBy([], ['id' => 'DESC']);
+    }
 }
