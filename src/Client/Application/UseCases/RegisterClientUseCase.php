@@ -31,15 +31,16 @@ class RegisterClientUseCase implements RegisterClientInputPort
     private UrlGeneratorInterface $urlGenerator;
     private NotificationServiceInterface $notificationService;
 
-    public function __construct(ClientRepositoryInterface $clientRepository,
+    public function __construct(
+        ClientRepositoryInterface $clientRepository,
         ValidatorInterface $validator,
         UserRepositoryInterface $userRepository,
         DockerService $dockerService,
         MessageBusInterface $bus,
         MailerInterface $mailer,
         UrlGeneratorInterface $urlGenerator,
-        NotificationServiceInterface $notificationService)
-    {
+        NotificationServiceInterface $notificationService
+    ) {
         $this->clientRepository = $clientRepository;
         $this->userRepository = $userRepository;
         $this->validator = $validator;
