@@ -28,13 +28,14 @@ class TtnController extends AbstractController
     private UnassignTtnDeviceUseCaseInterface $unassignTtnDeviceUseCase;
     private LoggerInterface $logger;
 
-    public function __construct(RegisterTtnDeviceUseCaseInterface $registerTtnDeviceUseCase,
+    public function __construct(
+        RegisterTtnDeviceUseCaseInterface $registerTtnDeviceUseCase,
         RegisterTtnAppUseCaseInterface $registerTtnAppUseCase,
         GetClientByUuidInputPort $getClientByUuidInputPort,
         GetAllTtnDevicesUseCaseInterface $getAllTtnDevicesUseCase,
         UnassignTtnDeviceUseCaseInterface $unassignTtnDeviceUseCase,
-        LoggerInterface $logger)
-    {
+        LoggerInterface $logger
+    ) {
         $this->registerTtnDeviceUseCase = $registerTtnDeviceUseCase;
         $this->registerTtnAppUseCase = $registerTtnAppUseCase;
         $this->getClientByUuidInputPort = $getClientByUuidInputPort;
@@ -74,7 +75,8 @@ class TtnController extends AbstractController
             $description,
             $uuidUser,
             new \DateTime(),
-            $uuidClient);
+            $uuidClient
+        );
         $response = $this->registerTtnAppUseCase->execute($dto);
 
         if ($response->isSuccess()) {
@@ -292,7 +294,6 @@ class TtnController extends AbstractController
                     properties: [
                         new OA\Property(property: 'error', type: 'string', example: 'Unauthorized'),
                     ],
-
                     type: 'object'
                 )
             ),
