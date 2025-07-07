@@ -35,6 +35,20 @@ class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
     public function execute(RegisterTtnDeviceRequest $request): RegisterTtnDeviceResponse
     {
         try {
+            /// 1. Buscar el último dispositivo para obtener el siguiente id correlativo
+            $lastDevice = $this->deviceRepository->findLastDevice();
+
+            if ($lastDevice) {
+                $lastDeviceId = $lastDevice->getEndDeviceId(); // Ej: "fs-0007"
+                // Extraer el número del id
+                $matches = [];
+                preg_match('/fs-(\d+)/', $lastDeviceId, $matches);
+                $numericPart = isset($matches[1]) ? (int)$matches[1] : 0;
+                $nextNumber = $numericPart + 1;
+                $nextDeviceId = sprintf('fs-%04d', $nextNumber); // Ej: "fs-0008"
+            } else {
+                $nextDeviceId = 'fs-0001';
+            }
             // 1) Generar EUI/AppKey si faltan
             $devEui = $request->getDevEui() ?? $this->generateEui();
             $joinEui = $request->getJoinEui() ?? $this->generateEui();
@@ -44,13 +58,13 @@ class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
             //    - O crea un constructor nuevo para TTNService
             //    - O solo pasamos estos a la TtnService -> registerDevice(...)
             $dtoForTtn = new RegisterTtnDeviceRequest(
-                $request->getDeviceId(),
                 $request->getUuidUser(),
                 $request->getDatehourCreation(),
                 $request->getUuidClient(),
                 $devEui,
                 $joinEui,
-                $appKey
+                $appKey,
+                $nextDeviceId // <-- deviceId como último argumento
             );
 
             // 3) Llamar a TTN (si falla, lanza excepción)
@@ -59,7 +73,7 @@ class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
             // 4) Crear la entidad local en BD
             $ttnDevice = new PoolTtnDevice();
             $ttnDevice->setAvailable(true);
-            $ttnDevice->setEndDeviceId($request->getDeviceId());
+            $ttnDevice->setEndDeviceId($nextDeviceId);
             $ttnDevice->setEndDeviceName($request->getUuidClient() ?? 'free');
             $ttnDevice->setAppEUI($devEui);
             $ttnDevice->setDevEUI($joinEui);
@@ -74,7 +88,7 @@ class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
             if ($request->getUuidClient()) {
                 $poolScale = new PoolScale();
                 $poolScale->setUuid(Uuid::v4()->toRfc4122());
-                $poolScale->setEndDeviceId($request->getDeviceId());
+                $poolScale->setEndDeviceId($nextDeviceId);
                 $poolScale->setAvailable(true);
                 $poolScale->setEndDeviceName($request->getUuidClient());
                 $poolScale->setAppEUI($devEui);

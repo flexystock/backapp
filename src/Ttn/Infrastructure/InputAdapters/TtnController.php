@@ -197,9 +197,7 @@ class TtnController extends AbstractController
             return new JsonResponse(['error' => 'Invalid uuid format'], 400);
         }
 
-        $deviceId = 'heltec-ab01-'.random_int(1000, 9999);
-
-        $dtoDevice = new RegisterTtnDeviceRequest($deviceId, $uuidUser, new \DateTime(), $uuidClient, null, null, null);
+        $dtoDevice = new RegisterTtnDeviceRequest($uuidUser, new \DateTime(), $uuidClient, null, null, null);
         $response = $this->registerTtnDeviceUseCase->execute($dtoDevice);
 
         if ($response->isSuccess()) {
