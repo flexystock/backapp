@@ -6,6 +6,7 @@ use App\Client\Infrastructure\OutputAdapters\Repositories\ClientRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use App\Entity\Main\Subscription;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
@@ -120,11 +121,15 @@ class Client
     #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'clients')]
     private Collection $users;
 
+    #[ORM\OneToMany(targetEntity: Subscription::class, mappedBy: 'client')]
+    private Collection $subscriptions;
+
     // Constructor
     public function __construct()
     {
         $this->uuid_client = Uuid::v4()->toRfc4122();
         $this->users = new ArrayCollection();
+        $this->subscriptions = new ArrayCollection();
     }
 
     /**
@@ -520,6 +525,28 @@ class Client
         if ($this->users->removeElement($user)) {
             $user->removeClient($this);
         }
+
+        return $this;
+    }
+
+    public function getSubscriptions(): Collection
+    {
+        return $this->subscriptions;
+    }
+
+    public function addSubscription(Subscription $subscription): self
+    {
+        if (!$this->subscriptions->contains($subscription)) {
+            $this->subscriptions[] = $subscription;
+            $subscription->setClient($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSubscription(Subscription $subscription): self
+    {
+        $this->subscriptions->removeElement($subscription);
 
         return $this;
     }

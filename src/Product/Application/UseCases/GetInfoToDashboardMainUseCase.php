@@ -83,16 +83,16 @@ class GetInfoToDashboardMainUseCase implements GetInfoToDashboardMainUseCaseInte
 
         // Calcular el stock y el peso en la unidad definida
         $stockInUnits = $conversionFactor > 0 ? round($stock / $conversionFactor, 2) : 0;
-        $realWeightSumInUnits = $conversionFactor > 0 ? round($realWeightSum / $conversionFactor, 2) : 0;
+        $realWeightSumInUnits = $conversionFactor > 0 ? round($realWeightSum / $conversionFactor, 1) : 0;
 
         return [
             'uuid' => $product->getUuid(),
             'name' => $product->getName(),
-            'stock_kg' => $stock,                 // Stock en Kg
-            'stock_in_units' => $stockInUnits,          // Stock en la unidad definida
+            //'stock_kg' => $stock,                 // Stock en Kg
+            //'stock_in_units' => $stockInUnits,          // Stock en la unidad definida
             'real_weight_sum_kg' => $realWeightSum,         // Peso acumulado en Kg
             'real_weight_sum_in_units' => $realWeightSumInUnits,    // Peso acumulado en la unidad definida
-            'percentage' => round($percentage, 2).'%',
+            //'percentage' => round($percentage, 2).'%',
             'unit' => [
                 'main_unit' => $mainUnit,
                 'unit_name' => $unitName,
