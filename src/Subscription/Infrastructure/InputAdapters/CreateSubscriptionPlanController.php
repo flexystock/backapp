@@ -3,9 +3,6 @@
 namespace App\Subscription\Infrastructure\InputAdapters;
 
 use App\Subscription\Application\DTO\CreateSubscriptionPlanRequest;
-use App\Subscription\Application\DTO\CreateSubscriptionPlanResponse;
-use App\Subscription\Application\UseCases\CreateSubscriptionPlanUseCase;
-use App\Subscription\Application\OuputPorts\SubscriptionPlanRepositoryInterface;
 use App\Subscription\Application\InputPorts\CreateSubscriptionPlanUseCaseInterface;
 use OpenApi\Attributes as OA;
 use Psr\Log\LoggerInterface;
@@ -64,20 +61,34 @@ class CreateSubscriptionPlanController extends AbstractController
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            $response = $this->createSubscriptionPlanUseCase->execute($createSubscriptionPlanRequest);
+            $responseDto = $this->createSubscriptionPlanUseCase->execute($createSubscriptionPlanRequest);
 
             return new JsonResponse([
                 'status' => 'success',
-                'data' => json_decode($this->serializer->serialize($response, 'json'), true)
+                'plan' => $responseDto->getPlan(),
             ], Response::HTTP_CREATED);
+
+        } catch (\RuntimeException $e) {
+            if ('PLAN_ALREADY_EXISTS' === $e->getMessage()) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'PLAN_ALREADY_EXISTS',
+                ], Response::HTTP_CONFLICT);
+            }
+
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], Response::HTTP_BAD_REQUEST);
 
         } catch (\Throwable $e) {
             $this->logger->error('Error al crear plan de suscripción', [
-                'exception' => $e->getMessage()
+                'exception' => $e->getMessage(),
             ]);
+
             return new JsonResponse([
                 'status' => 'error',
-                'message' => 'Error interno del servidor'
+                'message' => 'Error interno del servidor',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Subscription\Infrastructure\OutputAdapters\Repositories;
 
 use App\Entity\Main\SubscriptionPlan;
 use App\Subscription\Application\OuputPorts\SubscriptionPlanRepositoryInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -37,7 +40,7 @@ class SubscriptionPlanRepository extends ServiceEntityRepository implements Subs
      */
     public function findAll(): array
     {
-        return $this->findAll();
+        return parent::findAll();
     }
 
 }

@@ -3,9 +3,9 @@
 namespace App\Subscription\Application\InputPorts;
 
 use App\Subscription\Application\DTO\CreateSubscriptionPlanRequest;
-use App\Entity\Main\SubscriptionPlan;
+use App\Subscription\Application\DTO\CreateSubscriptionPlanResponse;
 
 interface CreateSubscriptionPlanUseCaseInterface
 {
-    public function execute(CreateSubscriptionPlanRequest $subscriptionPlanRequest): SubscriptionPlan;
+    public function execute(CreateSubscriptionPlanRequest $subscriptionPlanRequest): CreateSubscriptionPlanResponse;
 }
