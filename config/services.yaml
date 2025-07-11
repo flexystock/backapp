@@ -412,6 +412,21 @@ services:
         tags: ['controller.service_arguments']
         public: true
 
+    App\Subscription\Application\UseCases\CreateSubscriptionUseCase:
+        arguments:
+            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionRepositoryInterface'
+            $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+    App\Subscription\Application\InputPorts\CreateSubscriptionUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\CreateSubscriptionUseCase
+    App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionRepository:
+        arguments:
+            $em: '@doctrine.orm.main_entity_manager' # Este EntityManager se reemplazará dinámicamente en el caso de uso
+    App\Subscription\Application\OutputPorts\Repositories\SubscriptionRepositoryInterface:
+        alias: App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionRepository
+    App\Subscription\Infrastructure\InputAdapters\SubscriptionController:
+        tags: ['controller.service_arguments']
+        public: true
+
 
     App\Security\PermissionVoter:
         tags: ['security.voter']
