@@ -446,6 +446,18 @@ services:
         tags: [ 'controller.service_arguments' ]
         public: true
 
+    App\Subscription\Application\UseCases\UpdateSubscriptionPlanUseCase:
+        arguments:
+            $subscriptionPlanRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface'
+            $logger: '@logger'
+
+    App\Subscription\Application\InputPorts\UpdateSubscriptionPlanUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\UpdateSubscriptionPlanUseCase
+
+    App\Subscription\Infrastructure\InputAdapters\UpdateSubscriptionPlanController:
+        tags: ['controller.service_arguments']
+        public: true
+
     App\Security\PermissionVoter:
         tags: ['security.voter']
 
