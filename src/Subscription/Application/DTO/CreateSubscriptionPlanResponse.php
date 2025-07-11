@@ -4,20 +4,20 @@ namespace App\Subscription\Application\DTO;
 
 class CreateSubscriptionPlanResponse
 {
-    private ?array $product;
+    private ?array $plan;
     private ?string $error;
     private int $statusCode;
 
-    public function __construct(?array $product, ?string $error, int $statusCode)
+    public function __construct(?array $plan, ?string $error, int $statusCode)
     {
-        $this->product = $product;
+        $this->plan = $plan;
         $this->error = $error;
         $this->statusCode = $statusCode;
     }
 
-    public function getProduct(): ?array
+    public function getPlan(): ?array
     {
-        return $this->product;
+        return $this->plan;
     }
 
     public function getError(): ?string
