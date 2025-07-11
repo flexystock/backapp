@@ -49,6 +49,11 @@ class CreateSubscriptionPlanController extends AbstractController
                 'json'
             );
 
+            $user = $this->getUser();
+            // 4) Asignar el userCreation
+            $uuidUser = $user->getUuid();
+            $createSubscriptionPlanRequest->setUuidUser($uuidUser);
+
             $errors = $this->validator->validate($createSubscriptionPlanRequest);
             if ($errors->count() > 0) {
                 $this->logger->warning('Validación fallida al crear plan de suscripción', [

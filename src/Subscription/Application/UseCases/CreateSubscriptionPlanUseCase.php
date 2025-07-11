@@ -8,15 +8,17 @@ use App\Subscription\Application\DTO\CreateSubscriptionPlanResponse;
 use App\Entity\Main\SubscriptionPlan;
 use App\Subscription\Application\OutputPorts\SubscriptionPlanRepositoryInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class CreateSubscriptionPlanUseCase implements CreateSubscriptionPlanUseCaseInterface
 {
-    private SubscriptionPlanRepositoryInterface $planRepository;
+    private SubscriptionPlanRepositoryInterface $subscriptionPlanRepository;
     private LoggerInterface $logger;
 
-    public function __construct(SubscriptionPlanRepositoryInterface $planRepository, LoggerInterface $logger)
+    public function __construct(SubscriptionPlanRepositoryInterface $subscriptionPlanRepository, LoggerInterface $logger)
     {
-        $this->planRepository = $planRepository;
+        $this->planRepository = $subscriptionPlanRepository;
         $this->logger = $logger;
     }
 
@@ -44,12 +46,16 @@ class CreateSubscriptionPlanUseCase implements CreateSubscriptionPlanUseCaseInte
             throw new \RuntimeException('PLAN_ALREADY_EXISTS');
         }
 
+        $dateCreate = new \DateTime();
+
         // Create the subscription plan entity
         $subscriptionPlan = new SubscriptionPlan();
         $subscriptionPlan->setName($request->getName());
         $subscriptionPlan->setDescription($request->getDescription());
         $subscriptionPlan->setPrice($request->getPrice());
         $subscriptionPlan->setMaxScales($request->getMaxScales());
+        $subscriptionPlan->setUuidUserCreation($request->getUuidUser());
+        $subscriptionPlan->setDatehourCreation($dateCreate);
 
         // Save the subscription plan using the repository
         $this->planRepository->save($subscriptionPlan);

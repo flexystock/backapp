@@ -25,6 +25,18 @@ class SubscriptionPlan
     #[ORM\Column(name: 'max_scales', type: 'integer', options: ['unsigned' => true])]
     private int $maxScales;
 
+    #[ORM\Column(name: 'uuid_user_creation', type: 'string', length: 36, nullable: true)]
+    private ?string $uuidUserCreation = null;
+
+    #[ORM\Column(name: 'uuid_user_modification', type: 'string', length: 36, nullable: true)]
+    private ?string $uuidUserModification = null;
+
+    #[ORM\Column(name: 'datehour_creation', type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $datehourCreation = null;
+
+    #[ORM\Column(name: 'datehour_modification', type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $datehourModification = null;
+
     public function getId(): int
     {
         return $this->id;
@@ -71,6 +83,50 @@ class SubscriptionPlan
     public function setMaxScales(int $maxScales): self
     {
         $this->maxScales = $maxScales;
+        return $this;
+    }
+
+    public function getUuidUserCreation(): ?string
+    {
+        return $this->uuidUserCreation;
+    }
+
+    public function setUuidUserCreation(?string $uuidUserCreation): self
+    {
+        $this->uuidUserCreation = $uuidUserCreation;
+        return $this;
+    }
+
+    public function getUuidUserModification(): ?string
+    {
+        return $this->uuidUserModification;
+    }
+
+    public function setUuidUserModification(?string $uuidUserModification): self
+    {
+        $this->uuidUserModification = $uuidUserModification;
+        return $this;
+    }
+
+    public function getDatehourCreation(): ?\DateTimeInterface
+    {
+        return $this->datehourCreation;
+    }
+
+    public function setDatehourCreation(?\DateTimeInterface $datehourCreation): self
+    {
+        $this->datehourCreation = $datehourCreation;
+        return $this;
+    }
+
+    public function getDatehourModification(): ?\DateTimeInterface
+    {
+        return $this->datehourModification;
+    }
+
+    public function setDatehourModification(?\DateTimeInterface $datehourModification): self
+    {
+        $this->datehourModification = $datehourModification;
         return $this;
     }
 }

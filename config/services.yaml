@@ -412,21 +412,39 @@ services:
         tags: ['controller.service_arguments']
         public: true
 
-    App\Subscription\Application\UseCases\CreateSubscriptionUseCase:
+    # Subscriptions
+    App\Subscription\Application\UseCases\CreateSubscriptionPlanUseCase:
         arguments:
-            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionRepositoryInterface'
-            $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
-    App\Subscription\Application\InputPorts\CreateSubscriptionUseCaseInterface:
-        alias: App\Subscription\Application\UseCases\CreateSubscriptionUseCase
-    App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionRepository:
+            $subscriptionPlanRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface'
+            $logger: '@logger'
+
+    App\Subscription\Application\InputPorts\CreateSubscriptionPlanUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\CreateSubscriptionPlanUseCase
+    App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionPlanRepository:
         arguments:
-            $em: '@doctrine.orm.main_entity_manager' # Este EntityManager se reemplazará dinámicamente en el caso de uso
-    App\Subscription\Application\OutputPorts\Repositories\SubscriptionRepositoryInterface:
-        alias: App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionRepository
-    App\Subscription\Infrastructure\InputAdapters\SubscriptionController:
+            $registry: '@doctrine'
+            $entityManager: '@doctrine.orm.main_entity_manager' # Este EntityManager se reemplazará dinámicamente en el caso de uso
+
+    App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface:
+        alias: App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionPlanRepository
+
+    App\Subscription\Infrastructure\InputAdapters\CreateSubscriptionPlanController:
         tags: ['controller.service_arguments']
         public: true
 
+
+    App\Subscription\Application\UseCases\GetInfoSubscriptionPlansUseCase:
+        arguments:
+            $subscriptionPlanRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface'
+            $logger: '@logger'
+
+    App\Subscription\Application\InputPorts\GetInfoSubscriptionPlansUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\GetInfoSubscriptionPlansUseCase
+
+
+    App\Subscription\Infrastructure\InputAdapters\GetInfoSubscriptionPlansController:
+        tags: [ 'controller.service_arguments' ]
+        public: true
 
     App\Security\PermissionVoter:
         tags: ['security.voter']

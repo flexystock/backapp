@@ -8,13 +8,15 @@ class CreateSubscriptionPlanRequest
     private string $description;
     private float $price;
     private int $maxScales;
+    private ?string $uuidUser = null;
 
-    public function __construct(string $name, string $description, float $price, int $maxScales)
+    public function __construct(string $name, string $description, float $price, int $maxScales, ?string $uuidUser = null)
     {
         $this->name = $name;
         $this->description = $description;
         $this->price = $price;
         $this->maxScales = $maxScales;
+        $this->uuidUser = $uuidUser;
     }
 
     public function getName(): string
@@ -34,6 +36,16 @@ class CreateSubscriptionPlanRequest
     public function getMaxScales(): int
     {
         return $this->maxScales;
+    }
+
+    public function getUuidUser(): ?string
+    {
+        return $this->uuidUser;
+    }
+
+    public function setUuidUser(?string $uuidUser): void
+    {
+        $this->uuidUser = $uuidUser;
     }
 
 
