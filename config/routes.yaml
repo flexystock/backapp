@@ -37,3 +37,9 @@ controllers_weight_analytics:
         path: ../src/WeightAnalytics/Infrastructure/InputAdapters/
         namespace: App\WeightAnalytics\Infrastructure\InputAdapters
     type: attribute
+
+controller_subscription:
+    resource:
+        path: ../src/Subscription/Infrastructure/InputAdapters/
+        namespace: App\Subscription\Infrastructure\InputAdapters
+    type: attribute
