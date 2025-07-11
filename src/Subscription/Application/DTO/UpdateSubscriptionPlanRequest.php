@@ -4,7 +4,7 @@ namespace App\Subscription\Application\DTO;
 
 class UpdateSubscriptionPlanRequest
 {
-    private string $id;
+    private int $id;
     private ?string $name = null;
     private ?string $description = null;
     private ?float $price = null;
@@ -17,7 +17,7 @@ class UpdateSubscriptionPlanRequest
         $this->id = $id;
     }
 
-    public function getId(): string
+    public function getId(): int
     {
         return $this->id;
     }
