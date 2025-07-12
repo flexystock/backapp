@@ -26,6 +26,12 @@ class SubscriptionPlanRepository extends ServiceEntityRepository implements Subs
         $this->entityManager->flush();
     }
 
+    public function remove(SubscriptionPlan $subscriptionPlan): void
+    {
+        $this->entityManager->remove($subscriptionPlan);
+        $this->entityManager->flush();
+    }
+
     public function findByUuid(string $id): ?SubscriptionPlan
     {
         return $this->findOneBy(['id' => $id]);

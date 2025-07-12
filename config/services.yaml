@@ -458,6 +458,18 @@ services:
         tags: ['controller.service_arguments']
         public: true
 
+    App\Subscription\Application\UseCases\DeleteSubscriptionPlanUseCase:
+        arguments:
+            $subscriptionPlanRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface'
+            $logger: '@logger'
+
+    App\Subscription\Application\InputPorts\DeleteSubscriptionPlanUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\DeleteSubscriptionPlanUseCase
+
+    App\Subscription\Infrastructure\InputAdapters\DeleteSubscriptionPlanController:
+        tags: ['controller.service_arguments']
+        public: true
+
     App\Security\PermissionVoter:
         tags: ['security.voter']
 
