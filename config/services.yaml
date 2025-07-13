@@ -470,6 +470,63 @@ services:
         tags: ['controller.service_arguments']
         public: true
 
+    App\Subscription\Application\UseCases\CreateSubscriptionUseCase:
+        arguments:
+            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
+            $entityManager: '@doctrine.orm.main_entity_manager'
+            $logger: '@logger'
+
+    App\Subscription\Application\InputPorts\CreateSubscriptionUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\CreateSubscriptionUseCase
+    App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionRepository:
+        arguments:
+            $registry: '@doctrine'
+            $entityManager: '@doctrine.orm.main_entity_manager'
+
+    App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface:
+        alias: App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionRepository
+
+    App\Subscription\Infrastructure\InputAdapters\CreateSubscriptionController:
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Subscription\Application\UseCases\GetInfoSubscriptionUseCase:
+        arguments:
+            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
+            $logger: '@logger'
+
+    App\Subscription\Application\InputPorts\GetInfoSubscriptionUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\GetInfoSubscriptionUseCase
+
+    App\Subscription\Infrastructure\InputAdapters\GetInfoSubscriptionController:
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Subscription\Application\UseCases\UpdateSubscriptionUseCase:
+        arguments:
+            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
+            $entityManager: '@doctrine.orm.main_entity_manager'
+            $logger: '@logger'
+
+    App\Subscription\Application\InputPorts\UpdateSubscriptionUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\UpdateSubscriptionUseCase
+
+    App\Subscription\Infrastructure\InputAdapters\UpdateSubscriptionController:
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Subscription\Application\UseCases\DeleteSubscriptionUseCase:
+        arguments:
+            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
+            $logger: '@logger'
+
+    App\Subscription\Application\InputPorts\DeleteSubscriptionUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\DeleteSubscriptionUseCase
+
+    App\Subscription\Infrastructure\InputAdapters\DeleteSubscriptionController:
+        tags: ['controller.service_arguments']
+        public: true
+
     App\Security\PermissionVoter:
         tags: ['security.voter']
 
