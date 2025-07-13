@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Subscription\Application\UseCases;
+
+use App\Entity\Main\Subscription;
+use App\Entity\Main\Client;
+use App\Entity\Main\SubscriptionPlan;
+use App\Subscription\Application\DTO\CreateSubscriptionRequest;
+use App\Subscription\Application\DTO\CreateSubscriptionResponse;
+use App\Subscription\Application\InputPorts\CreateSubscriptionUseCaseInterface;
+use App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Uid\Uuid;
+use Psr\Log\LoggerInterface;
+
+class CreateSubscriptionUseCase implements CreateSubscriptionUseCaseInterface
+{
+    private SubscriptionRepositoryInterface $subscriptionRepository;
+    private EntityManagerInterface $entityManager;
+    private LoggerInterface $logger;
+
+    public function __construct(
+        SubscriptionRepositoryInterface $subscriptionRepository,
+        EntityManagerInterface $entityManager,
+        LoggerInterface $logger
+    ) {
+        $this->subscriptionRepository = $subscriptionRepository;
+        $this->entityManager = $entityManager;
+        $this->logger = $logger;
+    }
+
+    public function execute(CreateSubscriptionRequest $request): CreateSubscriptionResponse
+    {
+        try {
+            $subscription = new Subscription();
+            $subscription->setUuidSubscription(Uuid::v4()->toRfc4122());
+            $client = $this->entityManager->getReference(Client::class, $request->getClientUuid());
+            $plan = $this->entityManager->getReference(SubscriptionPlan::class, $request->getPlanId());
+            $subscription->setClient($client);
+            $subscription->setPlan($plan);
+            $subscription->setStartedAt($request->getStartedAt());
+            $subscription->setEndedAt($request->getEndedAt());
+            $subscription->setIsActive(true);
+            $subscription->setCreatedAt(new \DateTime());
+
+            $this->subscriptionRepository->save($subscription);
+
+            $data = [
+                'uuid' => $subscription->getUuidSubscription(),
+            ];
+
+            return new CreateSubscriptionResponse($data, null, 201);
+        } catch (\Throwable $e) {
+            $this->logger->error('CreateSubscriptionUseCase error', ['exception' => $e]);
+            return new CreateSubscriptionResponse(null, 'INTERNAL_ERROR', 500);
+        }
+    }
+}
