@@ -142,6 +142,11 @@ class RequestLogSubscriber implements EventSubscriberInterface
 
             return;
         }
+        if ('/api/create_subscription' === $request->getPathInfo()) {
+            $this->logger->info('onKernelTerminate: La ruta es /api/create_subscription, no se registra.');
+
+            return;
+        }
         // Calcular tiempo de procesamiento
         $startTime = $request->attributes->get('_start_time');
         if (!$startTime) {

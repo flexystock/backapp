@@ -15,14 +15,14 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CreateSubscriptionController extends AbstractController
 {
-    private CreateSubscriptionUseCaseInterface $useCase;
+    private CreateSubscriptionUseCaseInterface $createSubscriptionUseCase;
     private SerializerInterface $serializer;
     private ValidatorInterface $validator;
     private LoggerInterface $logger;
 
-    public function __construct(CreateSubscriptionUseCaseInterface $useCase, SerializerInterface $serializer, ValidatorInterface $validator, LoggerInterface $logger)
+    public function __construct(CreateSubscriptionUseCaseInterface $createSubscriptionUseCase, SerializerInterface $serializer, ValidatorInterface $validator, LoggerInterface $logger)
     {
-        $this->useCase = $useCase;
+        $this->createSubscriptionUseCase = $createSubscriptionUseCase;
         $this->serializer = $serializer;
         $this->validator = $validator;
         $this->logger = $logger;
@@ -41,8 +41,11 @@ class CreateSubscriptionController extends AbstractController
             if ($errors->count() > 0) {
                 return new JsonResponse(['status' => 'error', 'errors' => json_decode($this->serializer->serialize($errors, 'json'), true)], Response::HTTP_BAD_REQUEST);
             }
-
-            $responseDto = $this->useCase->execute($dto);
+            $user = $this->getUser();
+            // 4) Asignar el userCreation
+            $uuidUser = $user->getUuid();
+            $dto->setUuidUser($uuidUser);
+            $responseDto = $this->createSubscriptionUseCase->execute($dto);
             if ($responseDto->getError()) {
                 return new JsonResponse(['status' => 'error', 'message' => $responseDto->getError()], $responseDto->getStatusCode());
             }

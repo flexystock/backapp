@@ -19,7 +19,7 @@ class Subscription
     private Client $client;
 
     #[ORM\ManyToOne(targetEntity: SubscriptionPlan::class)]
-    #[ORM\JoinColumn(name: 'plan_id', referencedColumnName: 'id')]
+    #[ORM\JoinColumn(name: 'subscription_plan_id', referencedColumnName: 'id')]
     private SubscriptionPlan $plan;
 
     #[ORM\Column(name: 'started_at', type: 'datetime')]
@@ -36,6 +36,12 @@ class Subscription
 
     #[ORM\Column(name: 'updated_at', type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $updatedAt = null;
+
+    #[ORM\Column(name: 'uuid_user_creation', type: 'string', length: 36, nullable: true)]
+    private ?string $uuidUserCreation = null;
+
+    #[ORM\Column(name: 'uuid_user_modification', type: 'string', length: 36, nullable: true)]
+    private ?string $uuidUserModification = null;
 
     #[ORM\OneToMany(mappedBy: 'subscription', targetEntity: RentedScale::class)]
     private Collection $rentedScales;
@@ -150,6 +156,28 @@ class Subscription
     public function removeRentedScale(RentedScale $rentedScale): self
     {
         $this->rentedScales->removeElement($rentedScale);
+        return $this;
+    }
+
+    public function getUuidUserCreation(): ?string
+    {
+        return $this->uuidUserCreation;
+    }
+
+    public function setUuidUserCreation(?string $uuidUserCreation): self
+    {
+        $this->uuidUserCreation = $uuidUserCreation;
+        return $this;
+    }
+
+    public function getUuidUserModification(): ?string
+    {
+        return $this->uuidUserModification;
+    }
+
+    public function setUuidUserModification(?string $uuidUserModification): self
+    {
+        $this->uuidUserModification = $uuidUserModification;
         return $this;
     }
 }

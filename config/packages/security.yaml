@@ -69,6 +69,7 @@ security:
         - { path: ^/api/subscription_plans, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/subscription_plan_update, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/subscription_plan_delete, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/create_subscription, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:

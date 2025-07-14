@@ -5,6 +5,7 @@ namespace App\Subscription\Application\DTO;
 class UpdateSubscriptionRequest
 {
     private string $uuidSubscription;
+    private string $uuidClient;
     private ?int $planId = null;
     private ?\DateTimeInterface $endedAt = null;
     private ?bool $isActive = null;
@@ -47,5 +48,10 @@ class UpdateSubscriptionRequest
     public function setIsActive(?bool $isActive): void
     {
         $this->isActive = $isActive;
+    }
+
+    public function getUuidClient(): string
+    {
+        return $this->uuidClient;
     }
 }

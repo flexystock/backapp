@@ -42,6 +42,7 @@ class CreateSubscriptionUseCase implements CreateSubscriptionUseCaseInterface
             $subscription->setEndedAt($request->getEndedAt());
             $subscription->setIsActive(true);
             $subscription->setCreatedAt(new \DateTime());
+            $subscription->setUuidUserCreation($request->getUuidUser());
 
             $this->subscriptionRepository->save($subscription);
 
