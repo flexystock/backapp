@@ -530,6 +530,15 @@ services:
     App\Security\PermissionVoter:
         tags: ['security.voter']
 
+    Stripe\StripeClient:
+        arguments: ['%env(STRIPE_SECRET_KEY)%']
+
+    App\Infrastructure\Services\PaymentGatewayService:
+        arguments:
+            $entityManager: '@doctrine.orm.main_entity_manager'
+            $stripe: '@Stripe\StripeClient'
+            $logger: '@logger'
+
 
 
 
