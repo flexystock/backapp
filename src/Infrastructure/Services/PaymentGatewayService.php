@@ -6,22 +6,22 @@ use App\Entity\Main\PaymentTransaction;
 use App\Entity\Main\Subscription;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Stripe\StripeClient;
 
 class PaymentGatewayService
 {
     private EntityManagerInterface $entityManager;
-    private HttpClientInterface $httpClient;
+    private StripeClient $stripe;
     private LoggerInterface $logger;
 
-    public function __construct(EntityManagerInterface $entityManager, HttpClientInterface $httpClient, LoggerInterface $logger)
+    public function __construct(EntityManagerInterface $entityManager, StripeClient $stripe, LoggerInterface $logger)
     {
         $this->entityManager = $entityManager;
-        $this->httpClient = $httpClient;
+        $this->stripe = $stripe;
         $this->logger = $logger;
     }
 
-    public function charge(Subscription $subscription, float $amount, string $currency = 'EUR', string $gateway = 'default'): PaymentTransaction
+    public function charge(Subscription $subscription, float $amount, string $currency = 'EUR', string $gateway = 'stripe'): PaymentTransaction
     {
         $transaction = new PaymentTransaction();
         $transaction->setSubscription($subscription);
@@ -35,28 +35,27 @@ class PaymentGatewayService
         $this->entityManager->flush();
 
         try {
-            $response = $this->httpClient->request('POST', 'https://example-payment-gateway/charge', [
-                'json' => [
-                    'amount' => $amount,
-                    'currency' => $currency,
-                    'reference' => $transaction->getId(),
+            $intent = $this->stripe->paymentIntents->create([
+                'amount' => (int) round($amount * 100),
+                'currency' => strtolower($currency),
+                'metadata' => [
+                    'transaction_id' => $transaction->getId(),
+                    'subscription_uuid' => $subscription->getUuidSubscription(),
                 ],
             ]);
 
-            $data = $response->toArray(false);
-            $transaction->setTransactionReference($data['reference'] ?? null);
+            $transaction->setTransactionReference($intent->id);
 
-            if (($data['status'] ?? 'failed') === 'success') {
+            if ($intent->status === 'succeeded') {
                 $transaction->setStatus('paid');
                 $subscription->setPaymentStatus('paid');
             } else {
-                $transaction->setStatus('failed');
-                $subscription->setPaymentStatus('failed');
+                $transaction->setStatus('processing');
             }
         } catch (\Throwable $e) {
             $transaction->setStatus('failed');
             $subscription->setPaymentStatus('failed');
-            $this->logger->error('Payment gateway error', ['exception' => $e]);
+            $this->logger->error('Stripe payment error', ['exception' => $e]);
         }
 
         $this->entityManager->flush();
