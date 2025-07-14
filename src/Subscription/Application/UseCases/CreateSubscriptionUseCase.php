@@ -10,6 +10,7 @@ use App\Subscription\Application\DTO\CreateSubscriptionResponse;
 use App\Subscription\Application\InputPorts\CreateSubscriptionUseCaseInterface;
 use App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Infrastructure\Services\PaymentGatewayService;
 use Symfony\Component\Uid\Uuid;
 use Psr\Log\LoggerInterface;
 
@@ -18,15 +19,18 @@ class CreateSubscriptionUseCase implements CreateSubscriptionUseCaseInterface
     private SubscriptionRepositoryInterface $subscriptionRepository;
     private EntityManagerInterface $entityManager;
     private LoggerInterface $logger;
+    private PaymentGatewayService $paymentGateway;
 
     public function __construct(
         SubscriptionRepositoryInterface $subscriptionRepository,
         EntityManagerInterface $entityManager,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        PaymentGatewayService $paymentGateway
     ) {
         $this->subscriptionRepository = $subscriptionRepository;
         $this->entityManager = $entityManager;
         $this->logger = $logger;
+        $this->paymentGateway = $paymentGateway;
     }
 
     public function execute(CreateSubscriptionRequest $request): CreateSubscriptionResponse
@@ -45,6 +49,9 @@ class CreateSubscriptionUseCase implements CreateSubscriptionUseCaseInterface
             $subscription->setUuidUserCreation($request->getUuidUser());
 
             $this->subscriptionRepository->save($subscription);
+
+            // Charge the subscription using the configured payment gateway
+            $this->paymentGateway->charge($subscription, $plan->getPrice());
 
             $data = [
                 'uuid' => $subscription->getUuidSubscription(),

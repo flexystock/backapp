@@ -475,6 +475,7 @@ services:
             $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
             $entityManager: '@doctrine.orm.main_entity_manager'
             $logger: '@logger'
+            $paymentGateway: '@App\Infrastructure\Services\PaymentGatewayService'
 
     App\Subscription\Application\InputPorts\CreateSubscriptionUseCaseInterface:
         alias: App\Subscription\Application\UseCases\CreateSubscriptionUseCase
