@@ -43,6 +43,9 @@ class Subscription
     #[ORM\Column(name: 'uuid_user_modification', type: 'string', length: 36, nullable: true)]
     private ?string $uuidUserModification = null;
 
+    #[ORM\Column(name: 'payment_status', type: 'string', length: 20, options: ['default' => 'pending'])]
+    private string $paymentStatus = 'pending';
+
     #[ORM\OneToMany(mappedBy: 'subscription', targetEntity: RentedScale::class)]
     private Collection $rentedScales;
 
@@ -178,6 +181,17 @@ class Subscription
     public function setUuidUserModification(?string $uuidUserModification): self
     {
         $this->uuidUserModification = $uuidUserModification;
+        return $this;
+    }
+
+    public function getPaymentStatus(): string
+    {
+        return $this->paymentStatus;
+    }
+
+    public function setPaymentStatus(string $paymentStatus): self
+    {
+        $this->paymentStatus = $paymentStatus;
         return $this;
     }
 }
