@@ -39,21 +39,35 @@ class CreateSubscriptionController extends AbstractController
             $dto = $this->serializer->deserialize($request->getContent(), CreateSubscriptionRequest::class, 'json');
             $errors = $this->validator->validate($dto);
             if ($errors->count() > 0) {
-                return new JsonResponse(['status' => 'error', 'errors' => json_decode($this->serializer->serialize($errors, 'json'), true)], Response::HTTP_BAD_REQUEST);
-            }
-            $user = $this->getUser();
-            // 4) Asignar el userCreation
-            $uuidUser = $user->getUuid();
-            $dto->setUuidUser($uuidUser);
-            $responseDto = $this->createSubscriptionUseCase->execute($dto);
-            if ($responseDto->getError()) {
-                return new JsonResponse(['status' => 'error', 'message' => $responseDto->getError()], $responseDto->getStatusCode());
+                return new JsonResponse([
+                    'status' => 'error',
+                    'errors' => json_decode($this->serializer->serialize($errors, 'json'), true)
+                ], Response::HTTP_BAD_REQUEST);
             }
 
-            return new JsonResponse(['status' => 'success', 'subscription' => $responseDto->getSubscription()], Response::HTTP_CREATED);
+            $user = $this->getUser();
+            $uuidUser = $user->getUuid();
+            $dto->setUuidUser($uuidUser);
+
+            $responseDto = $this->createSubscriptionUseCase->execute($dto);
+
+            if ($responseDto->getError()) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => $responseDto->getError()
+                ], $responseDto->getStatusCode() ?? Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            return new JsonResponse([
+                'status' => 'success',
+                'subscription' => $responseDto->getSubscription()
+            ], Response::HTTP_CREATED);
         } catch (\Throwable $e) {
             $this->logger->error('Error creating subscription', ['exception' => $e->getMessage()]);
-            return new JsonResponse(['status' => 'error', 'message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'Internal Server Error'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

@@ -43,3 +43,8 @@ controller_subscription:
         path: ../src/Subscription/Infrastructure/InputAdapters/
         namespace: App\Subscription\Infrastructure\InputAdapters
     type: attribute
+controllers_infrastructure_services:
+    resource:
+        path: ../src/Infrastructure/Services/
+        namespace: App\Infrastructure\Services
+    type: attribute

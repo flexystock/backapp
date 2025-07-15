@@ -2,7 +2,7 @@
 # Files in the packages/ subdirectory configure your dependencies.
 
 parameters:
-
+    stripe_webhook_secret: '%env(STRIPE_WEBHOOK_SECRET)%'
 services:
     # Configuración predeterminada para autowire y autoconfigure
     _defaults:
@@ -539,6 +539,13 @@ services:
             $entityManager: '@doctrine.orm.main_entity_manager'
             $stripe: '@Stripe\StripeClient'
             $logger: '@logger'
+    App\Infrastructure\Services\StripeWebhookController:
+        arguments:
+            $stripeWebhookSecret: '%stripe_webhook_secret%'
+        tags: [ 'controller.service_arguments' ]
+        public: true
+
+
 
 
 
