@@ -21,7 +21,7 @@ class PaymentGatewayService
         $this->logger = $logger;
     }
 
-    public function charge(Subscription $subscription, float $amount, string $currency = 'EUR', string $gateway = 'stripe'): PaymentTransaction
+    public function charge(Subscription $subscription, float $amount, string $currency = 'EUR', string $gateway = 'stripe'): PaymentChargeResult
     {
         $transaction = new PaymentTransaction();
         $transaction->setSubscription($subscription);
@@ -34,6 +34,8 @@ class PaymentGatewayService
         $this->entityManager->persist($transaction);
         $this->entityManager->flush();
 
+        $clientSecret = null;
+
         try {
             $intent = $this->stripe->paymentIntents->create([
                 'amount' => (int) round($amount * 100),
@@ -44,9 +46,11 @@ class PaymentGatewayService
                 ],
             ]);
 
+            $clientSecret = $intent->client_secret ?? null;
+
             $transaction->setTransactionReference($intent->id);
 
-            if ($intent->status === 'succeeded') {
+            if ('succeeded' === $intent->status) {
                 $transaction->setStatus('paid');
                 $subscription->setPaymentStatus('paid');
             } else {
@@ -60,6 +64,6 @@ class PaymentGatewayService
 
         $this->entityManager->flush();
 
-        return $transaction;
+        return new PaymentChargeResult($transaction, $clientSecret);
     }
 }

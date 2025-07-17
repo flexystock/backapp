@@ -2,17 +2,17 @@
 
 namespace App\Subscription\Application\UseCases;
 
-use App\Entity\Main\Subscription;
 use App\Entity\Main\Client;
+use App\Entity\Main\Subscription;
 use App\Entity\Main\SubscriptionPlan;
+use App\Infrastructure\Services\PaymentGatewayService;
 use App\Subscription\Application\DTO\CreateSubscriptionRequest;
 use App\Subscription\Application\DTO\CreateSubscriptionResponse;
 use App\Subscription\Application\InputPorts\CreateSubscriptionUseCaseInterface;
 use App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
-use App\Infrastructure\Services\PaymentGatewayService;
-use Symfony\Component\Uid\Uuid;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Uid\Uuid;
 
 class CreateSubscriptionUseCase implements CreateSubscriptionUseCaseInterface
 {
@@ -25,7 +25,7 @@ class CreateSubscriptionUseCase implements CreateSubscriptionUseCaseInterface
         SubscriptionRepositoryInterface $subscriptionRepository,
         EntityManagerInterface $entityManager,
         LoggerInterface $logger,
-        PaymentGatewayService $paymentGateway
+        PaymentGatewayService $paymentGateway,
     ) {
         $this->subscriptionRepository = $subscriptionRepository;
         $this->entityManager = $entityManager;
@@ -51,20 +51,23 @@ class CreateSubscriptionUseCase implements CreateSubscriptionUseCaseInterface
             $this->subscriptionRepository->save($subscription);
 
             // Cobra usando Stripe
-            $paymentTransaction = $this->paymentGateway->charge($subscription, $plan->getPrice());
+            $chargeResult = $this->paymentGateway->charge($subscription, $plan->getPrice());
+            $paymentTransaction = $chargeResult->getTransaction();
 
             // Si Stripe falla, devolvemos error al frontend
-            if ($paymentTransaction->getStatus() === 'failed') {
+            if ('failed' === $paymentTransaction->getStatus()) {
                 return new CreateSubscriptionResponse(null, 'PAYMENT_FAILED', 402); // 402 Payment Required
             }
 
             $data = [
                 'uuid' => $subscription->getUuidSubscription(),
+                'client_secret' => $chargeResult->getClientSecret(),
             ];
 
             return new CreateSubscriptionResponse($data, null, 201);
         } catch (\Throwable $e) {
             $this->logger->error('CreateSubscriptionUseCase error', ['exception' => $e->getMessage()]);
+
             return new CreateSubscriptionResponse(null, 'INTERNAL_ERROR', 500);
         }
     }
