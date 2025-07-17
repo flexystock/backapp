@@ -12,11 +12,14 @@ class ClientDTO
     public string $uuid;
     #[Groups(['client'])]
     public string $name;
+    #[Groups(['client'])]
+    public bool $hasActiveSubscription;
     // Agrega otros campos necesarios
 
-    public function __construct(Client $client)
+    public function __construct(Client $client, bool $hasActiveSubscription = false)
     {
         $this->uuid = $client->getUuidClient();
         $this->name = $client->getName();
+        $this->hasActiveSubscription = $hasActiveSubscription;
     }
 }

@@ -166,7 +166,6 @@ class GenericUserController extends AbstractController
 
             // Serializar los datos
             $data = $this->serializer->serialize($clientDTOs, 'json', ['groups' => ['client']]);
-
             return new JsonResponse(json_decode($data), Response::HTTP_OK);
         } catch (\Exception $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
