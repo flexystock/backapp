@@ -15,7 +15,10 @@ class PaymentMethodUseCase implements PaymentMethodUseCaseInterface
 
     public function execute(PaymentMethodRequest $request): PaymentMethodResponse
     {
-        $paymentMethodId = $repository->getDefaultPaymentMethod($request->uuidClient);
+        $paymentMethodId = $this->repository->getDefaultPaymentMethod(
+            $request->getUuidClient()
+        );
+
         return new PaymentMethodResponse($paymentMethodId);
     }
 }
