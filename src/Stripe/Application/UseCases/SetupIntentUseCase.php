@@ -16,6 +16,7 @@ class SetupIntentUseCase implements SetupIntentUseCaseInterface
     public function execute(SetupIntentRequest $request): SetupIntentResponse
     {
         $clientSecret = $this->repository->createSetupIntent($request->uuidClient);
+
         return new SetupIntentResponse($clientSecret);
     }
 }
