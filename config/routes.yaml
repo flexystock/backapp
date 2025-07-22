@@ -48,3 +48,8 @@ controllers_infrastructure_services:
         path: ../src/Infrastructure/Services/
         namespace: App\Infrastructure\Services
     type: attribute
+controllers_stripe:
+    resource:
+        path: ../src/Stripe/Infrastructure/InputAdapters/
+        namespace: App\Stripe\Infrastructure\InputAdapters
+    type: attribute

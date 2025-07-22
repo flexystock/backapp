@@ -38,6 +38,16 @@ class SubscriptionRepository extends ServiceEntityRepository implements Subscrip
         return $this->findOneBy(['uuidSubscription' => $uuid]);
     }
 
+    public function findByUuidClient(string $uuid): ?Subscription
+    {
+        return $this->findOneBy(['client_uuid' => $uuid]);
+    }
+
+    public function findOneByUuid(string $uuid): ?Subscription
+    {
+        return $this->findOneBy(['uuidSubscription' => $uuid]);
+    }
+
     /**
      * @return Subscription[]
      */

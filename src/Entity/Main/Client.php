@@ -124,6 +124,9 @@ class Client
     #[ORM\OneToMany(targetEntity: Subscription::class, mappedBy: 'client')]
     private Collection $subscriptions;
 
+    #[ORM\Column(name: 'stripe_customer_id', type: 'string', length: 255, nullable: true)]
+    private ?string $stripeCustomerId = null;
+
     // Constructor
     public function __construct()
     {
@@ -554,5 +557,15 @@ class Client
     public function setDockVolumeName(string $volumeName): void
     {
         $this->docker_volume_name = $volumeName;
+    }
+
+    public function getStripeCustomerId(): ?string
+    {
+        return $this->stripeCustomerId;
+    }
+
+    public function setStripeCustomerId(?string $stripeCustomerId): void
+    {
+        $this->stripeCustomerId = $stripeCustomerId;
     }
 }

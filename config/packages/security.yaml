@@ -71,6 +71,9 @@ security:
         - { path: ^/api/subscription_plan_delete, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/create_subscription, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/stripe/webhook, roles: PUBLIC_ACCESS }
+        - { path: ^/api/subscription/stripe_latest_invoice, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/payment_method/default, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/payment_method/setup_intent, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:

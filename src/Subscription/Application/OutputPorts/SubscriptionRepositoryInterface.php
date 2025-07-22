@@ -12,6 +12,8 @@ interface SubscriptionRepositoryInterface
 
     public function findByUuid(string $uuid): ?Subscription;
 
+    public function findByUuidClient(string $uuid): ?Subscription;
+
     /**
      * @return Subscription[]
      */

@@ -49,6 +49,9 @@ class Subscription
     #[ORM\OneToMany(mappedBy: 'subscription', targetEntity: RentedScale::class)]
     private Collection $rentedScales;
 
+    #[ORM\Column(name: 'stripe_subscription_id', type: 'string', length: 255, nullable: true)]
+    private ?string $stripeSubscriptionId = null;
+
     public function __construct()
     {
         $this->rentedScales = new ArrayCollection();
@@ -192,6 +195,17 @@ class Subscription
     public function setPaymentStatus(string $paymentStatus): self
     {
         $this->paymentStatus = $paymentStatus;
+        return $this;
+    }
+
+    public function getStripeSubscriptionId(): ?string
+    {
+        return $this->stripeSubscriptionId;
+    }
+
+    public function setStripeSubscriptionId(?string $stripeSubscriptionId): self
+    {
+        $this->stripeSubscriptionId = $stripeSubscriptionId;
         return $this;
     }
 }

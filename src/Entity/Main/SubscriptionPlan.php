@@ -22,6 +22,9 @@ class SubscriptionPlan
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
     private float $price;
 
+    #[ORM\Column(name: 'stripe_price_id', type: 'string', length: 100, nullable: true)]
+    private ?string $stripePriceId = null;
+
     #[ORM\Column(name: 'max_scales', type: 'integer', options: ['unsigned' => true])]
     private int $maxScales;
 
@@ -127,6 +130,17 @@ class SubscriptionPlan
     public function setDatehourModification(?\DateTimeInterface $datehourModification): self
     {
         $this->datehourModification = $datehourModification;
+        return $this;
+    }
+
+    public function getStripePriceId(): ?string
+    {
+        return $this->stripePriceId;
+    }
+
+    public function setStripePriceId(?string $stripePriceId): self
+    {
+        $this->stripePriceId = $stripePriceId;
         return $this;
     }
 }

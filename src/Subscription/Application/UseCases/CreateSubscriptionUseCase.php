@@ -50,24 +50,18 @@ class CreateSubscriptionUseCase implements CreateSubscriptionUseCaseInterface
 
             $this->subscriptionRepository->save($subscription);
 
-            // Cobra usando Stripe
-            $chargeResult = $this->paymentGateway->charge($subscription, $plan->getPrice());
-            $paymentTransaction = $chargeResult->getTransaction();
-
-            // Si Stripe falla, devolvemos error al frontend
-            if ('failed' === $paymentTransaction->getStatus()) {
-                return new CreateSubscriptionResponse(null, 'PAYMENT_FAILED', 402); // 402 Payment Required
-            }
+            // Aquí NO trabajas directamente con Stripe
+            $result = $this->paymentGateway->createStripeSubscription($subscription, $plan, $client);
 
             $data = [
                 'uuid' => $subscription->getUuidSubscription(),
-                'client_secret' => $chargeResult->getClientSecret(),
+                'stripe_subscription_id' => $result['subscription_id'],
+                'client_secret' => $result['client_secret'],
             ];
 
             return new CreateSubscriptionResponse($data, null, 201);
         } catch (\Throwable $e) {
             $this->logger->error('CreateSubscriptionUseCase error', ['exception' => $e->getMessage()]);
-
             return new CreateSubscriptionResponse(null, 'INTERNAL_ERROR', 500);
         }
     }

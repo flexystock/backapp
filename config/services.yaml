@@ -544,6 +544,26 @@ services:
             $stripeWebhookSecret: '%stripe_webhook_secret%'
         tags: [ 'controller.service_arguments' ]
         public: true
+    App\Subscription\Application\InputPorts\GetSubscriptionStripeLatestInvoiceUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\GetSubscriptionStripeLatestInvoiceUseCase
+        public: true
+
+    App\Subscription\Application\UseCases\GetSubscriptionStripeLatestInvoiceUseCase:
+        arguments:
+            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
+            $paymentGateway: '@App\Infrastructure\Services\PaymentGatewayService'
+            $logger: '@logger'
+
+    App\Subscription\Infrastructure\InputAdapters\GetSubscriptionStripeLatestInvoiceController:
+        arguments:
+            $useCase: '@App\Subscription\Application\InputPorts\GetSubscriptionStripeLatestInvoiceUseCaseInterface'
+    App\Service\Stripe\StripeClientFactory:
+        arguments:
+            $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
+    App\Stripe\Application\InputPorts\SetupIntentUseCaseInterface:
+        alias: 'App\Stripe\Application\UseCases\SetupIntentUseCase'
+    App\Stripe\Application\OutputPorts\SetupIntentRepositoryInterface:
+        alias: 'App\Stripe\Infrastructure\OutputAdapters\Repositories\SetupIntentRepository'
 
 
 
