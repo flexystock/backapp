@@ -152,6 +152,11 @@ class RequestLogSubscriber implements EventSubscriberInterface
 
             return;
         }
+        if ('/api/subscription/stripe_latest_invoice' === $request->getPathInfo()) {
+            $this->logger->info('onKernelTerminate: La ruta es /api/subscription/stripe_latest_invoice, no se registra.');
+
+            return;
+        }
         // Calcular tiempo de procesamiento
         $startTime = $request->attributes->get('_start_time');
         if (!$startTime) {

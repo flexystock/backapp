@@ -16,4 +16,15 @@ class StripeClientFactory
     {
         return new StripeClient($this->stripeSecretKey);
     }
+
+    public function get(): StripeClient
+    {
+        static $client = null;
+
+        if ($client === null) {
+            $client = $this->create();
+        }
+
+        return $client;
+    }
 }

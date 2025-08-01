@@ -16,7 +16,7 @@ class PaymentMethodRepository implements PaymentMethodUseRepositoryInterface
 
     public function getDefaultPaymentMethod(string $uuidClient): ?string
     {
-        $client = $this->clientRepository->findOneBy(['uuid' => $uuidClient]);
+        $client = $this->clientRepository->findOneBy(['uuid_client' => $uuidClient]);
         if (!$client || !$client->getStripeCustomerId()) {
             return null;
         }
