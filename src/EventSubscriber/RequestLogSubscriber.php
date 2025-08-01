@@ -122,6 +122,41 @@ class RequestLogSubscriber implements EventSubscriberInterface
 
             return;
         }
+        if ('/api/create_subscription_plan' === $request->getPathInfo()) {
+            $this->logger->info('onKernelTerminate: La ruta es /api/create_subscription_plan, no se registra.');
+
+            return;
+        }
+        if ('/api/subscription_plans' === $request->getPathInfo()) {
+            $this->logger->info('onKernelTerminate: La ruta es /api/create_subscription_plan, no se registra.');
+
+            return;
+        }
+        if ('/api/subscription_plan_update' === $request->getPathInfo()) {
+            $this->logger->info('onKernelTerminate: La ruta es /api/create_subscription_plan, no se registra.');
+
+            return;
+        }
+        if ('/api/subscription_plan_delete' === $request->getPathInfo()) {
+            $this->logger->info('onKernelTerminate: La ruta es /api/create_subscription_plan, no se registra.');
+
+            return;
+        }
+        if ('/api/create_subscription' === $request->getPathInfo()) {
+            $this->logger->info('onKernelTerminate: La ruta es /api/create_subscription, no se registra.');
+
+            return;
+        }
+        if ('/api/stripe/webhook' === $request->getPathInfo()) {
+            $this->logger->info('onKernelTerminate: La ruta es /api/stripe/webhook, no se registra.');
+
+            return;
+        }
+        if ('/api/subscription/stripe_latest_invoice' === $request->getPathInfo()) {
+            $this->logger->info('onKernelTerminate: La ruta es /api/subscription/stripe_latest_invoice, no se registra.');
+
+            return;
+        }
         // Calcular tiempo de procesamiento
         $startTime = $request->attributes->get('_start_time');
         if (!$startTime) {

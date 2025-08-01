@@ -2,7 +2,7 @@
 # Files in the packages/ subdirectory configure your dependencies.
 
 parameters:
-
+    stripe_webhook_secret: '%env(STRIPE_WEBHOOK_SECRET)%'
 services:
     # Configuración predeterminada para autowire y autoconfigure
     _defaults:
@@ -412,9 +412,160 @@ services:
         tags: ['controller.service_arguments']
         public: true
 
+    # Subscriptions
+    App\Subscription\Application\UseCases\CreateSubscriptionPlanUseCase:
+        arguments:
+            $subscriptionPlanRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface'
+            $logger: '@logger'
+
+    App\Subscription\Application\InputPorts\CreateSubscriptionPlanUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\CreateSubscriptionPlanUseCase
+    App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionPlanRepository:
+        arguments:
+            $registry: '@doctrine'
+            $entityManager: '@doctrine.orm.main_entity_manager' # Este EntityManager se reemplazará dinámicamente en el caso de uso
+
+    App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface:
+        alias: App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionPlanRepository
+
+    App\Subscription\Infrastructure\InputAdapters\CreateSubscriptionPlanController:
+        tags: ['controller.service_arguments']
+        public: true
+
+
+    App\Subscription\Application\UseCases\GetInfoSubscriptionPlansUseCase:
+        arguments:
+            $subscriptionPlanRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface'
+            $logger: '@logger'
+
+    App\Subscription\Application\InputPorts\GetInfoSubscriptionPlansUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\GetInfoSubscriptionPlansUseCase
+
+
+    App\Subscription\Infrastructure\InputAdapters\GetInfoSubscriptionPlansController:
+        tags: [ 'controller.service_arguments' ]
+        public: true
+
+    App\Subscription\Application\UseCases\UpdateSubscriptionPlanUseCase:
+        arguments:
+            $subscriptionPlanRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface'
+            $logger: '@logger'
+
+    App\Subscription\Application\InputPorts\UpdateSubscriptionPlanUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\UpdateSubscriptionPlanUseCase
+
+    App\Subscription\Infrastructure\InputAdapters\UpdateSubscriptionPlanController:
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Subscription\Application\UseCases\DeleteSubscriptionPlanUseCase:
+        arguments:
+            $subscriptionPlanRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface'
+            $logger: '@logger'
+
+    App\Subscription\Application\InputPorts\DeleteSubscriptionPlanUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\DeleteSubscriptionPlanUseCase
+
+    App\Subscription\Infrastructure\InputAdapters\DeleteSubscriptionPlanController:
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Subscription\Application\UseCases\CreateSubscriptionUseCase:
+        arguments:
+            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
+            $entityManager: '@doctrine.orm.main_entity_manager'
+            $logger: '@logger'
+            $paymentGateway: '@App\Infrastructure\Services\PaymentGatewayService'
+
+    App\Subscription\Application\InputPorts\CreateSubscriptionUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\CreateSubscriptionUseCase
+    App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionRepository:
+        arguments:
+            $registry: '@doctrine'
+            $entityManager: '@doctrine.orm.main_entity_manager'
+
+    App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface:
+        alias: App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionRepository
+
+    App\Subscription\Infrastructure\InputAdapters\CreateSubscriptionController:
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Subscription\Application\UseCases\GetInfoSubscriptionUseCase:
+        arguments:
+            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
+            $logger: '@logger'
+
+    App\Subscription\Application\InputPorts\GetInfoSubscriptionUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\GetInfoSubscriptionUseCase
+
+    App\Subscription\Infrastructure\InputAdapters\GetInfoSubscriptionController:
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Subscription\Application\UseCases\UpdateSubscriptionUseCase:
+        arguments:
+            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
+            $entityManager: '@doctrine.orm.main_entity_manager'
+            $logger: '@logger'
+
+    App\Subscription\Application\InputPorts\UpdateSubscriptionUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\UpdateSubscriptionUseCase
+
+    App\Subscription\Infrastructure\InputAdapters\UpdateSubscriptionController:
+        tags: ['controller.service_arguments']
+        public: true
+
+    App\Subscription\Application\UseCases\DeleteSubscriptionUseCase:
+        arguments:
+            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
+            $logger: '@logger'
+
+    App\Subscription\Application\InputPorts\DeleteSubscriptionUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\DeleteSubscriptionUseCase
+
+    App\Subscription\Infrastructure\InputAdapters\DeleteSubscriptionController:
+        tags: ['controller.service_arguments']
+        public: true
 
     App\Security\PermissionVoter:
         tags: ['security.voter']
+
+    Stripe\StripeClient:
+        arguments: ['%env(STRIPE_SECRET_KEY)%']
+
+    App\Infrastructure\Services\PaymentGatewayService:
+        arguments:
+            $entityManager: '@doctrine.orm.main_entity_manager'
+            $stripe: '@Stripe\StripeClient'
+            $logger: '@logger'
+    App\Infrastructure\Services\StripeWebhookController:
+        arguments:
+            $stripeWebhookSecret: '%stripe_webhook_secret%'
+        tags: [ 'controller.service_arguments' ]
+        public: true
+    App\Subscription\Application\InputPorts\GetSubscriptionStripeLatestInvoiceUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\GetSubscriptionStripeLatestInvoiceUseCase
+        public: true
+
+    App\Subscription\Application\UseCases\GetSubscriptionStripeLatestInvoiceUseCase:
+        arguments:
+            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
+            $paymentGateway: '@App\Infrastructure\Services\PaymentGatewayService'
+            $logger: '@logger'
+
+    App\Subscription\Infrastructure\InputAdapters\GetSubscriptionStripeLatestInvoiceController:
+        arguments:
+            $useCase: '@App\Subscription\Application\InputPorts\GetSubscriptionStripeLatestInvoiceUseCaseInterface'
+    App\Service\Stripe\StripeClientFactory:
+        arguments:
+            $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
+    App\Stripe\Application\InputPorts\SetupIntentUseCaseInterface:
+        alias: 'App\Stripe\Application\UseCases\SetupIntentUseCase'
+    App\Stripe\Application\OutputPorts\SetupIntentRepositoryInterface:
+        alias: 'App\Stripe\Infrastructure\OutputAdapters\Repositories\SetupIntentRepository'
+
+
 
 
 
