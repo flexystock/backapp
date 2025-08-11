@@ -53,7 +53,6 @@ class GetUserClientsUseCase implements GetUserClientsInterface
             $clientDTOs->add(new ClientDTO($client, $hasActiveSub));
         }
 
-
         return $clientDTOs;
     }
 }

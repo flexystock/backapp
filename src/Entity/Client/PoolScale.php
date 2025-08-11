@@ -62,6 +62,7 @@ class PoolScale
     public function setAvailable(bool $available): self
     {
         $this->available = $available;
+
         return $this;
     }
 
@@ -73,6 +74,7 @@ class PoolScale
     public function setEndDeviceId(string $endDeviceId): self
     {
         $this->end_device_id = $endDeviceId;
+
         return $this;
     }
 
@@ -84,6 +86,7 @@ class PoolScale
     public function setEndDeviceName(?string $endDeviceName): self
     {
         $this->end_device_name = $endDeviceName;
+
         return $this;
     }
 
@@ -95,6 +98,7 @@ class PoolScale
     public function setAppEUI(string $appEUI): self
     {
         $this->appEUI = $appEUI;
+
         return $this;
     }
 
@@ -106,6 +110,7 @@ class PoolScale
     public function setDevEUI(string $devEUI): self
     {
         $this->devEUI = $devEUI;
+
         return $this;
     }
 
@@ -117,6 +122,7 @@ class PoolScale
     public function setAppKey(string $appKey): self
     {
         $this->appKey = $appKey;
+
         return $this;
     }
 
@@ -128,6 +134,7 @@ class PoolScale
     public function setUuidUserCreation(string $uuidUserCreation): self
     {
         $this->uuid_user_creation = $uuidUserCreation;
+
         return $this;
     }
 
@@ -139,6 +146,7 @@ class PoolScale
     public function setDatehourCreation(\DateTimeInterface $datehourCreation): self
     {
         $this->datehour_creation = $datehourCreation;
+
         return $this;
     }
 
@@ -150,6 +158,7 @@ class PoolScale
     public function setUuidUserModification(?string $uuidUserModification): self
     {
         $this->uuid_user_modification = $uuidUserModification;
+
         return $this;
     }
 
@@ -161,6 +170,7 @@ class PoolScale
     public function setDatehourModification(?\DateTimeInterface $datehourModification): self
     {
         $this->datehour_modification = $datehourModification;
+
         return $this;
     }
 }

@@ -8,11 +8,10 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class UpdateSubscriptionPlanController extends AbstractController
 {
@@ -52,6 +51,7 @@ class UpdateSubscriptionPlanController extends AbstractController
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_FORBIDDEN);
         } catch (\Throwable $e) {
             $this->logger->error('Error updating subscription plan', ['exception' => $e]);
+
             return new JsonResponse(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

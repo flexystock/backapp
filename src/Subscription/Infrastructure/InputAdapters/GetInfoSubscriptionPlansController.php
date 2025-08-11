@@ -2,12 +2,12 @@
 
 namespace App\Subscription\Infrastructure\InputAdapters;
 
+use App\Subscription\Application\InputPorts\GetInfoSubscriptionPlansUseCaseInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use App\Subscription\Application\InputPorts\GetInfoSubscriptionPlansUseCaseInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class GetInfoSubscriptionPlansController extends AbstractController
@@ -18,8 +18,8 @@ class GetInfoSubscriptionPlansController extends AbstractController
 
     public function __construct(
         GetInfoSubscriptionPlansUseCaseInterface $getInfoSubscriptionPlansUseCase,
-        LoggerInterface                          $logger,
-        SerializerInterface                      $serializer
+        LoggerInterface $logger,
+        SerializerInterface $serializer
     ) {
         $this->getInfoSubscriptionPlansUseCase = $getInfoSubscriptionPlansUseCase;
         $this->logger = $logger;
@@ -50,6 +50,7 @@ class GetInfoSubscriptionPlansController extends AbstractController
                     'message' => 'PLAN_NOT_FOUND',
                 ], Response::HTTP_NOT_FOUND);
             }
+
             return new JsonResponse([
                 'status' => 'error',
                 'message' => $e->getMessage(),
@@ -58,6 +59,7 @@ class GetInfoSubscriptionPlansController extends AbstractController
             $this->logger->error('Error inesperado al obtener planes de suscripción', [
                 'exception' => $e->getMessage(),
             ]);
+
             return new JsonResponse([
                 'status' => 'error',
                 'message' => 'Error interno del servidor',

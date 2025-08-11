@@ -2,9 +2,9 @@
 
 namespace App\Infrastructure\Services;
 
+use App\Entity\Main\Client;
 use App\Entity\Main\PaymentTransaction;
 use App\Entity\Main\Subscription;
-use App\Entity\Main\Client;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Stripe\StripeClient;
@@ -71,7 +71,7 @@ class PaymentGatewayService
     public function createStripeSubscription(
         Subscription $subscription,
         \App\Entity\Main\SubscriptionPlan $plan,
-        \App\Entity\Main\Client $client
+        Client $client
     ): array {
         // 1. Asegúrate de que el cliente existe en Stripe
         if (!$client->getStripeCustomerId()) {
@@ -81,7 +81,7 @@ class PaymentGatewayService
             ]);
             $stripeCustomer = $this->stripe->customers->create([
                 'name' => $client->getName(),
-                'email' => $client->getCompanyEmail() ?? 'fake_' . $client->getUuidClient() . '@mail.com',
+                'email' => $client->getCompanyEmail() ?? 'fake_'.$client->getUuidClient().'@mail.com',
             ]);
             $this->logger->info('Respuesta de Stripe al crear cliente', [
                 'stripe_customer' => (array) $stripeCustomer,
@@ -97,7 +97,7 @@ class PaymentGatewayService
         // 2. Crea la suscripción en Stripe
         $stripeParams = [
             'customer' => $client->getStripeCustomerId(),
-            'items' => [[ 'price' => $plan->getStripePriceId() ]],
+            'items' => [['price' => $plan->getStripePriceId()]],
             'payment_behavior' => 'default_incomplete',
             'expand' => ['latest_invoice.payment_intent'],
         ];
@@ -133,7 +133,7 @@ class PaymentGatewayService
             $this->logger->info('Obtenido client_secret de Stripe', [
                 'client_secret' => $clientSecret,
             ]);
-        } else if (
+        } elseif (
             isset($stripeSubscription->latest_invoice) &&
             isset($stripeSubscription->latest_invoice->id)
         ) {
@@ -167,7 +167,7 @@ class PaymentGatewayService
             }
         } else {
             $this->logger->error('Stripe: Falta el client_secret y no hay latest_invoice en la suscripción', [
-                'stripeSubscription' => (array) $stripeSubscription
+                'stripeSubscription' => (array) $stripeSubscription,
             ]);
         }
 
@@ -181,7 +181,6 @@ class PaymentGatewayService
             'client_secret' => $clientSecret,
         ];
     }
-
 
     public function getStripeLatestInvoiceClientSecret(string $stripeSubscriptionId): ?string
     {
@@ -213,9 +212,10 @@ class PaymentGatewayService
         } catch (\Throwable $e) {
             $this->logger->error('Error obteniendo client_secret de invoice Stripe', [
                 'exception' => $e->getMessage(),
-                'subscriptionId' => $stripeSubscriptionId
+                'subscriptionId' => $stripeSubscriptionId,
             ]);
         }
+
         return null;
     }
 }

@@ -2,13 +2,13 @@
 
 namespace App\Infrastructure\Services;
 
+use App\Entity\Main\PaymentTransaction;
+use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
+use Stripe\Webhook;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Stripe\Webhook;
-use Doctrine\ORM\EntityManagerInterface;
-use App\Entity\Main\PaymentTransaction;
-use Psr\Log\LoggerInterface;
 
 class StripeWebhookController
 {
@@ -31,6 +31,7 @@ class StripeWebhookController
             $logger->info('Stripe webhook received', ['type' => $event->type]);
         } catch (\Throwable $e) {
             $logger->error('Stripe webhook error', ['exception' => $e->getMessage()]);
+
             return new Response('Invalid payload', Response::HTTP_BAD_REQUEST);
         }
 

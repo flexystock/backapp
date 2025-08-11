@@ -166,6 +166,7 @@ class GenericUserController extends AbstractController
 
             // Serializar los datos
             $data = $this->serializer->serialize($clientDTOs, 'json', ['groups' => ['client']]);
+
             return new JsonResponse(json_decode($data), Response::HTTP_OK);
         } catch (\Exception $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -178,12 +179,12 @@ class GenericUserController extends AbstractController
         summary: 'Get Users for a client',
         tags: ['User'],
         parameters: [
-            new OA\Parameter(name: 'uuidClient', in: 'query', required: true, schema: new OA\Schema(type: 'string'))
+            new OA\Parameter(name: 'uuidClient', in: 'query', required: true, schema: new OA\Schema(type: 'string')),
         ],
         responses: [
             new OA\Response(response: 200, description: 'List of users'),
             new OA\Response(response: 403, description: 'Access denied'),
-            new OA\Response(response: 404, description: 'No Users Found')
+            new OA\Response(response: 404, description: 'No Users Found'),
         ]
     )]
     public function getUsersByClient(Request $request): JsonResponse
@@ -204,7 +205,7 @@ class GenericUserController extends AbstractController
         $usersArray = array_map(function ($user) {
             return ['email' => $user->getEmail(),
                     'name' => $user->getName(),
-                    'role' => $user->getRoles()];
+                    'role' => $user->getRoles(), ];
         }, $users);
 
         if (empty($users)) {

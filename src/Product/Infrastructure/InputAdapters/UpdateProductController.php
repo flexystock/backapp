@@ -168,8 +168,6 @@ class UpdateProductController extends AbstractController
             // 5) Asignar fecha de modificación
             $updateRequest->setDatehourModification(new \DateTime());
 
-
-
             // 6) Ejecutar el caso de uso
             $response = $this->updateProductUseCase->execute($updateRequest);
 

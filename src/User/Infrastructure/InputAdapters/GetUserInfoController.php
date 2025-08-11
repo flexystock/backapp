@@ -3,12 +3,13 @@
 namespace App\User\Infrastructure\InputAdapters;
 
 use App\User\Application\DTO\Profile\GetUserInfoRequest;
+use App\User\Application\InputPorts\Profile\GetUserInfoUseCaseInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use App\User\Application\InputPorts\Profile\GetUserInfoUseCaseInterface;
+
 class GetUserInfoController extends AbstractController
 {
     private LoggerInterface $logger;
@@ -44,7 +45,7 @@ class GetUserInfoController extends AbstractController
         if ($response->getError()) {
             return new JsonResponse(['error' => $response->getError()], $response->getStatusCode());
         }
+
         return new JsonResponse(['user_info' => $response->getUserInfo()], 200);
     }
-
 }

@@ -2,16 +2,15 @@
 
 namespace App\Scales\Infrastructure\InputAdapters;
 
-use App\Scales\Application\InputPorts\GetInfoScalesToDashboardMainUseCaseInterface;
 use App\Scales\Application\DTO\GetInfoScalesToDashboardMainRequest;
+use App\Scales\Application\InputPorts\GetInfoScalesToDashboardMainUseCaseInterface;
 use OpenApi\Attributes\OpenApi as OA;
 use Psr\Log\LoggerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class GetInfoScalesToDashboardMainController extends AbstractController
 {
@@ -25,6 +24,7 @@ class GetInfoScalesToDashboardMainController extends AbstractController
         $this->getInfoScalesToDashboardMainUseCase = $getInfoScalesToDashboardMainUseCase;
         $this->logger = $logger;
     }
+
     #[Route('/api/scales_dashboard', name: 'api_scales_dashboard', methods: ['POST'])]
     #[OA\Post(
         path: '/api/scales_dashboard',
@@ -148,7 +148,6 @@ class GetInfoScalesToDashboardMainController extends AbstractController
             ),
         ]
     )]
-
     public function getScalesInfoToDashboardMain(Request $request): JsonResponse
     {
         if (!$this->isGranted('ROLE_ROOT') && !$this->isGranted('ROLE_SUPERADMIN') && !$this->isGranted('ROLE_ADMIN')

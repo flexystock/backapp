@@ -2,15 +2,15 @@
 
 namespace App\Ttn\Application\UseCases;
 
-use App\Entity\Main\PoolTtnDevice;
 use App\Entity\Client\PoolScale;
+use App\Entity\Main\PoolTtnDevice;
+use App\Infrastructure\Services\ClientConnectionManager;
+use App\Scales\Application\OutputPorts\PoolScalesRepositoryInterface;
 use App\Ttn\Application\DTO\RegisterTtnDeviceRequest;
 use App\Ttn\Application\DTO\RegisterTtnDeviceResponse;
 use App\Ttn\Application\InputPorts\RegisterTtnDeviceUseCaseInterface;
 use App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface;
 use App\Ttn\Application\OutputPorts\TtnServiceInterface;
-use App\Scales\Application\OutputPorts\PoolScalesRepositoryInterface;
-use App\Infrastructure\Services\ClientConnectionManager;
 use Symfony\Component\Uid\Uuid;
 
 class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
@@ -43,7 +43,7 @@ class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
                 // Extraer el número del id
                 $matches = [];
                 preg_match('/fs-(\d+)/', $lastDeviceId, $matches);
-                $numericPart = isset($matches[1]) ? (int)$matches[1] : 0;
+                $numericPart = isset($matches[1]) ? (int) $matches[1] : 0;
                 $nextNumber = $numericPart + 1;
                 $nextDeviceId = sprintf('fs-%04d', $nextNumber); // Ej: "fs-0008"
             } else {

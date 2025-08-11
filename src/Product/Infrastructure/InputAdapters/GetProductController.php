@@ -25,6 +25,7 @@ class GetProductController extends AbstractController
         $this->getAllProductsUseCase = $getAllProductsUseCase;
         $this->logger = $logger;
     }
+
     #[Route('/api/product', name: 'api_product', methods: ['POST'])]
     #[OA\Post(
         path: '/api/product',

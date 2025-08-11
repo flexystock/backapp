@@ -3,10 +3,10 @@
 namespace App\Product\Application\UseCases;
 
 use App\Entity\Client\Product;
+use App\Infrastructure\Services\ClientConnectionManager;
 use App\Product\Application\DTO\GetAllProductsRequest;
 use App\Product\Application\DTO\GetProductResponse;
 use App\Product\Application\InputPorts\GetAllProductsUseCaseInterface;
-use App\Infrastructure\Services\ClientConnectionManager;
 use Psr\Log\LoggerInterface;
 
 class GetAllProductsUseCase implements GetAllProductsUseCaseInterface
@@ -37,6 +37,7 @@ class GetAllProductsUseCase implements GetAllProductsUseCaseInterface
 
             if (!$products) {
                 $this->logger->warning("GetAllProductsUseCase: no se ha encontrado ningun producto para cliente '$uuidClient'.");
+
                 return new GetProductResponse(null, 'Product not found', 404);
             }
             // Serializar todos los productos

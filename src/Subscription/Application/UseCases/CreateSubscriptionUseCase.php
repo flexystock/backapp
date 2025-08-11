@@ -62,6 +62,7 @@ class CreateSubscriptionUseCase implements CreateSubscriptionUseCaseInterface
             return new CreateSubscriptionResponse($data, null, 201);
         } catch (\Throwable $e) {
             $this->logger->error('CreateSubscriptionUseCase error', ['exception' => $e->getMessage()]);
+
             return new CreateSubscriptionResponse(null, 'INTERNAL_ERROR', 500);
         }
     }

@@ -9,9 +9,8 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Routing\Annotation\Route;
 
 class GetInfoToDashboardMainController extends AbstractController
 {
@@ -175,7 +174,6 @@ class GetInfoToDashboardMainController extends AbstractController
             ),
         ]
     )]
-
     public function getProductsInfoToDashboardMain(Request $request): JsonResponse
     {
         if (!$this->isGranted('ROLE_ROOT') && !$this->isGranted('ROLE_SUPERADMIN') && !$this->isGranted('ROLE_ADMIN')

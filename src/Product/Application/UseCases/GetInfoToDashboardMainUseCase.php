@@ -3,12 +3,12 @@
 namespace App\Product\Application\UseCases;
 
 use App\Entity\Client\Product;
+use App\Infrastructure\Services\ClientConnectionManager;
 use App\Product\Application\DTO\GetInfoToDashboardMainRequest;
 use App\Product\Application\DTO\GetInfoToDashboardMainResponse;
 use App\Product\Application\InputPorts\GetInfoToDashboardMainUseCaseInterface;
 use App\Product\Infrastructure\OutputAdapters\Repositories\ProductRepository;
 use App\Product\Infrastructure\OutputAdapters\Repositories\WeightsLogRepository;
-use App\Infrastructure\Services\ClientConnectionManager;
 use Psr\Log\LoggerInterface;
 
 class GetInfoToDashboardMainUseCase implements GetInfoToDashboardMainUseCaseInterface

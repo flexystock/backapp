@@ -48,6 +48,7 @@ class PaymentTransaction
     public function setSubscription(Subscription $subscription): self
     {
         $this->subscription = $subscription;
+
         return $this;
     }
 
@@ -59,6 +60,7 @@ class PaymentTransaction
     public function setAmount(float $amount): self
     {
         $this->amount = $amount;
+
         return $this;
     }
 
@@ -70,6 +72,7 @@ class PaymentTransaction
     public function setCurrency(string $currency): self
     {
         $this->currency = $currency;
+
         return $this;
     }
 
@@ -81,6 +84,7 @@ class PaymentTransaction
     public function setStatus(string $status): self
     {
         $this->status = $status;
+
         return $this;
     }
 
@@ -92,6 +96,7 @@ class PaymentTransaction
     public function setGateway(string $gateway): self
     {
         $this->gateway = $gateway;
+
         return $this;
     }
 
@@ -103,6 +108,7 @@ class PaymentTransaction
     public function setTransactionReference(?string $transactionReference): self
     {
         $this->transactionReference = $transactionReference;
+
         return $this;
     }
 
@@ -114,7 +120,7 @@ class PaymentTransaction
     public function setCreatedAt(\DateTimeInterface $createdAt): self
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 }
-

@@ -33,8 +33,7 @@ class RegisterClientRequest
     )]
     private string $nifCif;
 
-    #[Assert\NotBlank(message: 'REQUIRED_FOUNDATION_DATE')]
-    private string $foundationDate;
+    private ?string $foundationDate = null;
 
     #[Assert\NotBlank(message: 'REQUIRED_FISCAL_ADDRESS')]
     #[Assert\Length(
@@ -80,16 +79,15 @@ class RegisterClientRequest
     private string $companyPhone;
 
     #[Assert\NotBlank(message: 'COMPANY_EMAIL_REQUIRED')]
-    #[Assert\Email(message: "INVALID_EMAIL")]
+    #[Assert\Email(message: 'INVALID_EMAIL')]
     private string $companyEmail;
 
-    #[Assert\NotBlank(message: 'REQUIRED_NUMBER_OF_EMPLOYEES')]
     #[Assert\Positive(message: 'INVALID_NUMBER_OF_EMPLOYEES')]
     #[Assert\LessThanOrEqual(
         value: 999999,
         message: 'INVALID_NUMBER_OF_EMPLOYEES'
     )]
-    private int $numberOfEmployees;
+    private ?int $numberOfEmployees = null;
 
     #[Assert\NotBlank(message: 'REQUIRED_INDUSTRY_SECTOR')]
     #[Assert\Regex(
@@ -98,30 +96,26 @@ class RegisterClientRequest
     )]
     private string $industrySector;
 
-    #[Assert\NotBlank(message: 'REQUIRED_AVERAGE_INVENTORY_VOLUME')]
     #[Assert\Regex(
         pattern: '/^\d{1,10}$/',
         message: 'INVALID_AVERAGE_INVENTORY_VOLUME'
     )]
-    private int $averageInventoryVolume;
+    private ?int $averageInventoryVolume = null;
 
-    #[Assert\NotBlank(message: 'REQUIRED_CURRENCY')]
     #[Assert\Regex(
         pattern: '/^([A-Za-z]{3,15}(?:\s?[A-Za-z]{2,15})?|[€$¥£₣₹₣])$/u',
         message: 'INVALID_CURRENCY'
     )]
-    private string $currency;
+    private ?string $currency = null;
 
-    #[Assert\NotBlank]
     #[Assert\Type(type: 'int', message: 'INVALID_NUMBER_OF_WAREHOUSES')]
-    private int $numberWarehouses;
+    private ?int $numberWarehouses = null;
 
-    #[Assert\NotBlank(message: 'REQUIRED_ANNUAL_SALES_VOLUME')]
     #[Assert\Regex(
         pattern: '/^\d{1,3}(?:\.\d{3})*(?:,([0-9]{1,2}))?$/',
         message: 'INVALID_ANNUAL_SALES_VOLUME'
     )]
-    private int $annualSalesVolume;
+    private ?int $annualSalesVolume = null;
 
     public function getUuidUser(): string
     {
@@ -168,12 +162,12 @@ class RegisterClientRequest
         $this->nifCif = $nifCif;
     }
 
-    public function getFoundationDate(): string
+    public function getFoundationDate(): ?string
     {
         return $this->foundationDate;
     }
 
-    public function setFoundationDate(string $foundationDate): void
+    public function setFoundationDate(?string $foundationDate): void
     {
         $this->foundationDate = $foundationDate;
     }
@@ -248,12 +242,12 @@ class RegisterClientRequest
         $this->companyEmail = $companyEmail;
     }
 
-    public function getNumberOfEmployees(): int
+    public function getNumberOfEmployees(): ?int
     {
         return $this->numberOfEmployees;
     }
 
-    public function setNumberOfEmployees(int $numberOfEmployees): void
+    public function setNumberOfEmployees(?int $numberOfEmployees): void
     {
         $this->numberOfEmployees = $numberOfEmployees;
     }
@@ -268,42 +262,42 @@ class RegisterClientRequest
         $this->industrySector = $industrySector;
     }
 
-    public function getAverageInventoryVolume(): int
+    public function getAverageInventoryVolume(): ?int
     {
         return $this->averageInventoryVolume;
     }
 
-    public function setAverageInventoryVolume(int $averageInventoryVolume): void
+    public function setAverageInventoryVolume(?int $averageInventoryVolume): void
     {
         $this->averageInventoryVolume = $averageInventoryVolume;
     }
 
-    public function getCurrency(): string
+    public function getCurrency(): ?string
     {
         return $this->currency;
     }
 
-    public function setCurrency(string $currency): void
+    public function setCurrency(?string $currency): void
     {
         $this->currency = $currency;
     }
 
-    public function getNumberWarehouses(): int
+    public function getNumberWarehouses(): ?int
     {
         return $this->numberWarehouses;
     }
 
-    public function setNumberWarehouses(int $numberWarehouses): void
+    public function setNumberWarehouses(?int $numberWarehouses): void
     {
         $this->numberWarehouses = $numberWarehouses;
     }
 
-    public function getAnnualSalesVolume(): int
+    public function getAnnualSalesVolume(): ?int
     {
         return $this->annualSalesVolume;
     }
 
-    public function setAnnualSalesVolume(int $annualSalesVolume): void
+    public function setAnnualSalesVolume(?int $annualSalesVolume): void
     {
         $this->annualSalesVolume = $annualSalesVolume;
     }

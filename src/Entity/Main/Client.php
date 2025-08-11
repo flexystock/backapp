@@ -6,7 +6,6 @@ use App\Client\Infrastructure\OutputAdapters\Repositories\ClientRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Main\Subscription;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
@@ -149,8 +148,6 @@ class Client
      * Set client UUID.
      *
      * @param string $uuid_client UUID of the client
-     *
-     * @return self
      */
     public function setUuidClient(string $uuid_client): self
     {
@@ -173,8 +170,6 @@ class Client
      * Set public name of the client.
      *
      * @param string $name name of the client
-     *
-     * @return self
      */
     public function setName(string $name): self
     {

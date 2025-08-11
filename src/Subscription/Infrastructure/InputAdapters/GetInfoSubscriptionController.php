@@ -4,13 +4,13 @@ namespace App\Subscription\Infrastructure\InputAdapters;
 
 use App\Subscription\Application\DTO\GetInfoSubscriptionRequest;
 use App\Subscription\Application\InputPorts\GetInfoSubscriptionUseCaseInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
-use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\Response;
 
 class GetInfoSubscriptionController extends AbstractController
 {
@@ -40,6 +40,7 @@ class GetInfoSubscriptionController extends AbstractController
             return new JsonResponse($this->serializer->serialize($responseDto, 'json'), Response::HTTP_OK, [], true);
         } catch (\Throwable $e) {
             $this->logger->error('Error fetching subscriptions', ['exception' => $e->getMessage()]);
+
             return new JsonResponse(['status' => 'error', 'message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

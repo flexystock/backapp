@@ -2,7 +2,6 @@
 
 namespace App\WeightAnalytics\Infrastructure\OutputAdapters\Repositories;
 
-use App\Entity\Client\WeightsLog;
 use App\WeightAnalytics\Application\OutputPorts\Repositories\WeightsLogRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -35,6 +34,5 @@ class WeightsLogRepository implements WeightsLogRepositoryInterface
         $qb->orderBy('w.date', 'ASC');
 
         return $qb->getQuery()->getResult();
-
     }
 }

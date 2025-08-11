@@ -1,14 +1,14 @@
 <?php
 
 namespace App\WeightAnalytics\Infrastructure\InputAdapters;
+
 use App\WeightAnalytics\Application\DTO\GetProductWeightSummaryRequest;
-use App\WeightAnalytics\Application\DTO\GetProductWeightSummaryResponse;
+use App\WeightAnalytics\Application\InputPorts\GetProductWeightSummaryUseCaseInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use App\WeightAnalytics\Application\InputPorts\GetProductWeightSummaryUseCaseInterface;
 
 class GetProductWeightSummaryController extends AbstractController
 {
@@ -46,6 +46,4 @@ class GetProductWeightSummaryController extends AbstractController
 
         return new JsonResponse(['summary' => $response->getSummary()], 200);
     }
-
-
 }

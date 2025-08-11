@@ -2,12 +2,12 @@
 
 namespace App\Stripe\Infrastructure\InputAdapters;
 
+use App\Stripe\Application\DTO\SetupIntentRequest;
+use App\Stripe\Application\InputPorts\SetupIntentUseCaseInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Stripe\Application\DTO\SetupIntentRequest;
-use App\Stripe\Application\InputPorts\SetupIntentUseCaseInterface;
 
 class SetupIntentController extends AbstractController
 {
@@ -27,6 +27,7 @@ class SetupIntentController extends AbstractController
 
         try {
             $response = $this->useCase->execute(new SetupIntentRequest($uuidClient));
+
             return new JsonResponse(['client_secret' => $response->clientSecret]);
         } catch (\Throwable $e) {
             return new JsonResponse(['message' => $e->getMessage()], 400);

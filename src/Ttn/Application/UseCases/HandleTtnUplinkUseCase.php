@@ -70,7 +70,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         //porcentaje de las pilas
         $percentage = max(0, min(100, ($request->getVoltage() - 3.2) / (3.6 - 3.2) * 100));
         $this->logger->debug('[TTN Uplink] Calculado voltagePercentage', [
-            'percentage' => $percentage
+            'percentage' => $percentage,
         ]);
 
         $scale->setVoltagePercentage($percentage);
@@ -109,6 +109,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                 'variation' => $variation,
                 'weightRange' => $weightRange,
             ]);
+
             return;  // o "return" si no quieres guardar
         }
 
@@ -130,11 +131,10 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         $entityManager->flush();
         $this->logger->info('[TTN Uplink] WeightsLog insertado correctamente', [
             'weightsLogId' => $weightLog->getId(),
-            'scaleId'      => $scale->getId(),
-            'productId'    => $product->getId(),
+            'scaleId' => $scale->getId(),
+            'productId' => $product->getId(),
         ]);
 
         //ahora guardar en la tabla de sacles la fecha del ultimo envío y el porcentaje de carga
-
     }
 }

@@ -5,9 +5,8 @@ namespace App\User\Application\UseCases\Profile;
 use App\User\Application\DTO\Profile\GetUserInfoRequest;
 use App\User\Application\DTO\Profile\GetUserInfoResponse;
 use App\User\Application\InputPorts\Profile\GetUserInfoUseCaseInterface;
-use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
+use Psr\Log\LoggerInterface;
 
 class GetUserInfoUseCase implements GetUserInfoUseCaseInterface
 {
@@ -31,11 +30,11 @@ class GetUserInfoUseCase implements GetUserInfoUseCaseInterface
         }
 
         $userInfo = [
-            'name'            => $user->getName(),
-            'surnames'        => $user->getSurnames(),
-            'phone'           => $user->getPhone(),
-            'email'           => $user->getEmail(),
-            'document_type'   => $user->getDocumentType(),
+            'name' => $user->getName(),
+            'surnames' => $user->getSurnames(),
+            'phone' => $user->getPhone(),
+            'email' => $user->getEmail(),
+            'document_type' => $user->getDocumentType(),
             'document_number' => $user->getDocumentNumber(),
         ];
 

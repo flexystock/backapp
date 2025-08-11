@@ -111,7 +111,6 @@ class RequestLogSubscriber implements EventSubscriberInterface
             return;
         }
 
-
         if ('/api/ttn-uplink' === $request->getPathInfo()) {
             $this->logger->info('onKernelTerminate: La ruta es /api/ttn-uplink, no se registra.');
 

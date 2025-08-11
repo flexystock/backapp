@@ -3,10 +3,10 @@
 namespace App\Product\Application\UseCases;
 
 use App\Entity\Client\ProductHistory;
+use App\Infrastructure\Services\ClientConnectionManager;
 use App\Product\Application\DTO\UpdateProductRequest;
 use App\Product\Application\DTO\UpdateProductResponse;
 use App\Product\Application\InputPorts\UpdateProductUseCaseInterface;
-use App\Infrastructure\Services\ClientConnectionManager;
 use Psr\Log\LoggerInterface;
 
 class UpdateProductUseCase implements UpdateProductUseCaseInterface
@@ -148,7 +148,6 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
             $history->setDateModification(new \DateTime());
             // Persistir el historial
             $em->persist($history);
-
 
             // Actualizar uuidUserModification y datehourModification
             $product->setUuidUserModification($request->getUuidUserModification());

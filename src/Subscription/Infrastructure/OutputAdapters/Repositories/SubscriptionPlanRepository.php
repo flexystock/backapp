@@ -41,6 +41,7 @@ class SubscriptionPlanRepository extends ServiceEntityRepository implements Subs
     {
         return $this->findOneBy(['name' => $name]);
     }
+
     /**
      * @return SubscriptionPlan[]
      */
@@ -48,5 +49,4 @@ class SubscriptionPlanRepository extends ServiceEntityRepository implements Subs
     {
         return parent::findAll();
     }
-
 }

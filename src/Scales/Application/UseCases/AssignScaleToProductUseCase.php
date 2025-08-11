@@ -2,19 +2,20 @@
 
 namespace App\Scales\Application\UseCases;
 
+use App\Entity\Client\Scales as ScaleEntity;
 use App\Infrastructure\Services\ClientConnectionManager;
 use App\Scales\Application\DTO\AssignScaleToProductRequest;
 use App\Scales\Application\DTO\AssignScaleToProductResponse;
 use App\Scales\Application\InputPorts\AssignScaleToProductUseCaseInterface;
 use App\Scales\Infrastructure\OutputAdapters\Repositories\PoolScalesRepository;
 use App\Scales\Infrastructure\OutputAdapters\Repositories\ScalesRepository;
-use App\Entity\Client\Scales as ScaleEntity;
 use Psr\Log\LoggerInterface;
 
 class AssignScaleToProductUseCase implements AssignScaleToProductUseCaseInterface
 {
     private ClientConnectionManager $connectionManager;
     private LoggerInterface $logger;
+
     public function __construct(ClientConnectionManager $connectionManager, LoggerInterface $logger)
     {
         $this->connectionManager = $connectionManager;

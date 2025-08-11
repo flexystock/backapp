@@ -32,6 +32,7 @@ class DeleteSubscriptionUseCase implements DeleteSubscriptionUseCaseInterface
             return new DeleteSubscriptionResponse('SUBSCRIPTION_DELETED', null, 200);
         } catch (\Throwable $e) {
             $this->logger->error('DeleteSubscriptionUseCase error', ['exception' => $e]);
+
             return new DeleteSubscriptionResponse(null, 'INTERNAL_ERROR', 500);
         }
     }

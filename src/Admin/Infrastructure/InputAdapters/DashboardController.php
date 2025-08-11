@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Admin\Infrastructure\InputAdapters;
 
+use App\Entity\Main\User;
+use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
-use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
-use App\Entity\Main\User;
 
 class DashboardController extends AbstractController
 {

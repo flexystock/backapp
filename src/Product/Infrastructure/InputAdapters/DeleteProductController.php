@@ -178,8 +178,8 @@ class DeleteProductController extends AbstractController
                 'message' => 'Internal Server Error',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
     }
+
     /**
      * Formatea la lista de errores de validación en un array asociativo.
      */

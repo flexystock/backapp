@@ -43,7 +43,7 @@ class JWTCreatedListener
         if (method_exists($user, 'getProfile') && $user->getProfile()) {
             foreach ($user->getProfile()->getProfilePermissions() as $profilePermission) {
                 $perm = $profilePermission->getPermission()->getName();
-                $permissions[] = 'PERMISSION_' . strtolower($perm);
+                $permissions[] = 'PERMISSION_'.strtolower($perm);
             }
         }
         $payload['permissions'] = $permissions;

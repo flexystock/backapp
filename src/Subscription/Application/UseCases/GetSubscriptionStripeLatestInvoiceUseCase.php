@@ -2,13 +2,12 @@
 
 namespace App\Subscription\Application\UseCases;
 
+use App\Infrastructure\Services\PaymentGatewayService;
 use App\Subscription\Application\DTO\GetSubscriptionStripeLatestInvoiceRequest;
 use App\Subscription\Application\DTO\GetSubscriptionStripeLatestInvoiceResponse;
 use App\Subscription\Application\InputPorts\GetSubscriptionStripeLatestInvoiceUseCaseInterface;
 use App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface;
-use App\Infrastructure\Services\PaymentGatewayService;
 use Psr\Log\LoggerInterface;
-
 
 class GetSubscriptionStripeLatestInvoiceUseCase implements GetSubscriptionStripeLatestInvoiceUseCaseInterface
 {
@@ -31,8 +30,9 @@ class GetSubscriptionStripeLatestInvoiceUseCase implements GetSubscriptionStripe
         $subscription = $this->subscriptionRepository->findOneByUuid($request->getSubscriptionUuid());
         if (!$subscription || !$subscription->getStripeSubscriptionId()) {
             $this->logger->error('Suscripción no encontrada o sin Stripe ID', [
-                'uuid' => $request->getSubscriptionUuid()
+                'uuid' => $request->getSubscriptionUuid(),
             ]);
+
             return new GetSubscriptionStripeLatestInvoiceResponse(null, 'SUBSCRIPTION_NOT_FOUND');
         }
 
@@ -42,6 +42,7 @@ class GetSubscriptionStripeLatestInvoiceUseCase implements GetSubscriptionStripe
             $this->logger->error('No se pudo obtener client_secret de Stripe', [
                 'stripeSubscriptionId' => $subscription->getStripeSubscriptionId(),
             ]);
+
             return new GetSubscriptionStripeLatestInvoiceResponse(null, 'CLIENT_SECRET_NOT_FOUND');
         }
 

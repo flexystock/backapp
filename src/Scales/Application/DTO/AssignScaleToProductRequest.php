@@ -31,6 +31,7 @@ class AssignScaleToProductRequest
     {
         return $this->productId;
     }
+
     public function getUuidUserCreation(): string
     {
         return $this->uuidUser;

@@ -134,6 +134,7 @@ class AuthController
         $verified = $user->isVerified();
         if (!$verified) {
             $this->logger->info('User not verified', ['username' => $mail, 'userId' => $user->getUuid()]);
+
             return $this->jsonResponse(['message' => 'USER_NOT_VERIFIED'], Response::HTTP_UNAUTHORIZED);
         }
         // Verificar si la cuenta está bloqueada

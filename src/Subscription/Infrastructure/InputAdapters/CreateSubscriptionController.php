@@ -4,14 +4,14 @@ namespace App\Subscription\Infrastructure\InputAdapters;
 
 use App\Subscription\Application\DTO\CreateSubscriptionRequest;
 use App\Subscription\Application\InputPorts\CreateSubscriptionUseCaseInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\Response;
 
 class CreateSubscriptionController extends AbstractController
 {
@@ -41,7 +41,7 @@ class CreateSubscriptionController extends AbstractController
             if ($errors->count() > 0) {
                 return new JsonResponse([
                     'status' => 'error',
-                    'errors' => json_decode($this->serializer->serialize($errors, 'json'), true)
+                    'errors' => json_decode($this->serializer->serialize($errors, 'json'), true),
                 ], Response::HTTP_BAD_REQUEST);
             }
 
@@ -54,19 +54,20 @@ class CreateSubscriptionController extends AbstractController
             if ($responseDto->getError()) {
                 return new JsonResponse([
                     'status' => 'error',
-                    'message' => $responseDto->getError()
+                    'message' => $responseDto->getError(),
                 ], $responseDto->getStatusCode() ?? Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
             return new JsonResponse([
                 'status' => 'success',
-                'subscription' => $responseDto->getSubscription()
+                'subscription' => $responseDto->getSubscription(),
             ], Response::HTTP_CREATED);
         } catch (\Throwable $e) {
             $this->logger->error('Error creating subscription', ['exception' => $e->getMessage()]);
+
             return new JsonResponse([
                 'status' => 'error',
-                'message' => 'Internal Server Error'
+                'message' => 'Internal Server Error',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

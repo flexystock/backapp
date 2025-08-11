@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Subscription\Infrastructure\OutputAdapters\Repositories;
 
-use App\Entity\Main\Subscription;
 use App\Entity\Main\Client;
+use App\Entity\Main\Subscription;
 use App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -58,6 +58,6 @@ class SubscriptionRepository extends ServiceEntityRepository implements Subscrip
 
     public function hasActiveSubscriptionForClient(Client $client): bool
     {
-        return $this->findOneBy(['client' => $client, 'isActive' => true]) !== null;
+        return null !== $this->findOneBy(['client' => $client, 'isActive' => true]);
     }
 }

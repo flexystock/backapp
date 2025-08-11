@@ -45,6 +45,7 @@ class TtnController extends AbstractController
     }
 
     #[Route('/api/app_register', name: 'api_app_register', methods: ['POST'])]
+
     /**
      * Register a new TTN application for the given client.
      *
@@ -172,6 +173,7 @@ class TtnController extends AbstractController
             ),
         ]
     )]
+
     /**
      * Register a new TTN device.
      *
@@ -307,6 +309,7 @@ class TtnController extends AbstractController
             ),
         ]
     )]
+
     /**
      * Retrieve a paginated list of TTN devices.
      *
@@ -438,6 +441,7 @@ class TtnController extends AbstractController
             ),
         ]
     )]
+
     /**
      * Unassign a TTN device from a client.
      *

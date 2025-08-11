@@ -7,7 +7,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 class ResetPasswordRequest
 {
     #[Assert\NotBlank(message: 'EMAIL_REQUIRED')]
-    #[Assert\Email(message: "INVALID_EMAIL")]
+    #[Assert\Email(message: 'INVALID_EMAIL')]
     public string $email;
 
     #[Assert\NotBlank(message: 'TOKEN_REQUIRED')]

@@ -36,6 +36,7 @@ class DeleteScaleController extends AbstractController
         if ($response->getError()) {
             return new JsonResponse(['error' => $response->getError()], $response->getStatusCode());
         }
+
         return new JsonResponse(['message' => $response->getMessage()], $response->getStatusCode());
     }
 }

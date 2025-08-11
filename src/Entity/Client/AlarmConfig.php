@@ -1,5 +1,7 @@
 <?php
+
 // src/Entity/Client/AlarmConfig.php
+
 namespace App\Entity\Client;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -54,6 +56,7 @@ class AlarmConfig
     public function setAlarmName(string $alarmName): self
     {
         $this->alarm_name = $alarmName;
+
         return $this;
     }
 
@@ -65,6 +68,7 @@ class AlarmConfig
     public function setProductId(int $productId): self
     {
         $this->product_id = $productId;
+
         return $this;
     }
 
@@ -76,6 +80,7 @@ class AlarmConfig
     public function setAlarmType(AlarmType $alarmType): self
     {
         $this->alarm_type = $alarmType;
+
         return $this;
     }
 
@@ -87,6 +92,7 @@ class AlarmConfig
     public function setPercentageThreshold(?float $percentageThreshold): self
     {
         $this->percentage_threshold = $percentageThreshold;
+
         return $this;
     }
 
@@ -98,6 +104,7 @@ class AlarmConfig
     public function setUuidUserCreation(string $uuidUserCreation): self
     {
         $this->uuid_user_creation = $uuidUserCreation;
+
         return $this;
     }
 
@@ -109,6 +116,7 @@ class AlarmConfig
     public function setCreationDate(\DateTimeInterface $creationDate): self
     {
         $this->datehour_creation = $creationDate;
+
         return $this;
     }
 
@@ -120,6 +128,7 @@ class AlarmConfig
     public function setUuidUserModification(?string $uuidUserModification): self
     {
         $this->uuid_user_modification = $uuidUserModification;
+
         return $this;
     }
 
@@ -131,6 +140,7 @@ class AlarmConfig
     public function setUpdateDate(?\DateTimeInterface $updateDate): self
     {
         $this->datehour_modification = $updateDate;
+
         return $this;
     }
 }

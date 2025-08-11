@@ -33,6 +33,7 @@ class CreateSubscriptionPlanRequest
     {
         return $this->price;
     }
+
     public function getMaxScales(): int
     {
         return $this->maxScales;
@@ -47,6 +48,4 @@ class CreateSubscriptionPlanRequest
     {
         $this->uuidUser = $uuidUser;
     }
-
-
 }

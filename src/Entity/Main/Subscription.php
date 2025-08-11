@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Entity\Main;
-use App\Entity\Main\Client;
+
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -65,6 +65,7 @@ class Subscription
     public function setUuidSubscription(string $uuidSubscription): self
     {
         $this->uuidSubscription = $uuidSubscription;
+
         return $this;
     }
 
@@ -76,6 +77,7 @@ class Subscription
     public function setClient(Client $client): self
     {
         $this->client = $client;
+
         return $this;
     }
 
@@ -87,6 +89,7 @@ class Subscription
     public function setPlan(SubscriptionPlan $plan): self
     {
         $this->plan = $plan;
+
         return $this;
     }
 
@@ -98,6 +101,7 @@ class Subscription
     public function setStartedAt(\DateTimeInterface $startedAt): self
     {
         $this->startedAt = $startedAt;
+
         return $this;
     }
 
@@ -109,6 +113,7 @@ class Subscription
     public function setEndedAt(?\DateTimeInterface $endedAt): self
     {
         $this->endedAt = $endedAt;
+
         return $this;
     }
 
@@ -120,6 +125,7 @@ class Subscription
     public function setIsActive(bool $isActive): self
     {
         $this->isActive = $isActive;
+
         return $this;
     }
 
@@ -131,6 +137,7 @@ class Subscription
     public function setCreatedAt(\DateTimeInterface $createdAt): self
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 
@@ -142,6 +149,7 @@ class Subscription
     public function setUpdatedAt(?\DateTimeInterface $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
+
         return $this;
     }
 
@@ -156,12 +164,14 @@ class Subscription
             $this->rentedScales[] = $rentedScale;
             $rentedScale->setSubscription($this);
         }
+
         return $this;
     }
 
     public function removeRentedScale(RentedScale $rentedScale): self
     {
         $this->rentedScales->removeElement($rentedScale);
+
         return $this;
     }
 
@@ -173,6 +183,7 @@ class Subscription
     public function setUuidUserCreation(?string $uuidUserCreation): self
     {
         $this->uuidUserCreation = $uuidUserCreation;
+
         return $this;
     }
 
@@ -184,6 +195,7 @@ class Subscription
     public function setUuidUserModification(?string $uuidUserModification): self
     {
         $this->uuidUserModification = $uuidUserModification;
+
         return $this;
     }
 
@@ -195,6 +207,7 @@ class Subscription
     public function setPaymentStatus(string $paymentStatus): self
     {
         $this->paymentStatus = $paymentStatus;
+
         return $this;
     }
 
@@ -206,6 +219,7 @@ class Subscription
     public function setStripeSubscriptionId(?string $stripeSubscriptionId): self
     {
         $this->stripeSubscriptionId = $stripeSubscriptionId;
+
         return $this;
     }
 }

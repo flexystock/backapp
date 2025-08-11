@@ -87,5 +87,4 @@ class ScaleHistory
     {
         $this->date_modification = $dateModification;
     }
-
 }

@@ -7,8 +7,6 @@ namespace App\Entity\Main;
 use App\Admin\Role\Infrastructure\OutputAdapters\Repositories\RoleRepository;
 use App\User\Application\DTO\Auth\CreateUserRequest;
 use App\User\Repository\UserRepository;
-use App\Entity\Main\Role;
-use App\Entity\Main\Profile;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -154,8 +152,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * Set user UUID.
      *
      * @param string $uuid UUID identifier
-     *
-     * @return self
      */
     public function setUuid(string $uuid): self
     {
@@ -178,8 +174,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * Set user name.
      *
      * @param string $name user full name
-     *
-     * @return self
      */
     public function setName(string $name): self
     {
@@ -202,8 +196,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * Set surnames.
      *
      * @param string $surnames user surnames
-     *
-     * @return self
      */
     public function setSurnames(string $surnames): self
     {
@@ -226,8 +218,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * Set phone number.
      *
      * @param int $phone contact phone
-     *
-     * @return self
      */
     public function setPhone(int $phone): self
     {
@@ -250,8 +240,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * Set email address.
      *
      * @param string $email email address
-     *
-     * @return self
      */
     public function setEmail(string $email): self
     {
@@ -282,15 +270,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // Roles asociados vía la tabla user_role
         $roles = [];
 
-
         // Garantizamos que la colección esté inicializada por si Doctrine la cargó de forma perezosa
         if ($this->roles instanceof PersistentCollection && !$this->roles->isInitialized()) {
             $this->roles->initialize();
         }
 
-
         foreach ($this->roles as $role) {
-            $roles[] = 'ROLE_' . strtoupper($role->getName());
+            $roles[] = 'ROLE_'.strtoupper($role->getName());
         }
 
         if ($this->isRoot()) {
@@ -347,7 +333,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             return true;
         }
 
-        if ($this->profile === null) {
+        if (null === $this->profile) {
             return false;
         }
 
@@ -630,8 +616,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     // En la entidad User
-    public static function fromCreateUserRequest(CreateUserRequest $request, UserPasswordHasherInterface $passwordHasher
-    ,RoleRepository $roleRepository): self
+    public static function fromCreateUserRequest(CreateUserRequest $request, UserPasswordHasherInterface $passwordHasher, RoleRepository $roleRepository): self
     {
         $user = new self();
         $user->setEmail($request->getEmail());
@@ -654,7 +639,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if ($adminRole) {
             $user->addRole($adminRole);
         }
-
 
         return $user;
     }

@@ -136,5 +136,4 @@ class ClientConnectionManager
         // Para conexiones internas en Docker, usa el puerto interno de MySQL
         return 3306;
     }
-
 }

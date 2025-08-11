@@ -6,8 +6,8 @@ use App\Subscription\Application\DTO\GetSubscriptionStripeLatestInvoiceRequest;
 use App\Subscription\Application\InputPorts\GetSubscriptionStripeLatestInvoiceUseCaseInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Annotation\Route;
 
 class GetSubscriptionStripeLatestInvoiceController extends AbstractController
 {
@@ -27,7 +27,7 @@ class GetSubscriptionStripeLatestInvoiceController extends AbstractController
         if (empty($data['uuid'])) {
             return new JsonResponse([
                 'status' => 'error',
-                'message' => 'uuidClient es requerido'
+                'message' => 'uuidClient es requerido',
             ], 400);
         }
 

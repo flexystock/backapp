@@ -18,5 +18,4 @@ interface SubscriptionPlanRepositoryInterface
      * @return SubscriptionPlan[]
      */
     public function findAll(): array;
-
 }

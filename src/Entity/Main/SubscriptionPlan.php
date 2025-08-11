@@ -53,6 +53,7 @@ class SubscriptionPlan
     public function setName(string $name): self
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -64,6 +65,7 @@ class SubscriptionPlan
     public function setDescription(?string $description): self
     {
         $this->description = $description;
+
         return $this;
     }
 
@@ -75,6 +77,7 @@ class SubscriptionPlan
     public function setPrice(float $price): self
     {
         $this->price = $price;
+
         return $this;
     }
 
@@ -86,6 +89,7 @@ class SubscriptionPlan
     public function setMaxScales(int $maxScales): self
     {
         $this->maxScales = $maxScales;
+
         return $this;
     }
 
@@ -97,6 +101,7 @@ class SubscriptionPlan
     public function setUuidUserCreation(?string $uuidUserCreation): self
     {
         $this->uuidUserCreation = $uuidUserCreation;
+
         return $this;
     }
 
@@ -108,6 +113,7 @@ class SubscriptionPlan
     public function setUuidUserModification(?string $uuidUserModification): self
     {
         $this->uuidUserModification = $uuidUserModification;
+
         return $this;
     }
 
@@ -119,6 +125,7 @@ class SubscriptionPlan
     public function setDatehourCreation(?\DateTimeInterface $datehourCreation): self
     {
         $this->datehourCreation = $datehourCreation;
+
         return $this;
     }
 
@@ -130,6 +137,7 @@ class SubscriptionPlan
     public function setDatehourModification(?\DateTimeInterface $datehourModification): self
     {
         $this->datehourModification = $datehourModification;
+
         return $this;
     }
 
@@ -141,6 +149,7 @@ class SubscriptionPlan
     public function setStripePriceId(?string $stripePriceId): self
     {
         $this->stripePriceId = $stripePriceId;
+
         return $this;
     }
 }

@@ -1,5 +1,7 @@
 <?php
+
 // src/Entity/Client/AlarmType.php
+
 namespace App\Entity\Client;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -34,6 +36,7 @@ class AlarmType
     public function setTypeName(string $typeName): self
     {
         $this->type_name = $typeName;
+
         return $this;
     }
 
@@ -45,6 +48,7 @@ class AlarmType
     public function setDescription(?string $description): self
     {
         $this->description = $description;
+
         return $this;
     }
 }

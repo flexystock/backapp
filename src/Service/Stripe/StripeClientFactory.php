@@ -9,7 +9,6 @@ class StripeClientFactory
     public function __construct(
         private string $stripeSecretKey
     ) {
-
     }
 
     public function create(): StripeClient
@@ -21,7 +20,7 @@ class StripeClientFactory
     {
         static $client = null;
 
-        if ($client === null) {
+        if (null === $client) {
             $client = $this->create();
         }
 

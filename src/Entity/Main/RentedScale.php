@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Entity\Main;
+
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -38,6 +39,7 @@ class RentedScale
     public function setSubscription(Subscription $subscription): self
     {
         $this->subscription = $subscription;
+
         return $this;
     }
 
@@ -49,6 +51,7 @@ class RentedScale
     public function setScaleUuid(string $scaleUuid): self
     {
         $this->scaleUuid = $scaleUuid;
+
         return $this;
     }
 
@@ -60,6 +63,7 @@ class RentedScale
     public function setRentedAt(\DateTimeInterface $rentedAt): self
     {
         $this->rentedAt = $rentedAt;
+
         return $this;
     }
 
@@ -71,6 +75,7 @@ class RentedScale
     public function setReturnedAt(?\DateTimeInterface $returnedAt): self
     {
         $this->returnedAt = $returnedAt;
+
         return $this;
     }
 }

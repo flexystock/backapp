@@ -36,6 +36,7 @@ class GetAllScalesController extends AbstractController
         if ($response->getError()) {
             return new JsonResponse(['error' => $response->getError()], $response->getStatusCode());
         }
+
         return new JsonResponse(['scale' => $response->getScale()], $response->getStatusCode());
     }
 }

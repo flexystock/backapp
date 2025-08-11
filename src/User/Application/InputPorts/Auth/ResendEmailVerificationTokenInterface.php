@@ -6,5 +6,5 @@ use App\Entity\Main\User;
 
 interface ResendEmailVerificationTokenInterface
 {
-    public function resendEmailVerificationToken(User $user,  string $token): bool;
+    public function resendEmailVerificationToken(User $user, string $token): bool;
 }

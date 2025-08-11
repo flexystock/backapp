@@ -3,12 +3,12 @@
 namespace App\Scales\Infrastructure\InputAdapters;
 
 use App\Scales\Application\DTO\UnassignScaleFromProductRequest;
+use App\Scales\Application\InputPorts\UnassignScaleFromProductUseCaseInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Scales\Application\InputPorts\UnassignScaleFromProductUseCaseInterface;
 
 class UnassignScaleFromProduct extends AbstractController
 {
@@ -47,5 +47,4 @@ class UnassignScaleFromProduct extends AbstractController
 
         return new JsonResponse(['scale' => $response->getScale()], $response->getStatusCode());
     }
-
 }

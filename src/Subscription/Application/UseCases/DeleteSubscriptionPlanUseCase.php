@@ -32,6 +32,7 @@ class DeleteSubscriptionPlanUseCase implements DeleteSubscriptionPlanUseCaseInte
             return new DeleteSubscriptionPlanResponse('PLAN_DELETED_SUCCESSFULLY', null, 200);
         } catch (\Exception $e) {
             $this->logger->error('DeleteSubscriptionPlanUseCase: Error', ['exception' => $e]);
+
             return new DeleteSubscriptionPlanResponse(null, 'Internal Server Error', 500);
         }
     }

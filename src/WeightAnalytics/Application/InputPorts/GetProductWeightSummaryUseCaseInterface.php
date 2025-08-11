@@ -7,9 +7,5 @@ use App\WeightAnalytics\Application\DTO\GetProductWeightSummaryResponse;
 
 interface GetProductWeightSummaryUseCaseInterface
 {
-    /**
-     * @param GetProductWeightSummaryRequest $request
-     * @return GetProductWeightSummaryResponse
-     */
     public function execute(GetProductWeightSummaryRequest $request): GetProductWeightSummaryResponse;
 }

@@ -1,5 +1,7 @@
 <?php
+
 // src/Entity/Client/AlarmConfigHistory.php
+
 namespace App\Entity\Client;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -45,6 +47,7 @@ class AlarmConfigHistory
     public function setAlarmConfig(AlarmConfig $alarmConfig): self
     {
         $this->alarm_config_id = $alarmConfig;
+
         return $this;
     }
 
@@ -56,6 +59,7 @@ class AlarmConfigHistory
     public function setUuidUserModification(string $uuidUserModification): self
     {
         $this->uuid_user_modification = $uuidUserModification;
+
         return $this;
     }
 
@@ -67,6 +71,7 @@ class AlarmConfigHistory
     public function setDataAlarmBeforeModification(string $dataAlarmBeforeModification): self
     {
         $this->data_alarm_before_modification = $dataAlarmBeforeModification;
+
         return $this;
     }
 
@@ -78,6 +83,7 @@ class AlarmConfigHistory
     public function setDataAlarmAfterModification(string $dataAlarmAfterModification): self
     {
         $this->data_alarm_after_modification = $dataAlarmAfterModification;
+
         return $this;
     }
 
@@ -89,6 +95,7 @@ class AlarmConfigHistory
     public function setDateModification(\DateTimeInterface $dateModification): self
     {
         $this->datehour_modification = $dateModification;
+
         return $this;
     }
 }

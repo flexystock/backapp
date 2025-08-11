@@ -21,6 +21,7 @@ class PermissionVoter extends Voter
         }
 
         $permission = substr($attribute, strlen('PERMISSION_'));
+
         return $user->hasPermission($permission);
     }
 }

@@ -4,13 +4,13 @@ namespace App\Subscription\Infrastructure\InputAdapters;
 
 use App\Subscription\Application\DTO\DeleteSubscriptionRequest;
 use App\Subscription\Application\InputPorts\DeleteSubscriptionUseCaseInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\HttpFoundation\Response;
-use Psr\Log\LoggerInterface;
 
 class DeleteSubscriptionController extends AbstractController
 {
@@ -43,6 +43,7 @@ class DeleteSubscriptionController extends AbstractController
             return new JsonResponse(['message' => $responseDto->getMessage()], $responseDto->getStatusCode());
         } catch (\Throwable $e) {
             $this->logger->error('Error deleting subscription', ['exception' => $e->getMessage()]);
+
             return new JsonResponse(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

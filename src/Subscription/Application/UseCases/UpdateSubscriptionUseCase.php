@@ -2,11 +2,11 @@
 
 namespace App\Subscription\Application\UseCases;
 
+use App\Entity\Main\SubscriptionPlan;
 use App\Subscription\Application\DTO\UpdateSubscriptionRequest;
 use App\Subscription\Application\DTO\UpdateSubscriptionResponse;
 use App\Subscription\Application\InputPorts\UpdateSubscriptionUseCaseInterface;
 use App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface;
-use App\Entity\Main\SubscriptionPlan;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -55,6 +55,7 @@ class UpdateSubscriptionUseCase implements UpdateSubscriptionUseCaseInterface
             return new UpdateSubscriptionResponse($data, null, 200);
         } catch (\Throwable $e) {
             $this->logger->error('UpdateSubscriptionUseCase error', ['exception' => $e]);
+
             return new UpdateSubscriptionResponse(null, 'INTERNAL_ERROR', 500);
         }
     }

@@ -27,6 +27,7 @@ class UnassignTtnDeviceRequest
     {
         return $this->endDeviceId;
     }
+
     public function getUuidUserModification(): string
     {
         return $this->uuidUserModification;
@@ -36,5 +37,4 @@ class UnassignTtnDeviceRequest
     {
         return $this->datehourModification;
     }
-
 }

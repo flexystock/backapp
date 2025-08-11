@@ -4,13 +4,13 @@ namespace App\Subscription\Infrastructure\InputAdapters;
 
 use App\Subscription\Application\DTO\UpdateSubscriptionRequest;
 use App\Subscription\Application\InputPorts\UpdateSubscriptionUseCaseInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\HttpFoundation\Response;
-use Psr\Log\LoggerInterface;
 
 class UpdateSubscriptionController extends AbstractController
 {
@@ -43,6 +43,7 @@ class UpdateSubscriptionController extends AbstractController
             return new JsonResponse(['subscription' => $responseDto->getSubscription()], $responseDto->getStatusCode());
         } catch (\Throwable $e) {
             $this->logger->error('Error updating subscription', ['exception' => $e->getMessage()]);
+
             return new JsonResponse(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

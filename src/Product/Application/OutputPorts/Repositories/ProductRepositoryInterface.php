@@ -12,6 +12,8 @@ interface ProductRepositoryInterface
      * Encuentra un producto por UUID y UUID del cliente.
      */
     public function findByUuidAndClient(string $uuidProduct, string $uuidClient): ?Product;
+
     public function findAllByUuidClient(string $uuidClient): array;
+
     public function save(Product $product): void;
 }

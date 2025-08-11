@@ -3,12 +3,12 @@
 namespace App\Scales\Infrastructure\InputAdapters;
 
 use App\Scales\Application\DTO\AssignScaleToProductRequest;
+use App\Scales\Application\InputPorts\AssignScaleToProductUseCaseInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Scales\Application\InputPorts\AssignScaleToProductUseCaseInterface;
 
 class AssignScaleToProduct extends AbstractController
 {

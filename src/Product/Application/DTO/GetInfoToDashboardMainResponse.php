@@ -1,4 +1,5 @@
 <?php
+
 // src/Product/Application/DTO/GetInfoToDashboardMainResponse.php
 
 namespace App\Product\Application\DTO;

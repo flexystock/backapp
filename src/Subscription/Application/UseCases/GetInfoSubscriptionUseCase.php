@@ -2,12 +2,12 @@
 
 namespace App\Subscription\Application\UseCases;
 
+use App\Entity\Main\Subscription;
 use App\Subscription\Application\DTO\GetInfoSubscriptionRequest;
 use App\Subscription\Application\DTO\GetInfoSubscriptionResponse;
 use App\Subscription\Application\InputPorts\GetInfoSubscriptionUseCaseInterface;
 use App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface;
 use Psr\Log\LoggerInterface;
-use App\Entity\Main\Subscription;
 
 class GetInfoSubscriptionUseCase implements GetInfoSubscriptionUseCaseInterface
 {
@@ -33,6 +33,7 @@ class GetInfoSubscriptionUseCase implements GetInfoSubscriptionUseCaseInterface
                     'clientUuid' => $subscription->getClient()->getUuidClient(),
                     'planId' => $subscription->getPlan()->getId(),
                 ];
+
                 return new GetInfoSubscriptionResponse($data, null, 200);
             }
 
@@ -48,9 +49,11 @@ class GetInfoSubscriptionUseCase implements GetInfoSubscriptionUseCaseInterface
                     'planId' => $sub->getPlan()->getId(),
                 ];
             }
+
             return new GetInfoSubscriptionResponse($data, null, 200);
         } catch (\Throwable $e) {
             $this->logger->error('GetInfoSubscriptionUseCase error', ['exception' => $e]);
+
             return new GetInfoSubscriptionResponse(null, 'INTERNAL_ERROR', 500);
         }
     }

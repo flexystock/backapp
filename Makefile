@@ -1,5 +1,6 @@
 DOCKER_BE = docker-symfony-be
 DOCKER_MESSENGER = docker-symfony-messenger
+DATE = $(shell date +%Y-%m-%d)
 
 help: ## Show this help message
 	@echo 'usage: make [target]'
@@ -42,8 +43,8 @@ prepare: composer-install ## Prepare environment by running necessary backend co
 composer-install: ## Install composer dependencies
 	docker exec -it ${DOCKER_BE} composer install --no-scripts --no-interaction --optimize-autoloader
 
-be-logs: ## Tail the Symfony development log
-	docker exec -it ${DOCKER_BE} tail -f var/log/dev.log
+logs: ## Tail the Symfony development log
+	docker exec -it ${DOCKER_BE} tail -200f /appdata/www/var/log/dev-$(DATE).log
 
 ssh-be: ## SSH into the backend container
 	docker exec -it ${DOCKER_BE} bash
@@ -52,4 +53,4 @@ ssh-messenger: ## SSH into the messenger container
 	docker exec -it ${DOCKER_MESSENGER} bash
 
 code-style: ## Fix code style according to Symfony rules
-	docker exec -it ${DOCKER_BE} php-cs-fixer fix src --rules=@Symfony
+	docker exec ${DOCKER_BE} bash -c "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix src --rules=@Symfony"

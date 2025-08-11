@@ -10,13 +10,13 @@ use App\WeightAnalytics\Application\OutputPorts\Repositories\WeightsLogRepositor
 use App\WeightAnalytics\Infrastructure\OutputAdapters\Repositories\WeightsLogRepository;
 use DateTime;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 class GetProductWeightSummaryUseCase implements GetProductWeightSummaryUseCaseInterface
 {
     private ClientConnectionManager $clientConnectionManager;
     private WeightsLogRepositoryInterface $weightsLogRepository;
     private LoggerInterface $logger;
+
     public function __construct(
         ClientConnectionManager $clientConnectionManager,
         WeightsLogRepositoryInterface $weightsLogRepository,
@@ -69,7 +69,8 @@ class GetProductWeightSummaryUseCase implements GetProductWeightSummaryUseCaseIn
             return new GetProductWeightSummaryResponse($summaryArray, null, 200);
         } catch (\Exception $e) {
             // Loguear para debug
-            $this->logger->error("Error en GetProductWeightSummaryUseCase: " . $e->getMessage());
+            $this->logger->error('Error en GetProductWeightSummaryUseCase: '.$e->getMessage());
+
             return new GetProductWeightSummaryResponse(null, 'INTERNAL_SERVER_ERROR', 500);
         }
     }

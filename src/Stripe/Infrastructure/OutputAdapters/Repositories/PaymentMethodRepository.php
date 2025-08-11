@@ -23,6 +23,7 @@ class PaymentMethodRepository implements PaymentMethodUseRepositoryInterface
 
         $stripe = $this->stripeClientFactory->get();
         $customer = $stripe->customers->retrieve($client->getStripeCustomerId(), []);
+
         return $customer->invoice_settings->default_payment_method ?? null;
     }
 }

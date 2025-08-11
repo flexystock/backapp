@@ -4,7 +4,6 @@ namespace App\Subscription\Infrastructure\InputAdapters;
 
 use App\Subscription\Application\DTO\CreateSubscriptionPlanRequest;
 use App\Subscription\Application\InputPorts\CreateSubscriptionPlanUseCaseInterface;
-use OpenApi\Attributes as OA;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -13,7 +12,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-
 
 class CreateSubscriptionPlanController extends AbstractController
 {
@@ -24,9 +22,9 @@ class CreateSubscriptionPlanController extends AbstractController
 
     public function __construct(
         CreateSubscriptionPlanUseCaseInterface $createSubscriptionPlanUseCase,
-        SerializerInterface                    $serializer,
-        ValidatorInterface                     $validator,
-        LoggerInterface                        $logger
+        SerializerInterface $serializer,
+        ValidatorInterface $validator,
+        LoggerInterface $logger
     ) {
         $this->createSubscriptionPlanUseCase = $createSubscriptionPlanUseCase;
         $this->serializer = $serializer;
@@ -56,12 +54,13 @@ class CreateSubscriptionPlanController extends AbstractController
             $errors = $this->validator->validate($createSubscriptionPlanRequest);
             if ($errors->count() > 0) {
                 $this->logger->warning('Validación fallida al crear plan de suscripción', [
-                    'errors' => (string)$errors
+                    'errors' => (string) $errors,
                 ]);
+
                 return new JsonResponse([
                     'status' => 'error',
                     'message' => 'Validación fallida',
-                    'errors' => json_decode($this->serializer->serialize($errors, 'json'), true)
+                    'errors' => json_decode($this->serializer->serialize($errors, 'json'), true),
                 ], Response::HTTP_BAD_REQUEST);
             }
 
@@ -71,7 +70,6 @@ class CreateSubscriptionPlanController extends AbstractController
                 'status' => 'success',
                 'plan' => $responseDto->getPlan(),
             ], Response::HTTP_CREATED);
-
         } catch (\RuntimeException $e) {
             if ('PLAN_ALREADY_EXISTS' === $e->getMessage()) {
                 return new JsonResponse([
@@ -84,7 +82,6 @@ class CreateSubscriptionPlanController extends AbstractController
                 'status' => 'error',
                 'message' => $e->getMessage(),
             ], Response::HTTP_BAD_REQUEST);
-
         } catch (\Throwable $e) {
             $this->logger->error('Error al crear plan de suscripción', [
                 'exception' => $e->getMessage(),

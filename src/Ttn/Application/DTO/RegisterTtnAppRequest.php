@@ -21,10 +21,12 @@ class RegisterTtnAppRequest
         $this->datehourCreation = $datehourCreation;
         $this->uuidClient = $uuidClient;
     }
+
     public function getUuidClient(): string
     {
         return $this->uuidClient;
     }
+
     public function getUuidUserCreation(): string
     {
         return $this->uuidUserCreation;

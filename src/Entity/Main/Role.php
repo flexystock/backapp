@@ -5,7 +5,6 @@ namespace App\Entity\Main;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Main\User;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'roles')]
