@@ -2,6 +2,8 @@
 
 namespace App\Subscription\Infrastructure\InputAdapters;
 
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
 use App\Subscription\Application\DTO\DeleteSubscriptionPlanRequest;
 use App\Subscription\Application\InputPorts\DeleteSubscriptionPlanUseCaseInterface;
 use Psr\Log\LoggerInterface;
@@ -15,23 +17,27 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class DeleteSubscriptionPlanController extends AbstractController
 {
+    use PermissionControllerTrait;
     private DeleteSubscriptionPlanUseCaseInterface $deleteSubscriptionPlanUseCase;
     private LoggerInterface $logger;
     private SerializerInterface $serializer;
+    private PermissionService $permissionService;
 
-    public function __construct(DeleteSubscriptionPlanUseCaseInterface $deleteSubscriptionPlanUseCase, LoggerInterface $logger, SerializerInterface $serializer)
+    public function __construct(DeleteSubscriptionPlanUseCaseInterface $deleteSubscriptionPlanUseCase, LoggerInterface $logger, SerializerInterface $serializer, PermissionService $permissionService)
     {
         $this->deleteSubscriptionPlanUseCase = $deleteSubscriptionPlanUseCase;
         $this->logger = $logger;
         $this->serializer = $serializer;
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/subscription_plan_delete', name: 'api_subscription_plan_delete', methods: ['DELETE'])]
     public function __invoke(Request $request): JsonResponse
     {
         try {
-            if (!$this->isGranted('ROLE_ROOT')) {
-                throw $this->createAccessDeniedException('No tienes permiso.');
+            $permissionCheck = $this->checkPermissionJson('subscription.delete', 'No tienes permisos para esta acción');
+            if ($permissionCheck) {
+                return $permissionCheck;
             }
 
             $dto = $this->serializer->deserialize($request->getContent(), DeleteSubscriptionPlanRequest::class, 'json');

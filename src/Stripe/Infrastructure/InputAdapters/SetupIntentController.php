@@ -2,6 +2,9 @@
 
 namespace App\Stripe\Infrastructure\InputAdapters;
 
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
+use App\Security\RequiresPermission;
 use App\Stripe\Application\DTO\SetupIntentRequest;
 use App\Stripe\Application\InputPorts\SetupIntentUseCaseInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -11,13 +14,24 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class SetupIntentController extends AbstractController
 {
-    public function __construct(private SetupIntentUseCaseInterface $useCase)
-    {
+    use PermissionControllerTrait;
+
+    public function __construct(
+        private SetupIntentUseCaseInterface $useCase,
+        PermissionService $permissionService
+    ) {
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/payment_method/setup_intent', name: 'create_setup_intent', methods: ['POST'])]
+    #[RequiresPermission('subscription.view')]
     public function __invoke(Request $request): JsonResponse
     {
+        $permissionCheck = $this->checkPermissionJson('subscription.view');
+        if ($permissionCheck) {
+            return $permissionCheck;
+        }
+
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;
 

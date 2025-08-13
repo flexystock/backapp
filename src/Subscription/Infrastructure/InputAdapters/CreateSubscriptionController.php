@@ -2,6 +2,8 @@
 
 namespace App\Subscription\Infrastructure\InputAdapters;
 
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
 use App\Subscription\Application\DTO\CreateSubscriptionRequest;
 use App\Subscription\Application\InputPorts\CreateSubscriptionUseCaseInterface;
 use Psr\Log\LoggerInterface;
@@ -15,25 +17,29 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class CreateSubscriptionController extends AbstractController
 {
+    use PermissionControllerTrait;
     private CreateSubscriptionUseCaseInterface $createSubscriptionUseCase;
     private SerializerInterface $serializer;
     private ValidatorInterface $validator;
     private LoggerInterface $logger;
+    private PermissionService $permissionService;
 
-    public function __construct(CreateSubscriptionUseCaseInterface $createSubscriptionUseCase, SerializerInterface $serializer, ValidatorInterface $validator, LoggerInterface $logger)
+    public function __construct(CreateSubscriptionUseCaseInterface $createSubscriptionUseCase, SerializerInterface $serializer, ValidatorInterface $validator, LoggerInterface $logger, PermissionService $permissionService)
     {
         $this->createSubscriptionUseCase = $createSubscriptionUseCase;
         $this->serializer = $serializer;
         $this->validator = $validator;
         $this->logger = $logger;
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/create_subscription', name: 'api_create_subscription', methods: ['POST'])]
     public function __invoke(Request $request): JsonResponse
     {
         try {
-            if (!$this->isGranted('ROLE_ROOT')) {
-                throw $this->createAccessDeniedException('No tienes permiso.');
+            $permissionCheck = $this->checkPermissionJson('subscription.create', 'No tienes permisos para esta acción');
+            if ($permissionCheck) {
+                return $permissionCheck;
             }
 
             $dto = $this->serializer->deserialize($request->getContent(), CreateSubscriptionRequest::class, 'json');
