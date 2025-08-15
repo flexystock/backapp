@@ -33,7 +33,7 @@ class GetInfoScalesToDashboardMainController extends AbstractController
     }
 
     #[Route('/api/scales_dashboard', name: 'api_scales_dashboard', methods: ['POST'])]
-    #[RequiresPermission('analytics.view')]
+    #[RequiresPermission('scales.dashboard')]
     #[OA\Post(
         path: '/api/scales_dashboard',
         summary: 'Obtener información para el dashboard principal',
@@ -158,7 +158,7 @@ class GetInfoScalesToDashboardMainController extends AbstractController
     )]
     public function getScalesInfoToDashboardMain(Request $request): JsonResponse
     {
-        $permissionCheck = $this->checkPermissionJson('analytics.view');
+        $permissionCheck = $this->checkPermissionJson('scales.dashboard', 'No tienes permisos para ver las balanzas');
         if ($permissionCheck) {
             return $permissionCheck;
         }

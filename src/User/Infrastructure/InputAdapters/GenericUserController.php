@@ -187,7 +187,7 @@ class GenericUserController extends AbstractController
     }
 
     #[Route('/api/users_client', name: 'get_users_by_client', methods: ['POST'])]
-    #[RequiresPermission('user.view')]
+    #[RequiresPermission('users.dashboard')]
     #[OA\Get(
         path: '/api/users_client',
         summary: 'Get Users for a client',
@@ -203,7 +203,7 @@ class GenericUserController extends AbstractController
     )]
     public function getUsersByClient(Request $request): JsonResponse
     {
-        $permissionCheck = $this->checkPermissionJson('user.view');
+        $permissionCheck = $this->checkPermissionJson('users.dashboard', 'No tiene permiso para ver los usuarios');
         if ($permissionCheck) {
             return $permissionCheck;
         }

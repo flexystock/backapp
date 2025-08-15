@@ -183,7 +183,7 @@ class GetInfoToDashboardMainController extends AbstractController
     public function getProductsInfoToDashboardMain(Request $request): JsonResponse
     {
         // Modern permission check - replace the old role checks
-        $permissionCheck = $this->checkPermissionJson('analytics.view', 'No tienes permisos para ver el dashboard');
+        $permissionCheck = $this->checkPermissionJson('product.dashboard', 'No tienes permisos para ver el dashboard');
         if ($permissionCheck) {
             return $permissionCheck;
         }

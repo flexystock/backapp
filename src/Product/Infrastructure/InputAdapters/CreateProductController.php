@@ -15,9 +15,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
 
 class CreateProductController extends AbstractController
 {
+    use PermissionControllerTrait;
     private CreateProductUseCaseInterface $createProductUseCase;
     private LoggerInterface $logger;
     private SerializerInterface $serializer;
@@ -26,11 +29,13 @@ class CreateProductController extends AbstractController
     public function __construct(LoggerInterface $logger, CreateProductUseCaseInterface $createProductUseCase,
         SerializerInterface $serializer,
         ValidatorInterface $validator,
+        PermissionService $permissionService
     ) {
         $this->logger = $logger;
         $this->createProductUseCase = $createProductUseCase;
         $this->serializer = $serializer;
         $this->validator = $validator;
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/product_create', name: 'api_product_create', methods: ['POST'])]
@@ -132,6 +137,11 @@ class CreateProductController extends AbstractController
     public function __invoke(Request $request): JsonResponse
     {
         try {
+            // Modern permission check - replace the old role checks
+            $permissionCheck = $this->checkPermissionJson('product.create', 'No tienes permisos para crear un producto');
+            if ($permissionCheck) {
+                return $permissionCheck;
+            }
             // 1) Deserializar JSON => DTO
             $createProductRequest = $this->serializer->deserialize(
                 $request->getContent(),

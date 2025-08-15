@@ -26,23 +26,23 @@ class PermissionService
         'ROLE_SUPERADMIN' => ['*'], // Full access
         'ROLE_ADMIN' => [
             'subscription.view', 'subscription.create', 'subscription.update', 'subscription.delete',
-            'product.view', 'product.create', 'product.update', 'product.delete',
-            'scale.view', 'scale.create', 'scale.update', 'scale.delete',
-            'user.view', 'user.create', 'user.update', 'user.delete',
+            'product.dashboard','product.view', 'product.create', 'product.update', 'product.delete',
+            'scales.dashboard','scale.view', 'scale.create', 'scale.update', 'scale.delete','scales.assign','scale.unassign',
+            'users.dashboard','user.view', 'user.create', 'user.update', 'user.delete',
             'alarm.view', 'alarm.create', 'alarm.update', 'alarm.delete',
             'analytics.view',
         ],
         'ROLE_MANAGER' => [
-            'product.view', 'product.create', 'product.update',
-            'scale.view', 'scale.update',
+            'product.dashboard','product.view', 'product.create', 'product.update',
+            'scales.dashboard', 'scale.view', 'scale.update',
             'user.view', 'user.update',
             'alarm.view', 'alarm.update',
             'analytics.view',
         ],
         'ROLE_USER' => [
+            'product.dashboard',
             'product.view',
             'scale.view',
-            'analytics.view',
         ],
     ];
 

@@ -171,7 +171,7 @@ class GetProductController extends AbstractController
     }
 
     #[Route('/api/product_all', name: 'api_product_all', methods: ['POST'])]
-    #[RequiresPermission('product.view')]
+    #[RequiresPermission('analytics.view')]
     #[OA\Post(
         path: '/api/product_all',
         summary: 'Obtener información de todos los productos de un cliente',
@@ -248,7 +248,7 @@ class GetProductController extends AbstractController
     )]
     public function getAllProducts(Request $request): JsonResponse
     {
-        $permissionCheck = $this->checkPermissionJson('product.view');
+        $permissionCheck = $this->checkPermissionJson('analytics.view', 'No tienes permisos para ver las estadísticas');
         if ($permissionCheck) {
             return $permissionCheck;
         }
