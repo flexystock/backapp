@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Security\PermissionControllerTrait;
 use App\Security\PermissionService;
+use App\Security\RequiresPermission;
 
 class AssignScaleToProduct extends AbstractController
 {
@@ -28,7 +29,8 @@ class AssignScaleToProduct extends AbstractController
         $this->permissionService = $permissionService;
     }
 
-    #[Route('/api/assign_sacale_product', name: 'api_assign_scales', methods: ['POST'])]
+    #[Route('/api/assign_scale_product', name: 'api_assign_scales', methods: ['POST'])]
+    #[RequiresPermission('scale.assign')]
     public function __invoke(Request $request): JsonResponse
     {
         $permissionCheck = $this->checkPermissionJson('scale.assign', 'No tiene permiso para asignar balanzas a productos');

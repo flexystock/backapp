@@ -4,28 +4,41 @@ namespace App\Scales\Infrastructure\InputAdapters;
 
 use App\Scales\Application\DTO\GetAllScalesRequest;
 use App\Scales\Application\InputPorts\GetAllScalesUseCaseInterface;
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
+use App\Security\RequiresPermission;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class GetAllScalesController extends AbstractController
 {
+    use PermissionControllerTrait;
+
     private GetAllScalesUseCaseInterface $getAllScalesUseCase;
     private LoggerInterface $logger;
 
-    public function __construct(GetAllScalesUseCaseInterface $getAllScalesUseCase, LoggerInterface $logger)
-    {
+    public function __construct(
+        GetAllScalesUseCaseInterface $getAllScalesUseCase, 
+        LoggerInterface $logger,
+        PermissionService $permissionService
+    ) {
         $this->getAllScalesUseCase = $getAllScalesUseCase;
         $this->logger = $logger;
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/scales', name: 'api_scales', methods: ['POST'])]
-    #[IsGranted('PERMISSION_scales')]
+    #[RequiresPermission('scale.view')]
     public function __invoke(Request $request): JsonResponse
     {
+        $permissionCheck = $this->checkPermissionJson('scale.view');
+        if ($permissionCheck) {
+            return $permissionCheck;
+        }
+
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;
         if (!$uuidClient) {

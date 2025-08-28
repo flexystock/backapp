@@ -392,7 +392,7 @@ class TtnController extends AbstractController
     }
 
     #[Route('/api/unassign_ttn_device', name: 'unassign_ttn_device', methods: ['PUT'])]
-    #[RequiresPermission('scale.view')]
+    #[RequiresPermission('scale.unassign')]
     #[OA\Put(
         path: '/api/unassign_ttn_device',
         summary: 'Desasignar un dispositivo TTN',
@@ -471,7 +471,7 @@ class TtnController extends AbstractController
      */
     public function UnassignTtnDevice(Request $request): JsonResponse
     {
-        $permissionCheck = $this->checkPermissionJson('scale.view');
+        $permissionCheck = $this->checkPermissionJson('scale.unassign');
         if ($permissionCheck) {
             return $permissionCheck;
         }
