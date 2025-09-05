@@ -531,6 +531,11 @@ services:
     App\Security\PermissionVoter:
         tags: ['security.voter']
 
+    App\Security\PermissionService:
+        arguments:
+            $tokenStorage: '@security.token_storage'
+            $authorizationChecker: '@security.authorization_checker'
+
     Stripe\StripeClient:
         arguments: ['%env(STRIPE_SECRET_KEY)%']
 

@@ -6,27 +6,38 @@ use App\Product\Application\DTO\GetAllProductsRequest;
 use App\Product\Application\DTO\GetProductRequest;
 use App\Product\Application\InputPorts\GetAllProductsUseCaseInterface;
 use App\Product\Application\InputPorts\GetProductUseCaseInterface;
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
+use App\Security\RequiresPermission;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class GetProductController extends AbstractController
 {
+    use PermissionControllerTrait;
+
     private GetProductUseCaseInterface $getProductUseCase;
     private GetAllProductsUseCaseInterface $getAllProductsUseCase;
     private LoggerInterface $logger;
 
-    public function __construct(GetProductUseCaseInterface $getProductUseCase, LoggerInterface $logger,
-        GetAllProductsUseCaseInterface $getAllProductsUseCase)
-    {
+    public function __construct(
+        GetProductUseCaseInterface $getProductUseCase, 
+        LoggerInterface $logger,
+        GetAllProductsUseCaseInterface $getAllProductsUseCase,
+        PermissionService $permissionService
+    ) {
         $this->getProductUseCase = $getProductUseCase;
         $this->getAllProductsUseCase = $getAllProductsUseCase;
         $this->logger = $logger;
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/product', name: 'api_product', methods: ['POST'])]
+    #[RequiresPermission('product.view')]
     #[OA\Post(
         path: '/api/product',
         summary: 'Obtener información de un producto para un cliente',
@@ -104,6 +115,11 @@ class GetProductController extends AbstractController
     )]
     public function getProductByUuid(Request $request): JsonResponse
     {
+        $permissionCheck = $this->checkPermissionJson('product.view');
+        if ($permissionCheck) {
+            return $permissionCheck;
+        }
+
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;
         $uuidProduct = $data['uuid'] ?? null;
@@ -155,6 +171,7 @@ class GetProductController extends AbstractController
     }
 
     #[Route('/api/product_all', name: 'api_product_all', methods: ['POST'])]
+    #[RequiresPermission('analytics.view')]
     #[OA\Post(
         path: '/api/product_all',
         summary: 'Obtener información de todos los productos de un cliente',
@@ -231,6 +248,11 @@ class GetProductController extends AbstractController
     )]
     public function getAllProducts(Request $request): JsonResponse
     {
+        $permissionCheck = $this->checkPermissionJson('analytics.view', 'No tienes permisos para ver las estadísticas');
+        if ($permissionCheck) {
+            return $permissionCheck;
+        }
+
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;
 

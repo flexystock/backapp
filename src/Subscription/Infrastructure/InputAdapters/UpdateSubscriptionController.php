@@ -2,6 +2,8 @@
 
 namespace App\Subscription\Infrastructure\InputAdapters;
 
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
 use App\Subscription\Application\DTO\UpdateSubscriptionRequest;
 use App\Subscription\Application\InputPorts\UpdateSubscriptionUseCaseInterface;
 use Psr\Log\LoggerInterface;
@@ -14,23 +16,27 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class UpdateSubscriptionController extends AbstractController
 {
+    use PermissionControllerTrait;
     private UpdateSubscriptionUseCaseInterface $useCase;
     private SerializerInterface $serializer;
     private LoggerInterface $logger;
+    private PermissionService $permissionService;
 
-    public function __construct(UpdateSubscriptionUseCaseInterface $useCase, SerializerInterface $serializer, LoggerInterface $logger)
+    public function __construct(UpdateSubscriptionUseCaseInterface $useCase, SerializerInterface $serializer, LoggerInterface $logger, PermissionService $permissionService)
     {
         $this->useCase = $useCase;
         $this->serializer = $serializer;
         $this->logger = $logger;
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/subscription_update', name: 'api_subscription_update', methods: ['PUT'])]
     public function __invoke(Request $request): JsonResponse
     {
         try {
-            if (!$this->isGranted('ROLE_ROOT')) {
-                throw $this->createAccessDeniedException('No tienes permiso.');
+            $permissionCheck = $this->checkPermissionJson('subscription.update', 'No tienes permisos para esta acción');
+            if ($permissionCheck) {
+                return $permissionCheck;
             }
 
             $dto = $this->serializer->deserialize($request->getContent(), UpdateSubscriptionRequest::class, 'json');

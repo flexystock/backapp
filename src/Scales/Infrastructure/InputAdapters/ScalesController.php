@@ -4,6 +4,9 @@ namespace App\Scales\Infrastructure\InputAdapters;
 
 use App\Scales\Application\DTO\RegisterScalesRequest;
 use App\Scales\Application\InputPorts\RegisterScalesUseCaseInterface;
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
+use App\Security\RequiresPermission;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -13,20 +16,30 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ScalesController extends AbstractController
 {
+    use PermissionControllerTrait;
+
     private RegisterScalesUseCaseInterface $registerScalesUseCase;
     private LoggerInterface $logger;
 
     public function __construct(
         RegisterScalesUseCaseInterface $registerScalesUseCase,
         LoggerInterface $logger,
+        PermissionService $permissionService
     ) {
         $this->registerScalesUseCase = $registerScalesUseCase;
         $this->logger = $logger;
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/scale_register', name: 'scale_register', methods: ['POST'])]
+    #[RequiresPermission('scale.create')]
     public function registerScale(Request $request): JsonResponse
     {
+        $permissionCheck = $this->checkPermissionJson('scale.create');
+        if ($permissionCheck) {
+            return $permissionCheck;
+        }
+
         // 1. parsear JSON
         $data = json_decode($request->getContent(), true);
 

@@ -2,6 +2,8 @@
 
 namespace App\Subscription\Infrastructure\InputAdapters;
 
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
 use App\Subscription\Application\DTO\CreateSubscriptionPlanRequest;
 use App\Subscription\Application\InputPorts\CreateSubscriptionPlanUseCaseInterface;
 use Psr\Log\LoggerInterface;
@@ -15,29 +17,34 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class CreateSubscriptionPlanController extends AbstractController
 {
+    use PermissionControllerTrait;
     private CreateSubscriptionPlanUseCaseInterface $createSubscriptionPlanUseCase;
     private SerializerInterface $serializer;
     private ValidatorInterface $validator;
     private LoggerInterface $logger;
+    private PermissionService $permissionService;
 
     public function __construct(
         CreateSubscriptionPlanUseCaseInterface $createSubscriptionPlanUseCase,
         SerializerInterface $serializer,
         ValidatorInterface $validator,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        PermissionService $permissionService
     ) {
         $this->createSubscriptionPlanUseCase = $createSubscriptionPlanUseCase;
         $this->serializer = $serializer;
         $this->validator = $validator;
         $this->logger = $logger;
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/create_subscription_plan', name: 'api_create_subscription_plan', methods: ['POST'])]
     public function __invoke(Request $request): JsonResponse
     {
         try {
-            if (!$this->isGranted('ROLE_ROOT')) {
-                throw $this->createAccessDeniedException('No tienes permiso.');
+            $permissionCheck = $this->checkPermissionJson('subscription.create', 'No tienes permisos para esta acción');
+            if ($permissionCheck) {
+                return $permissionCheck;
             }
 
             $createSubscriptionPlanRequest = $this->serializer->deserialize(

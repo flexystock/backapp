@@ -27,3 +27,5 @@
 /src/var/
 CLAUDE.md
 public/.env
+.php_cs.cache
+

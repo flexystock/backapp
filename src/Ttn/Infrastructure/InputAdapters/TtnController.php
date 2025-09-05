@@ -3,6 +3,9 @@
 namespace App\Ttn\Infrastructure\InputAdapters;
 
 use App\Client\Application\InputPorts\GetClientByUuidInputPort;
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
+use App\Security\RequiresPermission;
 use App\Ttn\Application\DTO\RegisterTtnAppRequest;
 use App\Ttn\Application\DTO\RegisterTtnDeviceRequest;
 use App\Ttn\Application\DTO\UnassignTtnDeviceRequest;
@@ -21,6 +24,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class TtnController extends AbstractController
 {
+    use PermissionControllerTrait;
+
     private RegisterTtnDeviceUseCaseInterface $registerTtnDeviceUseCase;
     private RegisterTtnAppUseCaseInterface $registerTtnAppUseCase;
     private GetClientByUuidInputPort $getClientByUuidInputPort;
@@ -34,7 +39,8 @@ class TtnController extends AbstractController
         GetClientByUuidInputPort $getClientByUuidInputPort,
         GetAllTtnDevicesUseCaseInterface $getAllTtnDevicesUseCase,
         UnassignTtnDeviceUseCaseInterface $unassignTtnDeviceUseCase,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        PermissionService $permissionService
     ) {
         $this->registerTtnDeviceUseCase = $registerTtnDeviceUseCase;
         $this->registerTtnAppUseCase = $registerTtnAppUseCase;
@@ -42,9 +48,11 @@ class TtnController extends AbstractController
         $this->getAllTtnDevicesUseCase = $getAllTtnDevicesUseCase;
         $this->unassignTtnDeviceUseCase = $unassignTtnDeviceUseCase;
         $this->logger = $logger;
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/app_register', name: 'api_app_register', methods: ['POST'])]
+    #[RequiresPermission('scale.view')]
 
     /**
      * Register a new TTN application for the given client.
@@ -55,6 +63,10 @@ class TtnController extends AbstractController
      */
     public function registerTtnApp(Request $request): JsonResponse
     {
+        $permissionCheck = $this->checkPermissionJson('scale.view');
+        if ($permissionCheck) {
+            return $permissionCheck;
+        }
         $data = json_decode($request->getContent(), true);
         if (!$data) {
             return new JsonResponse(['error' => 'Invalid data'], Response::HTTP_BAD_REQUEST);
@@ -91,6 +103,7 @@ class TtnController extends AbstractController
      * @throws RandomException
      */
     #[Route('/api/device_register', name: 'api_device_register', methods: ['POST'])]
+    #[RequiresPermission('scale.view')]
     #[OA\Post(
         path: '/api/device_register',
         description: 'Registra un nuevo dispositivo en TTN. El parámetro `uuidClient` es opcional. Si se proporciona, `end_device_name` se establecerá con el valor de `uuidClient`; de lo contrario, se establecerá en "free".',
@@ -183,14 +196,14 @@ class TtnController extends AbstractController
      */
     public function registerTtnDevice(Request $request): JsonResponse
     {
+        $permissionCheck = $this->checkPermissionJson('scale.view');
+        if ($permissionCheck) {
+            return $permissionCheck;
+        }
+
         $uuidUser = $this->getUser()->getUuid();
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;
-
-        if (!$this->isGranted('ROLE_ROOT') && !$this->isGranted('ROLE_SUPERADMIN') && !$this->isGranted('ROLE_ADMIN')
-        ) {
-            return new JsonResponse(['error' => 'No tienes permisos'], 455);
-        }
 
         // Validar formato de UUID
         if ($uuidClient && !$this->isValidUuid($uuidClient)) {
@@ -210,6 +223,7 @@ class TtnController extends AbstractController
     }
 
     #[Route('/api/devices', name: 'api_devices', methods: ['GET'])]
+    #[RequiresPermission('scale.view')]
     #[OA\Get(
         path: '/api/devices',
         description: 'Este endpoint devuelve un listado paginado de los dispositivos. 
@@ -319,6 +333,11 @@ class TtnController extends AbstractController
      */
     public function getAllDevices(Request $request): JsonResponse
     {
+        $permissionCheck = $this->checkPermissionJson('scale.view');
+        if ($permissionCheck) {
+            return $permissionCheck;
+        }
+
         // Verificar que el usuario tiene acceso al cliente
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;
@@ -373,6 +392,7 @@ class TtnController extends AbstractController
     }
 
     #[Route('/api/unassign_ttn_device', name: 'unassign_ttn_device', methods: ['PUT'])]
+    #[RequiresPermission('scale.unassign')]
     #[OA\Put(
         path: '/api/unassign_ttn_device',
         summary: 'Desasignar un dispositivo TTN',
@@ -451,6 +471,11 @@ class TtnController extends AbstractController
      */
     public function UnassignTtnDevice(Request $request): JsonResponse
     {
+        $permissionCheck = $this->checkPermissionJson('scale.unassign');
+        if ($permissionCheck) {
+            return $permissionCheck;
+        }
+
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;
         $endDeviceId = $data['endDeviceId'] ?? null;
