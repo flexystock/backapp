@@ -2,7 +2,7 @@
 
 namespace App\Client\Application\InputPorts;
 
-interface getInfoClientInputPort
+interface GetInfoClientInputPort
 {
 
 }

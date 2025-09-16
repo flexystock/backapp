@@ -2,7 +2,7 @@
 
 namespace App\Client\Application\DTO;
 
-class getInfoClientResponse
+class GetInfoClientResponse
 {
 
 }

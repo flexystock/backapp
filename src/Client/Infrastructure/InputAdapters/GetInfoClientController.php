@@ -2,7 +2,7 @@
 
 namespace App\Client\Infrastructure\InputAdapters;
 
-class getInfoClientController
+class GetInfoClientController
 {
 
 }
