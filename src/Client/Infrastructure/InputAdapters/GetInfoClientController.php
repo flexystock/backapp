@@ -129,11 +129,16 @@ class GetInfoClientController extends AbstractController
             $errorMessages = $this->getErrorMessages($errors);
             return new JsonResponse(['error' => 'Invalid input data: ' . implode(', ', $errorMessages)], Response::HTTP_BAD_REQUEST);
         }
-        $getInfoClientResponse = $this->getInfoClientInputPort->getInfo($uuidClient);
-        if ($getInfoClientResponse->isSuccess()) {
-            return new JsonResponse(['client' => $getInfoClientResponse->getClientData()], Response::HTTP_OK);
-        } else {
-            return new JsonResponse(['error' => $getInfoClientResponse->getErrorMessage()], Response::HTTP_NOT_FOUND);
+        $client = $this->getInfoClientInputPort->getInfo($uuidClient);
+
+        if ($client !=  null) {
+            // convertir la entidad en array antes de devolverla
+            return new JsonResponse(['client' => [
+                'name' => $client->getName(),
+
+            ]], Response::HTTP_OK);
         }
+
+        return new JsonResponse(['error' => 'Client not found'], Response::HTTP_NOT_FOUND);
     }
 }
