@@ -62,9 +62,17 @@ services:
         arguments:
             $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
 
+    App\Client\Application\UseCases\GetInfoClientUseCase:
+        arguments:
+            $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+
     App\Client\Infrastructure\InputAdapters\CreateClientController:
         arguments:
             $createClientUseCase: '@App\Client\Application\UseCases\CreateClientUseCase'
+
+    App\Client\Infrastructure\InputAdapters\GetInfoClientController:
+        arguments:
+          $GetInfoClientUseCase: '@App\Client\Application\UseCases\GetInfoClientUseCase'
 
     App\Client\Infrastructure\InputAdapters\:
         resource: '../src/Client/Infrastructure/InputAdapters'

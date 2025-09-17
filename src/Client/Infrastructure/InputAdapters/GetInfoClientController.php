@@ -14,26 +14,41 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Scales\Application\DTO\GetAllScalesRequest;
+use App\Scales\Application\InputPorts\GetAllScalesUseCaseInterface;
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
+use App\Security\RequiresPermission;
+use Psr\Log\LoggerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-class GetInfoClientController
+class GetInfoClientController extends AbstractController
 {
+    use PermissionControllerTrait;
+
     private GetInfoClientInputPort $getInfoClientInputPort;
     private GetInfoClientUseCase $getInfoClientUseCase;
     private SerializerInterface $serializer;
     private ValidatorInterface $validator;
+    private LoggerInterface $logger;
 
-    public function __construct(GetInfoClientInputPort $getInfoClientInputPort,
-        GetInfoClientUseCase $getInfoClientUseCase,
-        SerializerInterface $serializer,
-        ValidatorInterface $validator)
+    public function __construct (GetInfoClientInputPort $getInfoClientInputPort,
+                                 GetInfoClientUseCase   $getInfoClientUseCase,
+                                 SerializerInterface    $serializer,
+                                 ValidatorInterface     $validator,
+                                 LoggerInterface $logger,
+                                 PermissionService $permissionService)
     {
         $this->getInfoClientInputPort = $getInfoClientInputPort;
         $this->getInfoClientUseCase = $getInfoClientUseCase;
         $this->serializer = $serializer;
         $this->validator = $validator;
+        $this->logger = $logger;
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/client_info', name: 'api_client_info', methods: ['POST'])]
+    #[RequiresPermission('client.view')]
     #[OA\Post(
         path: '/api/client_info',
         summary: 'Get information of a Client by UUID',
@@ -98,19 +113,27 @@ class GetInfoClientController
             ),
         ]
     )]
-    public function getInfoClient(Request $request): JsonResponse
+    public function getInfoClient (Request $request): JsonResponse
     {
+        $permissionCheck = $this->checkPermissionJson('client.view', 'No tienes permisos para crear un producto');
+        if ($permissionCheck) {
+            return $permissionCheck;
+        }
+
         $data = $request->getContent();
         $getInfoClientRequest = $this->serializer->deserialize($data, GetInfoClientRequest::class, 'json');
+
+        $uuidClient = $getInfoClientRequest->getUuidClient();
         $errors = $this->validator->validate($getInfoClientRequest);
         if (count($errors) > 0) {
             $errorMessages = $this->getErrorMessages($errors);
             return new JsonResponse(['error' => 'Invalid input data: ' . implode(', ', $errorMessages)], Response::HTTP_BAD_REQUEST);
         }
-        $getInfoClientResponse = $this->getInfoClientInputPort->getInfo($getInfoClientRequest);
+        $getInfoClientResponse = $this->getInfoClientInputPort->getInfo($uuidClient);
         if ($getInfoClientResponse->isSuccess()) {
             return new JsonResponse(['client' => $getInfoClientResponse->getClientData()], Response::HTTP_OK);
         } else {
             return new JsonResponse(['error' => $getInfoClientResponse->getErrorMessage()], Response::HTTP_NOT_FOUND);
         }
+    }
 }
