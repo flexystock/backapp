@@ -135,6 +135,14 @@ class GetInfoClientController extends AbstractController
             // convertir la entidad en array antes de devolverla
             return new JsonResponse(['client' => [
                 'name' => $client->getName(),
+                'email' => $client->getCompanyEmail(),
+                'phone' => $client->getCompanyPhone(),
+                'nifCif' => $client->getNifCif(),
+                'fiscalAddress' => $client->getFiscalAddress(),
+                'physicalAddress' => $client->getPhysicalAddress(),
+                'city' => $client->getCity(),
+                'country' => $client->getCountry(),
+                'postalCode' => $client->getPostalCode()
 
             ]], Response::HTTP_OK);
         }
