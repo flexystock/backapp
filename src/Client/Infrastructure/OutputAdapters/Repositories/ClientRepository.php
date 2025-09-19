@@ -40,4 +40,14 @@ class ClientRepository extends ServiceEntityRepository implements ClientReposito
     {
         return $this->findOneBy(['port' => $port]);
     }
+
+    public function findByCompanyEmail(string $email): ?Client
+    {
+        return $this->findOneBy(['company_email' => $email]);
+    }
+
+    public function findByStripeCustomerId(string $stripeCustomerId): ?Client
+    {
+        return $this->findOneBy(['stripeCustomerId' => $stripeCustomerId]);
+    }
 }

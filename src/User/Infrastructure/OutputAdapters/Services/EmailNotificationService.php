@@ -18,14 +18,17 @@ class EmailNotificationService implements NotificationServiceInterface
     private MailerInterface $mailer;
     private UrlGeneratorInterface $urlGenerator;
     private EventDispatcherInterface $eventDispatcher;
+    private string $backEmail;
 
     public function __construct(MailerInterface $mailer,
         UrlGeneratorInterface $urlGenerator,
-        EventDispatcherInterface $eventDispatcher)
+        EventDispatcherInterface $eventDispatcher,
+        string $backEmail)
     {
         $this->mailer = $mailer;
         $this->urlGenerator = $urlGenerator;
         $this->eventDispatcher = $eventDispatcher;
+        $this->backEmail = $backEmail;
     }
 
     /**
@@ -40,7 +43,7 @@ class EmailNotificationService implements NotificationServiceInterface
         );
         $userName = $user->getName();
         $email = (new Email())
-            ->from('flexystock@gmail.com')
+            ->from($this->backEmail)
             ->to($user->getEmail())
             ->subject('Verifica tu cuenta')
             ->html(
@@ -68,8 +71,9 @@ class EmailNotificationService implements NotificationServiceInterface
         $userEmail = $user->getEmail();
 
         $email = (new Email())
-            ->from('flexystock@gmail.com')
-            ->to('flexystock@gmail.com')
+            ->from($this->backEmail)
+            // ->to('flexystock@gmail.com')
+            ->to('vidal.herrero@gmail.com')
             ->subject('Nueva cuenta creada')
             ->html(
                 '<p>Se acaba de registrar un nuevo cliente.</p>'.
@@ -91,9 +95,8 @@ class EmailNotificationService implements NotificationServiceInterface
     {
         $userName = $user->getName();
         $email = (new Email())
-            ->from('flexystock@gmail.com')
+            ->from($this->backEmail)
             ->to($user->getEmail())
-            // ->to('khvhih756uyvdhobyg88@gmail.com')
             ->subject('Codigo restablecimiento de la contraseña')
             ->html(
                 '<p>Generacioin de nueva password </p>'.
@@ -151,7 +154,7 @@ class EmailNotificationService implements NotificationServiceInterface
     public function sendSuccesfullPasswordResetEmail(User $user): void
     {
         $email = (new Email())
-            ->from('flexystock@gmail.com')
+            ->from($this->backEmail)
             ->to($user->getEmail())
             ->subject('Nuevo password')
             ->html(
@@ -214,7 +217,7 @@ class EmailNotificationService implements NotificationServiceInterface
         );
         $userName = $user->getName();
         $email = (new Email())
-            ->from('flexystock@gmail.com')
+            ->from($this->backEmail)
             ->to($user->getEmail())
             ->subject('Verifica tu cliente')
             ->html(
@@ -233,7 +236,7 @@ class EmailNotificationService implements NotificationServiceInterface
     public function sendEmailAccountPendingVerificationToUser(User $user): void
     {
         $email = (new Email())
-            ->from('flexystock@gmail.com')
+            ->from($this->backEmail)
             ->to($user->getEmail())
             ->subject('Cuenta en proceso de verificación')
             ->html(
@@ -249,7 +252,7 @@ class EmailNotificationService implements NotificationServiceInterface
     public function sendEmailAccountVerifiedToUser(User $user): void
     {
         $email = (new Email())
-            ->from('flexystock@gmail.com')
+            ->from($this->backEmail)
             ->to($user->getEmail())
             ->subject('Cuenta verificada')
             ->html(

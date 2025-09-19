@@ -16,26 +16,32 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Security\PermissionControllerTrait;
+use App\Security\ClientAccessControlTrait;
 use App\Security\PermissionService;
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 
 class CreateProductController extends AbstractController
 {
     use PermissionControllerTrait;
+    use ClientAccessControlTrait;
     private CreateProductUseCaseInterface $createProductUseCase;
     private LoggerInterface $logger;
     private SerializerInterface $serializer;
     private ValidatorInterface $validator;
+    private ClientRepositoryInterface $clientRepository;
 
     public function __construct(LoggerInterface $logger, CreateProductUseCaseInterface $createProductUseCase,
         SerializerInterface $serializer,
         ValidatorInterface $validator,
-        PermissionService $permissionService
+        PermissionService $permissionService,
+        ClientRepositoryInterface $clientRepository
     ) {
         $this->logger = $logger;
         $this->createProductUseCase = $createProductUseCase;
         $this->serializer = $serializer;
         $this->validator = $validator;
         $this->permissionService = $permissionService;
+        $this->clientRepository = $clientRepository;
     }
 
     #[Route('/api/product_create', name: 'api_product_create', methods: ['POST'])]
@@ -161,9 +167,23 @@ class CreateProductController extends AbstractController
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            // 3) Asignar manualmente (porque el user no llega en el JSON)
+            // 3) Verificar acceso del cliente - debe tener suscripción activa
+            $client = $this->clientRepository->findByUuid($createProductRequest->getUuidClient());
+            if (!$client) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'CLIENT_NOT_FOUND'
+                ], Response::HTTP_NOT_FOUND);
+            }
+            
+            $clientAccessCheck = $this->verifyClientAccess($client);
+            if ($clientAccessCheck) {
+                return $clientAccessCheck; // Returns 402 Payment Required
+            }
+
+            // 4) Asignar manualmente (porque el user no llega en el JSON)
             $user = $this->getUser();
-            if (!$user) {
+            if (!$user instanceof \App\Entity\Main\User) {
                 return new JsonResponse(['message' => 'USER_NOT_AUTHENTICATED'], Response::HTTP_UNAUTHORIZED);
             }
 

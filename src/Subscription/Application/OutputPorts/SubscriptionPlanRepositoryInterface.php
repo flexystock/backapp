@@ -18,4 +18,6 @@ interface SubscriptionPlanRepositoryInterface
      * @return SubscriptionPlan[]
      */
     public function findAll(): array;
+
+    public function findByStripePriceId(string $stripePriceId): ?SubscriptionPlan;
 }

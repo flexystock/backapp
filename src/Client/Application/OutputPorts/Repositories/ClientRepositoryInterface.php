@@ -11,4 +11,8 @@ interface ClientRepositoryInterface
     public function findByUuid(string $uuid): ?Client;
 
     public function findByName(string $name): ?Client;
+
+    public function findByCompanyEmail(string $email): ?Client;
+
+    public function findByStripeCustomerId(string $stripeCustomerId): ?Client;
 }

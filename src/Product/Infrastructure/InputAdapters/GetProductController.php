@@ -8,7 +8,10 @@ use App\Product\Application\InputPorts\GetAllProductsUseCaseInterface;
 use App\Product\Application\InputPorts\GetProductUseCaseInterface;
 use App\Security\PermissionControllerTrait;
 use App\Security\PermissionService;
+use App\Security\ClientAccessControlTrait;
 use App\Security\RequiresPermission;
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
+use OpenApi\Attributes as OA;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,21 +22,25 @@ use Symfony\Component\Routing\Annotation\Route;
 class GetProductController extends AbstractController
 {
     use PermissionControllerTrait;
+    use ClientAccessControlTrait;
 
     private GetProductUseCaseInterface $getProductUseCase;
     private GetAllProductsUseCaseInterface $getAllProductsUseCase;
     private LoggerInterface $logger;
+    private ClientRepositoryInterface $clientRepository;
 
     public function __construct(
         GetProductUseCaseInterface $getProductUseCase, 
         LoggerInterface $logger,
         GetAllProductsUseCaseInterface $getAllProductsUseCase,
-        PermissionService $permissionService
+        PermissionService $permissionService,
+        ClientRepositoryInterface $clientRepository
     ) {
         $this->getProductUseCase = $getProductUseCase;
         $this->getAllProductsUseCase = $getAllProductsUseCase;
         $this->logger = $logger;
         $this->permissionService = $permissionService;
+        $this->clientRepository = $clientRepository;
     }
 
     #[Route('/api/product', name: 'api_product', methods: ['POST'])]
@@ -137,18 +144,18 @@ class GetProductController extends AbstractController
             return new JsonResponse(['error' => 'Invalid uuid format'], 400);
         }
 
-        // Verificar que el usuario tiene acceso al cliente
-        $user = $this->getUser();
-        if (!$user) {
-            return new JsonResponse(['error' => 'Unauthorized'], 401);
+        // Verify client access - must have active subscription
+        $client = $this->clientRepository->findByUuid($uuidClient);
+        if (!$client) {
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'CLIENT_NOT_FOUND'
+            ], JsonResponse::HTTP_NOT_FOUND);
         }
-
-        if (!$user->getClients()->exists(function ($key, $client) use ($uuidClient) {
-            return $client->getUuidClient() === $uuidClient;
-        })) {
-            $this->logger->warning('ProductController: Usuario no tiene acceso al cliente proporcionado.');
-
-            return new JsonResponse(['error' => 'Access denied to the specified client'], 403);
+        
+        $clientAccessCheck = $this->verifyClientAccess($client);
+        if ($clientAccessCheck) {
+            return $clientAccessCheck; // Returns 402 Payment Required
         }
 
         try {
@@ -261,18 +268,19 @@ class GetProductController extends AbstractController
 
             return new JsonResponse(['error' => 'uuidClient are required'], 400);
         }
-        // Verificar que el usuario tiene acceso al cliente
-        $user = $this->getUser();
-        if (!$user) {
-            return new JsonResponse(['message' => 'USER_NOT_AUTHENTICATED'], Response::HTTP_UNAUTHORIZED);
+        
+        // Verify client access - must have active subscription
+        $client = $this->clientRepository->findByUuid($uuidClient);
+        if (!$client) {
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'CLIENT_NOT_FOUND'
+            ], JsonResponse::HTTP_NOT_FOUND);
         }
-
-        if (!$user->getClients()->exists(function ($key, $client) use ($uuidClient) {
-            return $client->getUuidClient() === $uuidClient;
-        })) {
-            $this->logger->warning('ProductController: Usuario no tiene acceso al cliente proporcionado.');
-
-            return new JsonResponse(['error' => 'Access denied to the specified client'], 403);
+        
+        $clientAccessCheck = $this->verifyClientAccess($client);
+        if ($clientAccessCheck) {
+            return $clientAccessCheck; // Returns 402 Payment Required
         }
 
         try {

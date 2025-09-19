@@ -47,7 +47,8 @@ class RequestLogSubscriber implements EventSubscriberInterface
 
     public function onKernelTerminate(TerminateEvent $event): void
     {
-        $this->logger->info('onKernelTerminate: Iniciando el registro de la petición.');
+        // TODO vha de momento no se usa?
+        // $this->logger->info('onKernelTerminate: Iniciando el registro de la petición.');
 
         // Si no tenemos una masterRequest, salimos
         if (!$this->masterRequest) {
@@ -191,6 +192,12 @@ class RequestLogSubscriber implements EventSubscriberInterface
         $responseData = $response ? $response->getContent() : '';
 
         try {
+            // Si no hay uuid_client en la petición, no podemos registrar el log
+            if (null === $uuidClientFromRequest) {
+                $this->logger->warning('onKernelTerminate: No se puede registrar el log - uuidClient no encontrado en la petición.');
+                return;
+            }
+
             // Obtener el EM del cliente usando el uuid_client de la petición
             $em = $this->clientConnectionManager->getEntityManager($uuidClientFromRequest);
 

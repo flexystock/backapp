@@ -1,9 +1,8 @@
 FROM php:8.2-fpm
 
-# Argumento para el UID del usuario
 ARG UID
 
-# Crear el usuario con el UID especificado y configurar su directorio de inicio
+# Usuario de app
 RUN adduser --disabled-password --gecos "" --uid ${UID} appuser \
     && mkdir /home/appuser/.ssh \
     && chown -R appuser:appuser /home/appuser/ \
@@ -11,10 +10,9 @@ RUN adduser --disabled-password --gecos "" --uid ${UID} appuser \
     && echo "export COLUMNS=300" >> /home/appuser/.bashrc \
     && echo "alias sf=/appdata/www/bin/console" >> /home/appuser/.bashrc
 
-# Copiar archivo php.ini
 COPY ./php.ini /usr/local/etc/php/php.ini
 
-# Instalar dependencias y extensiones de PHP
+# Paquetes base y extensiones PHP
 RUN find /etc/apt/ -name '*.list' -exec sed -i 's|http://deb.debian.org|http://ftp.es.debian.org|g' {} + && \
     apt-get update && \
     apt-get install -y --fix-missing \
@@ -22,33 +20,39 @@ RUN find /etc/apt/ -name '*.list' -exec sed -i 's|http://deb.debian.org|http://f
         libpng-dev zlib1g-dev libzip-dev libxml2-dev libicu-dev && \
     docker-php-ext-install intl pdo pdo_mysql mysqli zip gd soap bcmath sockets && \
     docker-php-ext-enable mysqli && \
-    docker-php-ext-enable --ini-name 05-opcache.ini opcache
+    docker-php-ext-enable --ini-name 05-opcache.ini opcache && \
+    rm -rf /var/lib/apt/lists/*
 
-
-# Instalar Composer
-RUN curl https://getcomposer.org/composer.phar -o /usr/bin/composer \
+# Composer
+RUN curl -fsSL https://getcomposer.org/composer.phar -o /usr/bin/composer \
     && chmod +x /usr/bin/composer \
     && composer self-update
 
-# Instalar PHP CS Fixer
+# PHP CS Fixer
 RUN wget https://cs.symfony.com/download/php-cs-fixer-v2.phar -O php-cs-fixer \
     && chmod a+x php-cs-fixer \
     && mv php-cs-fixer /usr/local/bin/php-cs-fixer
 
-# Crear directorio de trabajo y establecer permisos
+# Directorio de trabajo
 RUN mkdir -p /appdata/www \
     && chown -R appuser:appuser /appdata/www
 
-# Instalar Docker
-RUN apt-get update && \
-    apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release && \
-    curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
-    echo "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
-    apt-get update && \
-    apt-get install -y docker-ce-cli
+# Instalar Docker CLI (sin apt-key, con keyring)
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates curl gnupg; \
+    install -m 0755 -d /etc/apt/keyrings; \
+    curl -fsSL https://download.docker.com/linux/debian/gpg \
+      | gpg --dearmor -o /etc/apt/keyrings/docker.gpg; \
+    chmod a+r /etc/apt/keyrings/docker.gpg; \
+    . /etc/os-release; \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${VERSION_CODENAME} stable" \
+      > /etc/apt/sources.list.d/docker.list; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends docker-ce-cli; \
+    rm -rf /var/lib/apt/lists/*
 
-# Crear grupo docker y añadir appuser al grupo
-RUN groupadd -f docker \
-    && usermod -aG docker appuser
+# Grupo docker y añadir appuser
+RUN groupadd -f docker && usermod -aG docker appuser
 
 WORKDIR /appdata/www

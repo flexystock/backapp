@@ -6,7 +6,9 @@ use App\Scales\Application\DTO\DeleteScaleRequest;
 use App\Scales\Application\InputPorts\DeleteScaleUseCaseInterface;
 use App\Security\PermissionControllerTrait;
 use App\Security\PermissionService;
+use App\Security\ClientAccessControlTrait;
 use App\Security\RequiresPermission;
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -17,21 +19,25 @@ use Symfony\Component\Serializer\SerializerInterface;
 class DeleteScaleController extends AbstractController
 {
     use PermissionControllerTrait;
+    use ClientAccessControlTrait;
 
     private DeleteScaleUseCaseInterface $deleteScaleUseCase;
     private LoggerInterface $logger;
     private SerializerInterface $serializer;
+    private ClientRepositoryInterface $clientRepository;
 
     public function __construct(
         DeleteScaleUseCaseInterface $deleteScaleUseCase, 
         LoggerInterface $logger, 
         SerializerInterface $serializer,
-        PermissionService $permissionService
+        PermissionService $permissionService,
+        ClientRepositoryInterface $clientRepository
     ) {
         $this->deleteScaleUseCase = $deleteScaleUseCase;
         $this->logger = $logger;
         $this->serializer = $serializer;
         $this->permissionService = $permissionService;
+        $this->clientRepository = $clientRepository;
     }
 
     #[Route('/api/scale_delete', name: 'api_scale_delete', methods: ['DELETE'])]
@@ -44,6 +50,20 @@ class DeleteScaleController extends AbstractController
         }
 
         $dto = $this->serializer->deserialize($request->getContent(), DeleteScaleRequest::class, 'json');
+        
+        // Verify client access - must have active subscription
+        $client = $this->clientRepository->findByUuid($dto->getUuidClient());
+        if (!$client) {
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'CLIENT_NOT_FOUND'
+            ], JsonResponse::HTTP_NOT_FOUND);
+        }
+        
+        $clientAccessCheck = $this->verifyClientAccess($client);
+        if ($clientAccessCheck) {
+            return $clientAccessCheck; // Returns 402 Payment Required
+        }
         $user = $this->getUser();
         if (!$user) {
             return new JsonResponse(['error' => 'USER_NOT_AUTHENTICATED'], 401);

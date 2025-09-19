@@ -25,14 +25,14 @@ doctrine:
             dir: '%kernel.project_dir%/src/Entity/Client'
             prefix: 'App\Entity\Client'
             alias: Client
-monolog:
-  channels: ['doctrine']
-  handlers:
-    doctrine:
-      type: stream
-      path: '%kernel.logs_dir%/doctrine.sql.log'
-      level: debug
-      channels: ['doctrine']
+# monolog:
+#   channels: ['doctrine']
+#   handlers:
+#     doctrine:
+#       type: stream
+#       path: '%kernel.logs_dir%/doctrine.sql.log'
+#       level: debug
+#       channels: ['doctrine']
 
   # Configuraciones específicas de entorno
 when@test:

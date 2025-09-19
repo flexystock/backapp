@@ -13,10 +13,12 @@ when@dev:
                 type: rotating_file
                 # Archivo de logs en dev
                 path: "%kernel.logs_dir%/%kernel.environment%.log"
-                level: debug
+                level: info
                 max_files: 10
-                # Excluimos algunos canales (por ejemplo, "!event", "!doctrine")
-                channels: [ "!event", "!doctrine" ]
+                # Excluimos algunos canales (por ejemplo, "!event", "!doctrine", "!security")
+                channels: [ "!event", "!doctrine", "!security" ]
+                # Formatter personalizado para mostrar archivo y línea
+                formatter: app.monolog.file_line_formatter
 
             console:
                 type: console

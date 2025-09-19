@@ -2,8 +2,7 @@
 
 namespace App\Infrastructure\Services;
 
-use App\Entity\Main\PaymentTransaction;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Subscription\Application\Services\SubscriptionWebhookService;
 use Psr\Log\LoggerInterface;
 use Stripe\Webhook;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,14 +12,18 @@ use Symfony\Component\Routing\Annotation\Route;
 class StripeWebhookController
 {
     private string $stripeWebhookSecret;
+    private SubscriptionWebhookService $subscriptionWebhookService;
 
-    public function __construct(string $stripeWebhookSecret)
-    {
+    public function __construct(
+        string $stripeWebhookSecret,
+        SubscriptionWebhookService $subscriptionWebhookService
+    ) {
         $this->stripeWebhookSecret = $stripeWebhookSecret;
+        $this->subscriptionWebhookService = $subscriptionWebhookService;
     }
 
     #[Route('/api/stripe/webhook', name: 'stripe_webhook', methods: ['POST'])]
-    public function __invoke(Request $request, EntityManagerInterface $em, LoggerInterface $logger): Response
+    public function __invoke(Request $request, LoggerInterface $logger): Response
     {
         $payload = $request->getContent();
         $sig_header = $request->headers->get('stripe-signature');
@@ -35,33 +38,38 @@ class StripeWebhookController
             return new Response('Invalid payload', Response::HTTP_BAD_REQUEST);
         }
 
-        switch ($event->type) {
-            case 'payment_intent.succeeded':
-                $paymentIntent = $event->data->object;
-                /** @var PaymentTransaction|null $transaction */
-                $transaction = $em->getRepository(PaymentTransaction::class)
-                    ->findOneBy(['transactionReference' => $paymentIntent->id]);
-                if ($transaction && $transaction->getSubscription()) {
-                    $transaction->setStatus('paid');
-                    $transaction->getSubscription()->setPaymentStatus('paid');
-                    $em->flush();
-                    $logger->info('Payment marked as paid', ['id' => $transaction->getId()]);
-                }
-                break;
+        $logger->info('Stripe event received:', ['type' => $event->type]);
+        
+        try {
+            switch ($event->type) {
+                case 'checkout.session.completed':
+                    $checkoutSession = $event->data->object;
+                    $this->subscriptionWebhookService->handleCheckoutCompleted($checkoutSession);
+                    $logger->info('Checkout session completed processed', [
+                        'session_id' => $checkoutSession->id
+                    ]);
+                    break;
 
-            case 'payment_intent.payment_failed':
-                $paymentIntent = $event->data->object;
-                $transaction = $em->getRepository(PaymentTransaction::class)
-                    ->findOneBy(['transactionReference' => $paymentIntent->id]);
-                if ($transaction && $transaction->getSubscription()) {
-                    $transaction->setStatus('failed');
-                    $transaction->getSubscription()->setPaymentStatus('failed');
-                    $em->flush();
-                    $logger->info('Payment marked as failed', ['id' => $transaction->getId()]);
-                }
-                break;
+                case 'customer.subscription.deleted':
+                    $subscription = $event->data->object;
+                    $this->subscriptionWebhookService->handleSubscriptionDeleted($subscription);
+                    $logger->info('Subscription deletion processed', [
+                        'stripe_subscription_id' => $subscription->id
+                    ]);
+                    break;
 
-            // Otros eventos Stripe aquí si los necesitas...
+                default:
+                    // $logger->info('Unhandled Stripe event type', ['type' => $event->type]);
+                    break;
+            }
+        } catch (\Throwable $e) {
+            $logger->error('Error processing Stripe webhook', [
+                'event_type' => $event->type,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return new Response('Webhook processing failed', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         return new Response('OK', Response::HTTP_OK);

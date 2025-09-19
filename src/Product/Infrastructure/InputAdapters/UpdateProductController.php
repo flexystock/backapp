@@ -5,8 +5,10 @@ namespace App\Product\Infrastructure\InputAdapters;
 use App\Product\Application\DTO\UpdateProductRequest;
 use App\Product\Application\InputPorts\UpdateProductUseCaseInterface;
 use App\Security\PermissionControllerTrait;
+use App\Security\ClientAccessControlTrait;
 use App\Security\PermissionService;
 use App\Security\RequiresPermission;
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use OpenApi\Attributes as OA;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,24 +23,28 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class UpdateProductController extends AbstractController
 {
     use PermissionControllerTrait;
+    use ClientAccessControlTrait;
 
     private UpdateProductUseCaseInterface $updateProductUseCase;
     private LoggerInterface $logger;
     private SerializerInterface $serializer;
     private ValidatorInterface $validator;
+    private ClientRepositoryInterface $clientRepository;
 
     public function __construct(
         LoggerInterface $logger, 
         UpdateProductUseCaseInterface $updateProductUseCase,
         SerializerInterface $serializer,
         ValidatorInterface $validator,
-        PermissionService $permissionService
+        PermissionService $permissionService,
+        ClientRepositoryInterface $clientRepository
     ) {
         $this->logger = $logger;
         $this->updateProductUseCase = $updateProductUseCase;
         $this->serializer = $serializer;
         $this->validator = $validator;
         $this->permissionService = $permissionService;
+        $this->clientRepository = $clientRepository;
     }
 
     #[Route('/api/product_update', name: 'api_product_update', methods: ['PUT'])]
@@ -150,6 +156,28 @@ class UpdateProductController extends AbstractController
         $permissionCheck = $this->checkPermissionJson('product.update');
         if ($permissionCheck) {
             return $permissionCheck;
+        }
+
+        // Verify client access - must have active subscription
+        $requestData = json_decode($request->getContent(), true);
+        if (!isset($requestData['uuidClient'])) {
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'Missing required field: uuidClient'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $client = $this->clientRepository->findByUuid($requestData['uuidClient']);
+        if (!$client) {
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'CLIENT_NOT_FOUND'
+            ], JsonResponse::HTTP_NOT_FOUND);
+        }
+        
+        $clientAccessCheck = $this->verifyClientAccess($client);
+        if ($clientAccessCheck) {
+            return $clientAccessCheck; // Returns 402 Payment Required
         }
 
         try {

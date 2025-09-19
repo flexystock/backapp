@@ -89,6 +89,10 @@ services:
             $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
             $projectDir: '%kernel.project_dir%'
 
+    App\User\Infrastructure\OutputAdapters\Services\EmailNotificationService:
+        arguments:
+            $backEmail: '%env(BACK_EMAIL)%'
+
     App\User\Application\OutputPorts\NotificationServiceInterface:
         alias: App\User\Infrastructure\OutputAdapters\Services\EmailNotificationService
 
@@ -544,9 +548,25 @@ services:
             $entityManager: '@doctrine.orm.main_entity_manager'
             $stripe: '@Stripe\StripeClient'
             $logger: '@logger'
+    # Subscription Webhook Service
+    App\Subscription\Application\Services\SubscriptionWebhookService:
+        arguments:
+            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
+            $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+            $entityManager: '@doctrine.orm.main_entity_manager'
+            $logger: '@logger'
+
+    # Subscription Access Voter
+    App\Security\SubscriptionAccessVoter:
+        arguments:
+            $subscriptionService: '@App\Subscription\Application\Services\SubscriptionWebhookService'
+        tags:
+            - { name: 'security.voter' }
+
     App\Infrastructure\Services\StripeWebhookController:
         arguments:
             $stripeWebhookSecret: '%stripe_webhook_secret%'
+            $subscriptionWebhookService: '@App\Subscription\Application\Services\SubscriptionWebhookService'
         tags: [ 'controller.service_arguments' ]
         public: true
     App\Subscription\Application\InputPorts\GetSubscriptionStripeLatestInvoiceUseCaseInterface:
@@ -569,6 +589,20 @@ services:
         alias: 'App\Stripe\Application\UseCases\SetupIntentUseCase'
     App\Stripe\Application\OutputPorts\SetupIntentRepositoryInterface:
         alias: 'App\Stripe\Infrastructure\OutputAdapters\Repositories\SetupIntentRepository'
+
+    # Logging processor para mostrar archivo y línea
+    App\Infrastructure\Services\Logging\FileLineProcessor:
+        tags:
+            - { name: monolog.processor, method: __invoke }
+    
+    # Formatter personalizado para mostrar archivo y línea en los logs
+    app.monolog.file_line_formatter:
+        class: Monolog\Formatter\LineFormatter
+        arguments:
+            - "[%%datetime%%] %%channel%%.%%level_name%%: [%%extra.file%%:%%extra.line%%] %%message%% %%context%%\n"
+            - ~  # dateFormat (null = default)
+            - true  # allowInlineLineBreaks
+            - false  # ignoreEmptyContextAndExtra (false para mostrar contexto)
 
 
 

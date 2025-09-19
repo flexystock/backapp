@@ -49,4 +49,9 @@ class SubscriptionPlanRepository extends ServiceEntityRepository implements Subs
     {
         return parent::findAll();
     }
+
+    public function findByStripePriceId(string $stripePriceId): ?SubscriptionPlan
+    {
+        return $this->findOneBy(['stripePriceId' => $stripePriceId]);
+    }
 }

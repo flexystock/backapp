@@ -58,6 +58,42 @@ class SubscriptionRepository extends ServiceEntityRepository implements Subscrip
 
     public function hasActiveSubscriptionForClient(Client $client): bool
     {
-        return null !== $this->findOneBy(['client' => $client, 'isActive' => true]);
+        $qb = $this->createQueryBuilder('s')
+            ->select('1')
+            ->andWhere('s.client = :client')
+            ->andWhere('s.isActive = :isActive')
+            ->andWhere('s.paymentStatus = :paymentStatus')
+            ->andWhere('(s.endedAt IS NULL OR s.endedAt > :now)')
+            ->setParameter('client', $client)
+            ->setParameter('isActive', true)
+            ->setParameter('paymentStatus', 'paid')
+            ->setParameter('now', new \DateTime())
+            ->setMaxResults(1);
+
+        return null !== $qb->getQuery()->getOneOrNullResult();
+    }
+
+    public function findByStripeSubscriptionId(string $stripeSubscriptionId): ?Subscription
+    {
+        return $this->findOneBy(['stripeSubscriptionId' => $stripeSubscriptionId]);
+    }
+
+    /**
+     * @return Subscription[]
+     */
+    public function findActiveByClient(Client $client): array
+    {
+        $qb = $this->createQueryBuilder('s')
+            ->andWhere('s.client = :client')
+            ->andWhere('s.isActive = :isActive')
+            ->andWhere('s.paymentStatus = :paymentStatus')
+            ->andWhere('(s.endedAt IS NULL OR s.endedAt > :now)')
+            ->setParameter('client', $client)
+            ->setParameter('isActive', true)
+            ->setParameter('paymentStatus', 'paid')
+            ->setParameter('now', new \DateTime())
+            ->orderBy('s.createdAt', 'DESC');
+
+        return $qb->getQuery()->getResult();
     }
 }

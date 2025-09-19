@@ -12,6 +12,11 @@
 /docker-compose.override.yml
 ###< symfony/framework-bundle ###
 
+###> Security - Never commit sensitive data ###
+# Environment files with sensitive data
+*.env
+
+
 ###> lexik/jwt-authentication-bundle ###
 # config/jwt/*.pem
 
