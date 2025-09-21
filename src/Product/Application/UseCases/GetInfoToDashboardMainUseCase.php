@@ -88,7 +88,7 @@ class GetInfoToDashboardMainUseCase implements GetInfoToDashboardMainUseCaseInte
         return [
             'uuid' => $product->getUuid(),
             'name' => $product->getName(),
-            //'stock_kg' => $stock,                 // Stock en Kg
+            'stock' => $product->getStock(),                 // Stock minimo
             //'stock_in_units' => $stockInUnits,          // Stock en la unidad definida
             'real_weight_sum_kg' => $realWeightSum,         // Peso acumulado en Kg
             'real_weight_sum_in_units' => $realWeightSumInUnits,    // Peso acumulado en la unidad definida
