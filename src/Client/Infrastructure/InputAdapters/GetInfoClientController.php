@@ -12,15 +12,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use App\Scales\Application\DTO\GetAllScalesRequest;
-use App\Scales\Application\InputPorts\GetAllScalesUseCaseInterface;
 use App\Security\PermissionControllerTrait;
 use App\Security\PermissionService;
 use App\Security\RequiresPermission;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+
 
 class GetInfoClientController extends AbstractController
 {
