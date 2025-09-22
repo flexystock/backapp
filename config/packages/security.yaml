@@ -74,6 +74,8 @@ security:
         - { path: ^/api/subscription/stripe_latest_invoice, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/payment_method/default, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/payment_method/setup_intent, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/client_info, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/client_update, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:

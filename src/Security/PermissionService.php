@@ -50,7 +50,8 @@ class PermissionService
             'user.create', 
             'user.delete',
             'user.update', 
-            'user.view', 
+            'user.view',
+            'client.view'
         ],
         'ROLE_MANAGER' => [
             'alarm.update',
