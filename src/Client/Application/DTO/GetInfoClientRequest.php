@@ -15,5 +15,4 @@ class GetInfoClientRequest
     {
         return $this->uuidClient;
     }
-
 }

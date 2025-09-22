@@ -21,7 +21,7 @@ class GetScaleController extends AbstractController
     private LoggerInterface $logger;
 
     public function __construct(
-        GetScaleUseCaseInterface $getScaleUseCase, 
+        GetScaleUseCaseInterface $getScaleUseCase,
         LoggerInterface $logger,
         PermissionService $permissionService
     ) {

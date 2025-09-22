@@ -2,11 +2,11 @@
 
 namespace App\Subscription\Application\UseCases;
 
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Subscription\Application\DTO\CheckSubscriptionStatusRequest;
 use App\Subscription\Application\DTO\CheckSubscriptionStatusResponse;
 use App\Subscription\Application\InputPorts\CheckSubscriptionStatusUseCaseInterface;
 use App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface;
-use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use Psr\Log\LoggerInterface;
 
 class CheckSubscriptionStatusUseCase implements CheckSubscriptionStatusUseCaseInterface
@@ -39,12 +39,11 @@ class CheckSubscriptionStatusUseCase implements CheckSubscriptionStatusUseCaseIn
             }
 
             return new CheckSubscriptionStatusResponse(null, 'MISSING_PARAMETERS', 400);
-
         } catch (\Throwable $e) {
             $this->logger->error('CheckSubscriptionStatusUseCase error', [
                 'exception' => $e->getMessage(),
                 'client_uuid' => $request->getClientUuid(),
-                'subscription_uuid' => $request->getSubscriptionUuid()
+                'subscription_uuid' => $request->getSubscriptionUuid(),
             ]);
 
             return new CheckSubscriptionStatusResponse(null, 'INTERNAL_ERROR', 500);
@@ -79,7 +78,7 @@ class CheckSubscriptionStatusUseCase implements CheckSubscriptionStatusUseCaseIn
             'started_at' => $subscription->getStartedAt()?->format('Y-m-d H:i:s'),
             'ended_at' => $subscription->getEndedAt()?->format('Y-m-d H:i:s'),
             'plan_name' => $subscription->getPlan()->getName(),
-            'stripe_subscription_id' => $subscription->getStripeSubscriptionId()
+            'stripe_subscription_id' => $subscription->getStripeSubscriptionId(),
         ];
 
         return new CheckSubscriptionStatusResponse($data, null, 200);
@@ -104,7 +103,7 @@ class CheckSubscriptionStatusUseCase implements CheckSubscriptionStatusUseCaseIn
                 'started_at' => $subscription->getStartedAt()?->format('Y-m-d H:i:s'),
                 'ended_at' => $subscription->getEndedAt()?->format('Y-m-d H:i:s'),
                 'plan_name' => $subscription->getPlan()->getName(),
-                'stripe_subscription_id' => $subscription->getStripeSubscriptionId()
+                'stripe_subscription_id' => $subscription->getStripeSubscriptionId(),
             ];
         }
 
@@ -112,7 +111,7 @@ class CheckSubscriptionStatusUseCase implements CheckSubscriptionStatusUseCaseIn
             'client_uuid' => $clientUuid,
             'has_active_subscription' => $hasActiveSubscription,
             'active_subscriptions_count' => count($activeSubscriptions),
-            'active_subscriptions' => $subscriptionDetails
+            'active_subscriptions' => $subscriptionDetails,
         ];
 
         return new CheckSubscriptionStatusResponse($data, null, 200);

@@ -42,7 +42,7 @@ class CreateSubscriptionUseCase implements CreateSubscriptionUseCaseInterface
             // Get entities from references
             $client = $this->entityManager->getReference(Client::class, $request->getClientUuid());
             $plan = $this->entityManager->getReference(SubscriptionPlan::class, $request->getPlanId());
-            
+
             // Create subscription using domain service (without Stripe ID initially)
             $subscription = $this->subscriptionDomainService->createSubscription(
                 $client,
@@ -67,7 +67,7 @@ class CreateSubscriptionUseCase implements CreateSubscriptionUseCaseInterface
 
             $this->logger->info('Subscription created successfully via UseCase', [
                 'uuid_subscription' => $subscription->getUuidSubscription(),
-                'stripe_subscription_id' => $result['subscription_id']
+                'stripe_subscription_id' => $result['subscription_id'],
             ]);
 
             $data = [

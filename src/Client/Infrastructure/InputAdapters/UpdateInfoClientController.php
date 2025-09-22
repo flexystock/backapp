@@ -2,12 +2,14 @@
 
 namespace App\Client\Infrastructure\InputAdapters;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use App\Client\Application\DTO\UpdateInfoClientRequest;
-use App\Client\Application\DTO\UpdateInfoClientResponse;
 use App\Client\Application\InputPorts\UpdateInfoClientInputPort;
 use App\Client\Application\UseCases\UpdateInfoClientUseCase;
-use OpenApi\Attributes as OA;
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
+use App\Security\RequiresPermission;
+use Psr\Log\LoggerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,10 +17,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use App\Security\PermissionControllerTrait;
-use App\Security\PermissionService;
-use App\Security\RequiresPermission;
-use Psr\Log\LoggerInterface;
 
 class UpdateInfoClientController extends AbstractController
 {
@@ -85,7 +83,6 @@ class UpdateInfoClientController extends AbstractController
             // 5) Asignar fecha de modificación
             $updateRequest->setDatehourModification(new \DateTime());
 
-
             // 6) Ejecutar el caso de uso
             $response = $this->updateInfoClientUseCase->execute($updateRequest);
 
@@ -122,7 +119,6 @@ class UpdateInfoClientController extends AbstractController
                 'message' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
     }
 
     /**
@@ -139,5 +135,4 @@ class UpdateInfoClientController extends AbstractController
 
         return $errorMessages;
     }
-
 }

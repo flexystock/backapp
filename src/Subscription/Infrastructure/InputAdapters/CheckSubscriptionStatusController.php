@@ -64,12 +64,11 @@ class CheckSubscriptionStatusController extends AbstractController
                 'status' => 'success',
                 'data' => $responseDto->getData(),
             ], Response::HTTP_OK);
-
         } catch (\Throwable $e) {
             $this->logger->error('Error checking subscription status', [
                 'exception' => $e->getMessage(),
                 'client_uuid' => $request->query->get('client_uuid'),
-                'subscription_uuid' => $request->query->get('subscription_uuid')
+                'subscription_uuid' => $request->query->get('subscription_uuid'),
             ]);
 
             return new JsonResponse([

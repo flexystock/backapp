@@ -39,14 +39,14 @@ class StripeWebhookController
         }
 
         $logger->info('Stripe event received:', ['type' => $event->type]);
-        
+
         try {
             switch ($event->type) {
                 case 'checkout.session.completed':
                     $checkoutSession = $event->data->object;
                     $this->subscriptionWebhookService->handleCheckoutCompleted($checkoutSession);
                     $logger->info('Checkout session completed processed', [
-                        'session_id' => $checkoutSession->id
+                        'session_id' => $checkoutSession->id,
                     ]);
                     break;
 
@@ -54,7 +54,7 @@ class StripeWebhookController
                     $subscription = $event->data->object;
                     $this->subscriptionWebhookService->handleSubscriptionDeleted($subscription);
                     $logger->info('Subscription deletion processed', [
-                        'stripe_subscription_id' => $subscription->id
+                        'stripe_subscription_id' => $subscription->id,
                     ]);
                     break;
 
@@ -66,9 +66,9 @@ class StripeWebhookController
             $logger->error('Error processing Stripe webhook', [
                 'event_type' => $event->type,
                 'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return new Response('Webhook processing failed', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 

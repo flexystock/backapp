@@ -195,6 +195,7 @@ class RequestLogSubscriber implements EventSubscriberInterface
             // Si no hay uuid_client en la petición, no podemos registrar el log
             if (null === $uuidClientFromRequest) {
                 $this->logger->warning('onKernelTerminate: No se puede registrar el log - uuidClient no encontrado en la petición.');
+
                 return;
             }
 

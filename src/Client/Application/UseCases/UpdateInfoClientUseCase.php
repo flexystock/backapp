@@ -1,13 +1,14 @@
 <?php
 
 namespace App\Client\Application\UseCases;
-use App\Entity\Main\ClientHistory;
-use App\Infrastructure\Services\ClientConnectionManager;
+
 use App\Client\Application\DTO\UpdateInfoClientRequest;
 use App\Client\Application\DTO\UpdateInfoClientResponse;
 use App\Client\Application\InputPorts\UpdateInfoClientInputPort;
-use Psr\Log\LoggerInterface;
+use App\Entity\Main\ClientHistory;
+use App\Infrastructure\Services\ClientConnectionManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 
 class UpdateInfoClientUseCase implements UpdateInfoClientInputPort
 {
@@ -16,21 +17,18 @@ class UpdateInfoClientUseCase implements UpdateInfoClientInputPort
     private $clientRepository;
     private $mainEntityManager;
 
-
-
-    public function __construct (ClientConnectionManager $connectionManager,
+    public function __construct(ClientConnectionManager $connectionManager,
                                  LoggerInterface $logger,
                                  $clientRepository,
                                  EntityManagerInterface $mainEntityManager
-    )
-    {
+    ) {
         $this->connectionManager = $connectionManager;
         $this->logger = $logger;
         $this->clientRepository = $clientRepository;
         $this->mainEntityManager = $mainEntityManager;
     }
 
-    public function execute (UpdateInfoClientRequest $request): UpdateInfoClientResponse
+    public function execute(UpdateInfoClientRequest $request): UpdateInfoClientResponse
     {
         $uuidClient = $request->getUuidClient();
 
@@ -126,11 +124,9 @@ class UpdateInfoClientUseCase implements UpdateInfoClientInputPort
             $this->mainEntityManager->persist($history);
             $this->mainEntityManager->flush();
 
-
             // 6. Guarda el cliente modificado en su base de datos
             $this->mainEntityManager->persist($client);
             $this->mainEntityManager->flush();
-
 
             // 7. Devuelve respuesta
             $clientData = [
@@ -142,16 +138,17 @@ class UpdateInfoClientUseCase implements UpdateInfoClientInputPort
                 'physicalAddress' => $client->getPhysicalAddress(),
                 'city' => $client->getCity(),
                 'country' => $client->getCountry(),
-                'postalCode' => $client->getPostalCode()
+                'postalCode' => $client->getPostalCode(),
                 // otros campos...
             ];
-            return new UpdateInfoClientResponse($clientData, null, 200);
 
+            return new UpdateInfoClientResponse($clientData, null, 200);
         } catch (\Exception $e) {
             $this->logger->error('UpdateInfoClientUseCase: Error updating client.', [
                 'uuid_client' => $uuidClient,
                 'exception' => $e,
             ]);
+
             return new UpdateInfoClientResponse(null, 'Internal Server Error', 500);
         }
     }

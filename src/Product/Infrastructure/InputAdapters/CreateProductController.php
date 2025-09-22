@@ -2,8 +2,12 @@
 
 namespace App\Product\Infrastructure\InputAdapters;
 
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Product\Application\DTO\CreateProductRequest;
 use App\Product\Application\InputPorts\CreateProductUseCaseInterface;
+use App\Security\ClientAccessControlTrait;
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
 use OpenApi\Attributes as OA;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,10 +19,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use App\Security\PermissionControllerTrait;
-use App\Security\ClientAccessControlTrait;
-use App\Security\PermissionService;
-use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 
 class CreateProductController extends AbstractController
 {
@@ -172,10 +172,10 @@ class CreateProductController extends AbstractController
             if (!$client) {
                 return new JsonResponse([
                     'status' => 'error',
-                    'message' => 'CLIENT_NOT_FOUND'
+                    'message' => 'CLIENT_NOT_FOUND',
                 ], Response::HTTP_NOT_FOUND);
             }
-            
+
             $clientAccessCheck = $this->verifyClientAccess($client);
             if ($clientAccessCheck) {
                 return $clientAccessCheck; // Returns 402 Payment Required

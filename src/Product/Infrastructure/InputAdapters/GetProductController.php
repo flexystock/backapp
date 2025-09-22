@@ -2,21 +2,20 @@
 
 namespace App\Product\Infrastructure\InputAdapters;
 
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Product\Application\DTO\GetAllProductsRequest;
 use App\Product\Application\DTO\GetProductRequest;
 use App\Product\Application\InputPorts\GetAllProductsUseCaseInterface;
 use App\Product\Application\InputPorts\GetProductUseCaseInterface;
+use App\Security\ClientAccessControlTrait;
 use App\Security\PermissionControllerTrait;
 use App\Security\PermissionService;
-use App\Security\ClientAccessControlTrait;
 use App\Security\RequiresPermission;
-use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use OpenApi\Attributes as OA;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class GetProductController extends AbstractController
@@ -30,7 +29,7 @@ class GetProductController extends AbstractController
     private ClientRepositoryInterface $clientRepository;
 
     public function __construct(
-        GetProductUseCaseInterface $getProductUseCase, 
+        GetProductUseCaseInterface $getProductUseCase,
         LoggerInterface $logger,
         GetAllProductsUseCaseInterface $getAllProductsUseCase,
         PermissionService $permissionService,
@@ -149,10 +148,10 @@ class GetProductController extends AbstractController
         if (!$client) {
             return new JsonResponse([
                 'status' => 'error',
-                'message' => 'CLIENT_NOT_FOUND'
+                'message' => 'CLIENT_NOT_FOUND',
             ], JsonResponse::HTTP_NOT_FOUND);
         }
-        
+
         $clientAccessCheck = $this->verifyClientAccess($client);
         if ($clientAccessCheck) {
             return $clientAccessCheck; // Returns 402 Payment Required
@@ -268,16 +267,16 @@ class GetProductController extends AbstractController
 
             return new JsonResponse(['error' => 'uuidClient are required'], 400);
         }
-        
+
         // Verify client access - must have active subscription
         $client = $this->clientRepository->findByUuid($uuidClient);
         if (!$client) {
             return new JsonResponse([
                 'status' => 'error',
-                'message' => 'CLIENT_NOT_FOUND'
+                'message' => 'CLIENT_NOT_FOUND',
             ], JsonResponse::HTTP_NOT_FOUND);
         }
-        
+
         $clientAccessCheck = $this->verifyClientAccess($client);
         if ($clientAccessCheck) {
             return $clientAccessCheck; // Returns 402 Payment Required

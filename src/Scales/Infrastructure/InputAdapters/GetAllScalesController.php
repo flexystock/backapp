@@ -2,13 +2,13 @@
 
 namespace App\Scales\Infrastructure\InputAdapters;
 
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Scales\Application\DTO\GetAllScalesRequest;
 use App\Scales\Application\InputPorts\GetAllScalesUseCaseInterface;
+use App\Security\ClientAccessControlTrait;
 use App\Security\PermissionControllerTrait;
 use App\Security\PermissionService;
-use App\Security\ClientAccessControlTrait;
 use App\Security\RequiresPermission;
-use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,7 +25,7 @@ class GetAllScalesController extends AbstractController
     private ClientRepositoryInterface $clientRepository;
 
     public function __construct(
-        GetAllScalesUseCaseInterface $getAllScalesUseCase, 
+        GetAllScalesUseCaseInterface $getAllScalesUseCase,
         LoggerInterface $logger,
         PermissionService $permissionService,
         ClientRepositoryInterface $clientRepository
@@ -50,16 +50,16 @@ class GetAllScalesController extends AbstractController
         if (!$uuidClient) {
             return new JsonResponse(['error' => 'uuidClient is required'], 400);
         }
-        
+
         // Verify client access - must have active subscription
         $client = $this->clientRepository->findByUuid($uuidClient);
         if (!$client) {
             return new JsonResponse([
                 'status' => 'error',
-                'message' => 'CLIENT_NOT_FOUND'
+                'message' => 'CLIENT_NOT_FOUND',
             ], JsonResponse::HTTP_NOT_FOUND);
         }
-        
+
         $clientAccessCheck = $this->verifyClientAccess($client);
         if ($clientAccessCheck) {
             return $clientAccessCheck; // Returns 402 Payment Required

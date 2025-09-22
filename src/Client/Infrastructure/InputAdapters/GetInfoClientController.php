@@ -3,22 +3,20 @@
 namespace App\Client\Infrastructure\InputAdapters;
 
 use App\Client\Application\DTO\GetInfoClientRequest;
-use App\Client\Application\DTO\GetInfoClientResponse;
 use App\Client\Application\InputPorts\GetInfoClientInputPort;
 use App\Client\Application\UseCases\GetInfoClientUseCase;
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
+use App\Security\RequiresPermission;
 use OpenApi\Attributes as OA;
+use Psr\Log\LoggerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use App\Security\PermissionControllerTrait;
-use App\Security\PermissionService;
-use App\Security\RequiresPermission;
-use Psr\Log\LoggerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-
 
 class GetInfoClientController extends AbstractController
 {
@@ -30,10 +28,10 @@ class GetInfoClientController extends AbstractController
     private ValidatorInterface $validator;
     private LoggerInterface $logger;
 
-    public function __construct (GetInfoClientInputPort $getInfoClientInputPort,
-                                 GetInfoClientUseCase   $getInfoClientUseCase,
-                                 SerializerInterface    $serializer,
-                                 ValidatorInterface     $validator,
+    public function __construct(GetInfoClientInputPort $getInfoClientInputPort,
+                                 GetInfoClientUseCase $getInfoClientUseCase,
+                                 SerializerInterface $serializer,
+                                 ValidatorInterface $validator,
                                  LoggerInterface $logger,
                                  PermissionService $permissionService)
     {
@@ -111,7 +109,7 @@ class GetInfoClientController extends AbstractController
             ),
         ]
     )]
-    public function getInfoClient (Request $request): JsonResponse
+    public function getInfoClient(Request $request): JsonResponse
     {
         $permissionCheck = $this->checkPermissionJson('client.view', 'No tienes permisos para crear un producto');
         if ($permissionCheck) {
@@ -125,11 +123,12 @@ class GetInfoClientController extends AbstractController
         $errors = $this->validator->validate($getInfoClientRequest);
         if (count($errors) > 0) {
             $errorMessages = $this->getErrorMessages($errors);
-            return new JsonResponse(['error' => 'Invalid input data: ' . implode(', ', $errorMessages)], Response::HTTP_BAD_REQUEST);
+
+            return new JsonResponse(['error' => 'Invalid input data: '.implode(', ', $errorMessages)], Response::HTTP_BAD_REQUEST);
         }
         $client = $this->getInfoClientInputPort->getInfo($uuidClient);
 
-        if ($client !=  null) {
+        if (null != $client) {
             // convertir la entidad en array antes de devolverla
             return new JsonResponse(['client' => [
                 'name' => $client->getName(),
@@ -140,8 +139,7 @@ class GetInfoClientController extends AbstractController
                 'physicalAddress' => $client->getPhysicalAddress(),
                 'city' => $client->getCity(),
                 'country' => $client->getCountry(),
-                'postalCode' => $client->getPostalCode()
-
+                'postalCode' => $client->getPostalCode(),
             ]], Response::HTTP_OK);
         }
 

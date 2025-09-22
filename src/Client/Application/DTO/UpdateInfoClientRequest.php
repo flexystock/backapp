@@ -73,8 +73,7 @@ class UpdateInfoClientRequest
         int $postalCode,
         string $companyPhone,
         string $companyEmail,
-
-    ){
+    ) {
         $this->uuidClient = $uuidClient;
         $this->name = $name;
         $this->nifCif = $nifCif;
@@ -86,10 +85,12 @@ class UpdateInfoClientRequest
         $this->companyPhone = $companyPhone;
         $this->companyEmail = $companyEmail;
     }
+
     public function getUuidClient(): string
     {
         return $this->uuidClient;
     }
+
     public function getName(): string
     {
         return $this->name;
@@ -179,6 +180,7 @@ class UpdateInfoClientRequest
     {
         $this->companyEmail = $companyEmail;
     }
+
     public function getUuidUserModification(): string
     {
         return $this->uuidUserModification;
@@ -198,5 +200,4 @@ class UpdateInfoClientRequest
     {
         $this->uuidUserModification = $uuidUserModification;
     }
-
 }

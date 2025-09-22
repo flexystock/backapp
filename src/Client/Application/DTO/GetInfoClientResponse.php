@@ -29,5 +29,4 @@ class GetInfoClientResponse
     {
         return $this->statusCode;
     }
-
 }

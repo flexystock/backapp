@@ -2,8 +2,8 @@
 
 namespace App\Subscription\Application\Services;
 
-use App\Entity\Main\Subscription;
 use App\Entity\Main\Client;
+use App\Entity\Main\Subscription;
 use App\Entity\Main\SubscriptionPlan;
 use App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,7 +27,7 @@ class SubscriptionDomainService
     }
 
     /**
-     * Create subscription entity in database
+     * Create subscription entity in database.
      */
     public function createSubscription(
         Client $client,
@@ -41,30 +41,30 @@ class SubscriptionDomainService
         try {
             $subscription = new Subscription();
             $subscription->setUuidSubscription(Uuid::v4()->toRfc4122());
-            
+
             // Use entity references to avoid additional queries
             $clientRef = $this->entityManager->getReference(Client::class, $client->getUuidClient());
             $planRef = $this->entityManager->getReference(SubscriptionPlan::class, $plan->getId());
-            
+
             $subscription->setClient($clientRef);
             $subscription->setPlan($planRef);
             $subscription->setStartedAt($startedAt ?? new \DateTime());
             $subscription->setEndedAt($endedAt);
             $subscription->setCreatedAt(new \DateTime());
             $subscription->setUpdatedAt(new \DateTime());
-            
+
             // Optional fields
             if ($stripeSubscriptionId) {
                 $subscription->setStripeSubscriptionId($stripeSubscriptionId);
             }
-            
+
             if ($uuidUserCreation) {
                 $subscription->setUuidUserCreation($uuidUserCreation);
                 $subscription->setUuidUserModification($uuidUserCreation);
             }
-            
+
             // Set payment status and active state based on context
-            if ($context === 'webhook') {
+            if ('webhook' === $context) {
                 $subscription->setIsActive(true);
                 $subscription->setPaymentStatus('paid');
             } else {
@@ -79,25 +79,24 @@ class SubscriptionDomainService
                 'client_uuid' => $client->getUuidClient(),
                 'plan_id' => $plan->getId(),
                 'stripe_subscription_id' => $stripeSubscriptionId ?? 'not_set',
-                'context' => $context
+                'context' => $context,
             ]);
 
             return $subscription;
-
         } catch (\Throwable $e) {
             $this->logger->error('Error creating subscription via domain service', [
                 'client_uuid' => $client->getUuidClient(),
                 'plan_id' => $plan->getId(),
                 'stripe_subscription_id' => $stripeSubscriptionId ?? 'not_set',
                 'context' => $context,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
     }
 
     /**
-     * Create subscription from webhook with pre-existing Stripe ID
+     * Create subscription from webhook with pre-existing Stripe ID.
      */
     public function createSubscriptionFromWebhook(
         Client $client,
@@ -118,7 +117,7 @@ class SubscriptionDomainService
     }
 
     /**
-     * Update subscription with proper user tracking
+     * Update subscription with proper user tracking.
      */
     public function updateSubscription(
         Subscription $subscription,
@@ -128,28 +127,27 @@ class SubscriptionDomainService
         try {
             // Always update the modification timestamp
             $subscription->setUpdatedAt(new \DateTime());
-            
+
             // Set user modification if provided
             if ($uuidUserModification) {
                 $subscription->setUuidUserModification($uuidUserModification);
             }
-            
+
             $this->subscriptionRepository->save($subscription);
 
             $this->logger->info('Subscription updated via domain service', [
                 'subscription_uuid' => $subscription->getUuidSubscription(),
                 'uuid_user_modification' => $uuidUserModification ?? 'not_set',
-                'context' => $context
+                'context' => $context,
             ]);
 
             return $subscription;
-
         } catch (\Throwable $e) {
             $this->logger->error('Error updating subscription via domain service', [
                 'subscription_uuid' => $subscription->getUuidSubscription(),
                 'uuid_user_modification' => $uuidUserModification ?? 'not_set',
                 'context' => $context,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }

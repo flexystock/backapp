@@ -4,14 +4,14 @@ namespace App\Scales\Infrastructure\InputAdapters;
 
 use App\Scales\Application\DTO\AssignScaleToProductRequest;
 use App\Scales\Application\InputPorts\AssignScaleToProductUseCaseInterface;
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
+use App\Security\RequiresPermission;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Security\PermissionControllerTrait;
-use App\Security\PermissionService;
-use App\Security\RequiresPermission;
 
 class AssignScaleToProduct extends AbstractController
 {

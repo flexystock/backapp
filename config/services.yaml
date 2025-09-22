@@ -606,11 +606,39 @@ services:
     App\Stripe\Application\OutputPorts\SetupIntentRepositoryInterface:
         alias: 'App\Stripe\Infrastructure\OutputAdapters\Repositories\SetupIntentRepository'
 
+    # Stripe Checkout Session Services
+    App\Subscription\Infrastructure\OutputAdapters\Services\StripeService:
+        arguments:
+            $stripeClientFactory: '@App\Service\Stripe\StripeClientFactory'
+            $logger: '@logger'
+
+    App\Subscription\Application\OutputPorts\StripeServiceInterface:
+        alias: App\Subscription\Infrastructure\OutputAdapters\Services\StripeService
+
+    App\Subscription\Application\UseCases\CreateStripeCheckoutSessionUseCase:
+        arguments:
+            $stripeService: '@App\Subscription\Application\OutputPorts\StripeServiceInterface'
+            $userRepository: '@App\User\Application\OutputPorts\Repositories\UserRepositoryInterface'
+            $logger: '@logger'
+
+    App\Subscription\Application\InputPorts\CreateStripeCheckoutSessionUseCaseInterface:
+        alias: App\Subscription\Application\UseCases\CreateStripeCheckoutSessionUseCase
+
+    App\Subscription\Infrastructure\InputAdapters\CreateStripeCheckoutSessionController:
+        arguments:
+            $createStripeCheckoutSessionUseCase: '@App\Subscription\Application\InputPorts\CreateStripeCheckoutSessionUseCaseInterface'
+            $serializer: '@serializer'
+            $validator: '@validator'
+            $logger: '@logger'
+            $permissionService: '@App\Security\PermissionService'
+        tags: ['controller.service_arguments']
+        public: true
+
     # Logging processor para mostrar archivo y línea
     App\Infrastructure\Services\Logging\FileLineProcessor:
         tags:
             - { name: monolog.processor, method: __invoke }
-    
+
     # Formatter personalizado para mostrar archivo y línea en los logs
     app.monolog.file_line_formatter:
         class: Monolog\Formatter\LineFormatter

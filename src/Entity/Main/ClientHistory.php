@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Entity\Main;
+
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -86,5 +87,4 @@ class ClientHistory
     {
         $this->date_modification = $dateModification;
     }
-
 }

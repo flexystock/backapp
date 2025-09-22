@@ -19,5 +19,4 @@ class GetInfoClientUseCase implements GetInfoClientInputPort
     {
         return $this->clientRepository->findByUuid($uuidClient);
     }
-
 }

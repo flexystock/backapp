@@ -2,11 +2,11 @@
 
 namespace App\WeightAnalytics\Infrastructure\InputAdapters;
 
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
+use App\Security\ClientAccessControlTrait;
 use App\Security\PermissionControllerTrait;
 use App\Security\PermissionService;
-use App\Security\ClientAccessControlTrait;
 use App\Security\RequiresPermission;
-use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\WeightAnalytics\Application\DTO\GetProductWeightSummaryRequest;
 use App\WeightAnalytics\Application\InputPorts\GetProductWeightSummaryUseCaseInterface;
 use Psr\Log\LoggerInterface;
@@ -54,16 +54,16 @@ class GetProductWeightSummaryController extends AbstractController
         if (!$uuidClient || !$productId) {
             return new JsonResponse(['error' => 'uuidClient and productId are required'], 400);
         }
-        
+
         // Verify client access - must have active subscription
         $client = $this->clientRepository->findByUuid($uuidClient);
         if (!$client) {
             return new JsonResponse([
                 'status' => 'error',
-                'message' => 'CLIENT_NOT_FOUND'
+                'message' => 'CLIENT_NOT_FOUND',
             ], JsonResponse::HTTP_NOT_FOUND);
         }
-        
+
         $clientAccessCheck = $this->verifyClientAccess($client);
         if ($clientAccessCheck) {
             return $clientAccessCheck; // Returns 402 Payment Required

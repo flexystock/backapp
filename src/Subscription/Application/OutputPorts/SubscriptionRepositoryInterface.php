@@ -2,8 +2,8 @@
 
 namespace App\Subscription\Application\OutputPorts;
 
-use App\Entity\Main\Subscription;
 use App\Entity\Main\Client;
+use App\Entity\Main\Subscription;
 
 interface SubscriptionRepositoryInterface
 {

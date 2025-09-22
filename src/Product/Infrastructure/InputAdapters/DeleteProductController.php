@@ -2,13 +2,13 @@
 
 namespace App\Product\Infrastructure\InputAdapters;
 
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Product\Application\DTO\DeleteProductRequest;
 use App\Product\Application\InputPorts\DeleteProductUseCaseInterface;
+use App\Security\ClientAccessControlTrait;
 use App\Security\PermissionControllerTrait;
 use App\Security\PermissionService;
-use App\Security\ClientAccessControlTrait;
 use App\Security\RequiresPermission;
-use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use OpenApi\Attributes as OA;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -32,7 +32,7 @@ class DeleteProductController extends AbstractController
     private ClientRepositoryInterface $clientRepository;
 
     public function __construct(
-        LoggerInterface $logger, 
+        LoggerInterface $logger,
         DeleteProductUseCaseInterface $deleteProductUseCase,
         SerializerInterface $serializer,
         ValidatorInterface $validator,
@@ -139,7 +139,7 @@ class DeleteProductController extends AbstractController
         if (!isset($requestData['uuidClient'])) {
             return new JsonResponse([
                 'status' => 'error',
-                'message' => 'Missing required field: uuidClient'
+                'message' => 'Missing required field: uuidClient',
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
@@ -147,10 +147,10 @@ class DeleteProductController extends AbstractController
         if (!$client) {
             return new JsonResponse([
                 'status' => 'error',
-                'message' => 'CLIENT_NOT_FOUND'
+                'message' => 'CLIENT_NOT_FOUND',
             ], JsonResponse::HTTP_NOT_FOUND);
         }
-        
+
         $clientAccessCheck = $this->verifyClientAccess($client);
         if ($clientAccessCheck) {
             return $clientAccessCheck; // Returns 402 Payment Required

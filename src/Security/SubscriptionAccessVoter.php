@@ -10,7 +10,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 class SubscriptionAccessVoter extends Voter
 {
     public const ACCESS_CLIENT = 'ACCESS_CLIENT';
-    
+
     private SubscriptionWebhookService $subscriptionService;
 
     public function __construct(SubscriptionWebhookService $subscriptionService)
@@ -20,7 +20,7 @@ class SubscriptionAccessVoter extends Voter
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return $attribute === self::ACCESS_CLIENT && $subject instanceof Client;
+        return self::ACCESS_CLIENT === $attribute && $subject instanceof Client;
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
