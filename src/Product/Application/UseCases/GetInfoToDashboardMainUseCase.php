@@ -82,7 +82,7 @@ class GetInfoToDashboardMainUseCase implements GetInfoToDashboardMainUseCaseInte
         $conversionFactor = $conversionInfo['conversion_factor'];
 
         // Calcular el stock y el peso en la unidad definida
-        $stockInUnits = $conversionFactor > 0 ? round($stock / $conversionFactor, 2) : 0;
+        //$stockInUnits = $conversionFactor > 0 ? round($stock / $conversionFactor, 2) : 0;
         $realWeightSumInUnits = $conversionFactor > 0 ? round($realWeightSum / $conversionFactor, 1) : 0;
 
         return [
