@@ -19,7 +19,6 @@ use App\Security\RequiresPermission;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-
 class GetInfoClientController extends AbstractController
 {
     use PermissionControllerTrait;
@@ -30,13 +29,14 @@ class GetInfoClientController extends AbstractController
     private ValidatorInterface $validator;
     private LoggerInterface $logger;
 
-    public function __construct (GetInfoClientInputPort $getInfoClientInputPort,
-                                 GetInfoClientUseCase   $getInfoClientUseCase,
-                                 SerializerInterface    $serializer,
-                                 ValidatorInterface     $validator,
-                                 LoggerInterface $logger,
-                                 PermissionService $permissionService)
-    {
+    public function __construct(
+        GetInfoClientInputPort $getInfoClientInputPort,
+        GetInfoClientUseCase   $getInfoClientUseCase,
+        SerializerInterface    $serializer,
+        ValidatorInterface     $validator,
+        LoggerInterface $logger,
+        PermissionService $permissionService
+    ) {
         $this->getInfoClientInputPort = $getInfoClientInputPort;
         $this->getInfoClientUseCase = $getInfoClientUseCase;
         $this->serializer = $serializer;
@@ -60,14 +60,13 @@ class GetInfoClientController extends AbstractController
             )
         ),
         tags: ['Client'],
-        responses: [
+        responses: array(
             new OA\Response(
                 response: 200,
                 description: 'Client information retrieved successfully',
                 content: new OA\JsonContent(
-                    type: 'object',
-                    properties: [
-                        new OA\Property(property: 'client', type: 'object', example: [
+                    properties: array(
+                        new OA\Property(property: 'client', type: 'object', example: array(
                             'uuidClient' => '492e5a45-9ad9-4876-87f7-0788d842f17d',
                             'name' => 'Restaurante Pepe',
                             'nifCif' => 'B12345678',
@@ -85,17 +84,18 @@ class GetInfoClientController extends AbstractController
                             'currency' => 'EUR',
                             'numberWarehouses' => 2,
                             'annualSalesVolume' => 500000,
-                        ]),
-                    ]
+                        )),
+                    ),
+                    type: 'object'
                 )
             ),
             new OA\Response(
                 response: 400,
                 description: 'Invalid input data',
                 content: new OA\JsonContent(
-                    properties: [
+                    properties: array(
                         new OA\Property(property: 'error', type: 'string', example: 'Invalid input data: ...'),
-                    ],
+                    ),
                     type: 'object'
                 )
             ),
@@ -103,15 +103,15 @@ class GetInfoClientController extends AbstractController
                 response: 404,
                 description: 'Client not found',
                 content: new OA\JsonContent(
-                    properties: [
+                    properties: array(
                         new OA\Property(property: 'error', type: 'string', example: 'Client not found'),
-                    ],
+                    ),
                     type: 'object'
                 )
             ),
-        ]
+        )
     )]
-    public function getInfoClient (Request $request): JsonResponse
+    public function getInfoClient(Request $request): JsonResponse
     {
         $permissionCheck = $this->checkPermissionJson('client.view', 'No tienes permisos para crear un producto');
         if ($permissionCheck) {

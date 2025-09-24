@@ -20,11 +20,12 @@ class GenericClientController
     private GetClientByNameInputPort $getClientByNameInputPort;
     private CreateClientInputPort $createClientInputPort;
 
-    public function __construct(GetAllClientsInputPort $getAllClientsInputPort,
+    public function __construct(
+        GetAllClientsInputPort $getAllClientsInputPort,
         GetClientByUuidInputPort $getClientByUuidInputPort,
         GetClientByNameInputPort $getClientByNameInputPort,
-        CreateClientInputPort $createClientInputPort)
-    {
+        CreateClientInputPort $createClientInputPort
+    ) {
         $this->getAllClientsInputPort = $getAllClientsInputPort;
         $this->getClientByUuidInputPort = $getClientByUuidInputPort;
         $this->getClientByNameInputPort = $getClientByNameInputPort;
