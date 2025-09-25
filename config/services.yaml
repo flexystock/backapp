@@ -3,6 +3,8 @@
 
 parameters:
     stripe_webhook_secret: '%env(STRIPE_WEBHOOK_SECRET)%'
+    ttn_device_script_email_recipient: 'flexystock@gmail.com'
+    ttn_device_script_email_sender: 'flexystock@gmail.com'
 services:
     # Configuración predeterminada para autowire y autoconfigure
     _defaults:
@@ -107,6 +109,14 @@ services:
 
     App\User\Application\OutputPorts\NotificationServiceInterface:
         alias: App\User\Infrastructure\OutputAdapters\Services\EmailNotificationService
+
+    App\Ttn\Application\OutputPorts\DeviceScriptNotifierInterface:
+        alias: App\Ttn\Infrastructure\OutputAdapters\Services\EmailDeviceScriptNotifier
+
+    App\Ttn\Infrastructure\OutputAdapters\Services\EmailDeviceScriptNotifier:
+        arguments:
+            $recipientEmail: '%ttn_device_script_email_recipient%'
+            $senderEmail: '%ttn_device_script_email_sender%'
 
     App\User\Application\InputPorts\RequestPasswordResetInterface:
         alias: App\User\Application\UseCases\Password\RequestPasswordResetUseCase
