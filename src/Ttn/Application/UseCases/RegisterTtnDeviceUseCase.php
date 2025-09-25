@@ -9,6 +9,7 @@ use App\Scales\Application\OutputPorts\PoolScalesRepositoryInterface;
 use App\Ttn\Application\DTO\RegisterTtnDeviceRequest;
 use App\Ttn\Application\DTO\RegisterTtnDeviceResponse;
 use App\Ttn\Application\InputPorts\RegisterTtnDeviceUseCaseInterface;
+use App\Ttn\Application\OutputPorts\DeviceScriptNotifierInterface;
 use App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface;
 use App\Ttn\Application\OutputPorts\TtnServiceInterface;
 use Symfony\Component\Uid\Uuid;
@@ -19,17 +20,20 @@ class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
     private PoolTtnDeviceRepositoryInterface $deviceRepository;
     private PoolScalesRepositoryInterface $poolScaleRepository;
     private ClientConnectionManager $connectionManager;
+    private DeviceScriptNotifierInterface $deviceScriptNotifier;
 
     public function __construct(
         TtnServiceInterface $ttnService,
         PoolTtnDeviceRepositoryInterface $deviceRepository,
         PoolScalesRepositoryInterface $poolScaleRepository,
-        ClientConnectionManager $connectionManager
+        ClientConnectionManager $connectionManager,
+        DeviceScriptNotifierInterface $deviceScriptNotifier
     ) {
         $this->ttnService = $ttnService;
         $this->deviceRepository = $deviceRepository;
         $this->poolScaleRepository = $poolScaleRepository;
         $this->connectionManager = $connectionManager;
+        $this->deviceScriptNotifier = $deviceScriptNotifier;
     }
 
     public function execute(RegisterTtnDeviceRequest $request): RegisterTtnDeviceResponse
@@ -54,6 +58,10 @@ class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
             $joinEui = $request->getJoinEui() ?? $this->generateEui();
             $appKey = $request->getAppKey() ?? $this->generateAppKey();
 
+            $devEui = $this->normalizeHexString($devEui);
+            $joinEui = $this->normalizeHexString($joinEui);
+            $appKey = $this->normalizeHexString($appKey);
+
             // 2) Actualizar la request (opcional)
             //    - O crea un constructor nuevo para TTNService
             //    - O solo pasamos estos a la TtnService -> registerDevice(...)
@@ -75,8 +83,8 @@ class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
             $ttnDevice->setAvailable(true);
             $ttnDevice->setEndDeviceId($nextDeviceId);
             $ttnDevice->setEndDeviceName($request->getUuidClient() ?? 'free');
-            $ttnDevice->setAppEUI($devEui);
-            $ttnDevice->setDevEUI($joinEui);
+            $ttnDevice->setAppEUI($joinEui);
+            $ttnDevice->setDevEUI($devEui);
             $ttnDevice->setAppKey($appKey);
             $ttnDevice->setUuidUserCreation($request->getUuidUser());
             $ttnDevice->setDatehourCreation($request->getDatehourCreation());
@@ -91,8 +99,8 @@ class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
                 $poolScale->setEndDeviceId($nextDeviceId);
                 $poolScale->setAvailable(true);
                 $poolScale->setEndDeviceName($request->getUuidClient());
-                $poolScale->setAppEUI($devEui);
-                $poolScale->setDevEUI($joinEui);
+                $poolScale->setAppEUI($joinEui);
+                $poolScale->setDevEUI($devEui);
                 $poolScale->setAppKey($appKey);
                 $poolScale->setDatehourCreation($request->getDatehourCreation());
                 $poolScale->setUuidUserCreation($request->getUuidUser());
@@ -102,6 +110,8 @@ class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
                 $poolScalesRepo = new \App\Scales\Infrastructure\OutputAdapters\Repositories\PoolScalesRepository($emCliente);
                 $poolScalesRepo->savePoolScale($poolScale);
             }
+
+            $this->deviceScriptNotifier->notify($nextDeviceId, $devEui, $joinEui, $appKey);
 
             return new RegisterTtnDeviceResponse(true);
         } catch (\Exception $e) {
@@ -120,5 +130,16 @@ class RegisterTtnDeviceUseCase implements RegisterTtnDeviceUseCaseInterface
     {
         // Genera un AppKey de 16 bytes en hex
         return strtoupper(bin2hex(random_bytes(16)));
+    }
+
+    private function normalizeHexString(string $value): string
+    {
+        $normalized = strtoupper(preg_replace('/[^0-9A-F]/', '', $value));
+
+        if ($normalized === '') {
+            throw new \InvalidArgumentException('El valor hexadecimal no puede estar vacío.');
+        }
+
+        return $normalized;
     }
 }
