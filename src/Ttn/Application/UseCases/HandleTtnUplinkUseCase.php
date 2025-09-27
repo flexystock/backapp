@@ -2,6 +2,7 @@
 
 namespace App\Ttn\Application\UseCases;
 
+use App\Entity\Client\LogMail as ClientLogMail;
 use App\Entity\Client\WeightsLog;
 use App\Entity\Main\Client as MainClient;
 use App\Infrastructure\Services\ClientConnectionManager;
@@ -13,6 +14,9 @@ use App\Ttn\Application\OutputPorts\MinimumStockNotificationInterface;
 use App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 
 class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
 {
@@ -180,5 +184,18 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         }
 
         //ahora guardar en la tabla de sacles la fecha del ultimo envío y el porcentaje de carga
+    }
+
+    private function normalizeErrorCode(int|string|null $errorCode): ?int
+    {
+        if (null === $errorCode) {
+            return null;
+        }
+
+        if (is_int($errorCode)) {
+            return 0 !== $errorCode ? $errorCode : null;
+        }
+
+        return is_numeric($errorCode) ? ((int) $errorCode ?: null) : null;
     }
 }
