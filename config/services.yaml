@@ -5,6 +5,7 @@ parameters:
     stripe_webhook_secret: '%env(STRIPE_WEBHOOK_SECRET)%'
     ttn_device_script_email_recipient: 'flexystock@gmail.com'
     ttn_device_script_email_sender: 'flexystock@gmail.com'
+    stock_alert_email_sender: 'flexystock@gmail.com'
 services:
     # Configuración predeterminada para autowire y autoconfigure
     _defaults:
@@ -416,6 +417,7 @@ services:
             $poolTtnDeviceRepo: '@App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface'
             $connManager: '@App\Infrastructure\Services\ClientConnectionManager'
             $ScaleRepository: '@App\Scales\Application\OutputPorts\ScalesRepositoryInterface'
+            $stockAlertEmailSender: '%stock_alert_email_sender%'
 
     App\Admin\Role\Application\InputPorts\AssignRoleUseCaseInterface:
         alias: App\Admin\Role\Application\UseCases\AssignRoleUseCase
