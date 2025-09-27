@@ -327,6 +327,13 @@ services:
     App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface:
         alias: App\Ttn\Infrastructure\OutputAdapters\Repositories\PoolTtnDeviceRepository
 
+    App\Ttn\Application\OutputPorts\MinimumStockNotificationInterface:
+        alias: App\Ttn\Infrastructure\OutputAdapters\Services\EmailMinimumStockNotifier
+
+    App\Ttn\Infrastructure\OutputAdapters\Services\EmailMinimumStockNotifier:
+        arguments:
+            $senderEmail: '%stock_alert_email_sender%'
+
     App\Ttn\Application\InputPorts\UnassignTtnDeviceUseCaseInterface:
         alias: App\Ttn\Application\UseCases\UnassignTtnDeviceUseCase
 
@@ -417,7 +424,7 @@ services:
             $poolTtnDeviceRepo: '@App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface'
             $connManager: '@App\Infrastructure\Services\ClientConnectionManager'
             $ScaleRepository: '@App\Scales\Application\OutputPorts\ScalesRepositoryInterface'
-            $stockAlertEmailSender: '%stock_alert_email_sender%'
+            $minimumStockNotifier: '@App\Ttn\Application\OutputPorts\MinimumStockNotificationInterface'
 
     App\Admin\Role\Application\InputPorts\AssignRoleUseCaseInterface:
         alias: App\Admin\Role\Application\UseCases\AssignRoleUseCase
