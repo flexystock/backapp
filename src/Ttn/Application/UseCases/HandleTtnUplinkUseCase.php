@@ -3,11 +3,15 @@
 namespace App\Ttn\Application\UseCases;
 
 use App\Entity\Client\WeightsLog;
+use App\Entity\Main\Client as MainClient;
 use App\Infrastructure\Services\ClientConnectionManager;
 use App\Scales\Application\OutputPorts\ScalesRepositoryInterface;
+use App\Ttn\Application\DTO\MinimumStockNotification;
 use App\Ttn\Application\DTO\TtnUplinkRequest;
 use App\Ttn\Application\InputPorts\HandleTtnUplinkUseCaseInterface;
+use App\Ttn\Application\OutputPorts\MinimumStockNotificationInterface;
 use App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
 class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
@@ -16,17 +20,23 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
     private ClientConnectionManager $connectionManager;
     private ScalesRepositoryInterface $ScaleRepository;
     private LoggerInterface $logger;
+    private EntityManagerInterface $mainEntityManager;
+    private MinimumStockNotificationInterface $minimumStockNotifier;
 
     public function __construct(
         PoolTtnDeviceRepositoryInterface $poolTtnDeviceRepo,
         ClientConnectionManager $connManager,
         ScalesRepositoryInterface $ScaleRepository,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        EntityManagerInterface $mainEntityManager,
+        MinimumStockNotificationInterface $minimumStockNotifier
     ) {
         $this->poolTtnDeviceRepository = $poolTtnDeviceRepo;
         $this->connectionManager = $connManager;
         $this->ScaleRepository = $ScaleRepository;
         $this->logger = $logger;
+        $this->mainEntityManager = $mainEntityManager;
+        $this->minimumStockNotifier = $minimumStockNotifier;
     }
 
     public function execute(TtnUplinkRequest $request): void
@@ -134,6 +144,40 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             'scaleId' => $scale->getId(),
             'productId' => $product->getId(),
         ]);
+
+        $minimumStock = $product->getStock();
+        if (null !== $minimumStock && $newWeight <= $minimumStock) {
+            $this->logger->info('[TTN Uplink] Peso por debajo del stock mínimo, preparando notificación.', [
+                'currentWeight' => $newWeight,
+                'minimumStock' => $minimumStock,
+                'productId' => $product->getId(),
+            ]);
+
+            /** @var MainClient|null $mainClient */
+            $mainClient = $this->mainEntityManager->getRepository(MainClient::class)->find($uuidClient);
+            if (!$mainClient) {
+                $this->logger->error('[TTN Uplink] CLIENT_NOT_FOUND para notificación de stock.', [
+                    'uuidClient' => $uuidClient,
+                ]);
+
+                return;
+            }
+
+            $notification = new MinimumStockNotification(
+                $uuidClient,
+                $mainClient->getClientName(),
+                $mainClient->getCompanyEmail(),
+                (int) $product->getId(),
+                $product->getName(),
+                (int) $scale->getId(),
+                $deviceId,
+                (float) $newWeight,
+                (float) $minimumStock,
+                (float) $weightRange
+            );
+
+            $this->minimumStockNotifier->notify($notification);
+        }
 
         //ahora guardar en la tabla de sacles la fecha del ultimo envío y el porcentaje de carga
     }
