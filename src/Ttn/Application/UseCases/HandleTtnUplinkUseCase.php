@@ -2,7 +2,6 @@
 
 namespace App\Ttn\Application\UseCases;
 
-use App\Entity\Client\LogMail as ClientLogMail;
 use App\Entity\Client\WeightsLog;
 use App\Entity\Main\Client as MainClient;
 use App\Infrastructure\Services\ClientConnectionManager;
@@ -14,9 +13,6 @@ use App\Ttn\Application\OutputPorts\MinimumStockNotificationInterface;
 use App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
 
 class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
 {
@@ -150,6 +146,14 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         ]);
 
         $minimumStock = $product->getStock();
+        $mainNameUnit = $product->getMainUnit();
+        if (1 == $mainNameUnit) {
+            $nameUnit = $product->getNameUnit1();
+        } elseif (2 == $mainNameUnit) {
+            $nameUnit = $product->getNameUnit2();
+        } else {
+            $nameUnit = 'Kg';
+        }
         if (null !== $minimumStock && $newWeight <= $minimumStock) {
             $this->logger->info('[TTN Uplink] Peso por debajo del stock mínimo, preparando notificación.', [
                 'currentWeight' => $newWeight,
@@ -177,7 +181,8 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                 $deviceId,
                 (float) $newWeight,
                 (float) $minimumStock,
-                (float) $weightRange
+                (float) $weightRange,
+                $nameUnit
             );
 
             $this->minimumStockNotifier->notify($notification);

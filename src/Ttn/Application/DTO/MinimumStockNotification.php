@@ -14,7 +14,8 @@ class MinimumStockNotification
         private readonly string $deviceId,
         private readonly float $currentWeight,
         private readonly float $minimumStock,
-        private readonly float $weightRange
+        private readonly float $weightRange,
+        private readonly string $nameUnit
     ) {
     }
 
@@ -66,5 +67,10 @@ class MinimumStockNotification
     public function getWeightRange(): float
     {
         return $this->weightRange;
+    }
+
+    public function getNameUnit(): string
+    {
+        return $this->nameUnit;
     }
 }

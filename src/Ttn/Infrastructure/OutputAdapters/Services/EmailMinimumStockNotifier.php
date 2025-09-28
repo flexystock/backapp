@@ -2,7 +2,7 @@
 
 namespace App\Ttn\Infrastructure\OutputAdapters\Services;
 
-use App\Entity\Client\LogMail as ClientLogMail;
+use App\Event\MailLogTarget;
 use App\Event\MailSentEvent;
 use App\Infrastructure\Services\ClientConnectionManager;
 use App\Ttn\Application\DTO\MinimumStockNotification;
@@ -29,22 +29,30 @@ class EmailMinimumStockNotifier implements MinimumStockNotificationInterface
     {
         $recipientEmail = $notification->getRecipientEmail();
         $subject = sprintf('Alerta de stock bajo: %s', $notification->getProductName());
+        $txtActual = number_format($notification->getCurrentWeight(), 0, '.', '');
+        $txtMin = number_format($notification->getMinimumStock(), 0, '.', '');
+
         $textBody = sprintf(
-            "Hola %s,\n\nLa báscula asociada al producto '%s' ha registrado un peso actual de %.2f, que se encuentra por debajo del stock mínimo configurado (%.2f).\n\nPor favor, revisa tu inventario para reponer existencias.\n\nEquipo FlexyStock",
+            "Hola %s,\n\nLa báscula asociada al producto '%s' ha registrado un stock actual de %s %s, que se encuentra por debajo del stock mínimo configurado (%s %s).\n\nPor favor, revisa tu inventario para reponer existencias.\n\nEquipo FlexyStock",
             $notification->getClientName(),
             $notification->getProductName(),
-            $notification->getCurrentWeight(),
-            $notification->getMinimumStock()
+            $txtActual,
+            $notification->getNameUnit(),
+            $txtMin,
+            $notification->getNameUnit()
         );
+
         $htmlBody = sprintf(
-            '<p>Hola %s,</p>' .
-            "<p>La báscula asociada al producto <strong>%s</strong> ha registrado un peso actual de <strong>%.2f</strong>, que se encuentra por debajo del stock mínimo configurado (<strong>%.2f</strong>).</p>" .
-            '<p>Por favor, revisa tu inventario para reponer existencias.</p>' .
+            '<p>Hola %s,</p>'.
+            '<p>La báscula asociada al producto <strong>%s</strong> ha registrado un peso actual de <strong>%s %s</strong>, que se encuentra por debajo del stock mínimo configurado (<strong>%s %s</strong>).</p>'.
+            '<p>Por favor, revisa tu inventario para reponer existencias.</p>'.
             '<p>Equipo FlexyStock</p>',
             htmlspecialchars($notification->getClientName(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             htmlspecialchars($notification->getProductName(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
-            $notification->getCurrentWeight(),
-            $notification->getMinimumStock()
+            $txtActual,
+            htmlspecialchars($notification->getNameUnit(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            $txtMin,
+            htmlspecialchars($notification->getNameUnit(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
         );
 
         $status = 'success';
@@ -93,18 +101,6 @@ class EmailMinimumStockNotifier implements MinimumStockNotificationInterface
             $errorType,
             $notification
         );
-
-        $this->logInClientDatabase(
-            $notification,
-            $recipientForLog,
-            $subject,
-            $htmlBody,
-            $status,
-            $errorMessage,
-            $errorCode,
-            $errorType,
-            $sentAt
-        );
     }
 
     private function dispatchMailSentEvent(
@@ -119,14 +115,14 @@ class EmailMinimumStockNotifier implements MinimumStockNotificationInterface
         MinimumStockNotification $notification
     ): void {
         $event = new MailSentEvent(
-            $recipient,
-            $subject,
-            $body,
-            $status,
-            $errorMessage,
-            $errorCode,
-            $sentAt,
-            [
+            recipient: $recipient,
+            subject: $subject,
+            body: $body,
+            status: $status,
+            errorMessage: $errorMessage,
+            errorCode: $errorCode,
+            sentAt: $sentAt,
+            additionalData: [
                 'type' => 'stock_alert',
                 'uuidClient' => $notification->getUuidClient(),
                 'productId' => $notification->getProductId(),
@@ -137,60 +133,12 @@ class EmailMinimumStockNotifier implements MinimumStockNotificationInterface
                 'minimumStock' => $notification->getMinimumStock(),
                 'weightRange' => $notification->getWeightRange(),
             ],
-            $errorType
+            errorType: $errorType,
+            user: null,
+            logTarget: MailLogTarget::CLIENT
         );
 
         $this->eventDispatcher->dispatch($event);
-    }
-
-    private function logInClientDatabase(
-        MinimumStockNotification $notification,
-        string $recipient,
-        string $subject,
-        string $body,
-        string $status,
-        ?string $errorMessage,
-        ?int $errorCode,
-        ?string $errorType,
-        DateTimeImmutable $sentAt
-    ): void {
-        try {
-            $entityManager = $this->connectionManager->getEntityManager($notification->getUuidClient());
-
-            $logMail = new ClientLogMail();
-            $logMail->setRecipient($recipient);
-            $logMail->setSubject($subject);
-            $logMail->setBody($body);
-            $logMail->setStatus($status);
-            $logMail->setErrorMessage($errorMessage);
-            $logMail->setErrorCode($errorCode);
-            $logMail->setErrorType($errorType);
-            $logMail->setSentAt($sentAt);
-            $logMail->setAdditionalData([
-                'type' => 'stock_alert',
-                'uuidClient' => $notification->getUuidClient(),
-                'productId' => $notification->getProductId(),
-                'productName' => $notification->getProductName(),
-                'scaleId' => $notification->getScaleId(),
-                'deviceId' => $notification->getDeviceId(),
-                'currentWeight' => $notification->getCurrentWeight(),
-                'minimumStock' => $notification->getMinimumStock(),
-                'weightRange' => $notification->getWeightRange(),
-            ]);
-
-            $entityManager->persist($logMail);
-            $entityManager->flush();
-
-            $this->logger->info('[EmailMinimumStockNotifier] Registro de notificación almacenado en la base de datos del cliente.', [
-                'uuidClient' => $notification->getUuidClient(),
-                'status' => $status,
-            ]);
-        } catch (\Throwable $exception) {
-            $this->logger->error('[EmailMinimumStockNotifier] Error guardando log_mail en la base de datos del cliente.', [
-                'uuidClient' => $notification->getUuidClient(),
-                'exception' => $exception->getMessage(),
-            ]);
-        }
     }
 
     private function normalizeErrorCode(int|string $errorCode): ?int

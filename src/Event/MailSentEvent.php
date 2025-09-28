@@ -19,6 +19,7 @@ class MailSentEvent extends Event
     private ?User $user;
     private ?int $errorCode;
     private ?string $errorType;
+    private string $logTarget;
 
     public function __construct(
         string $recipient,
@@ -31,6 +32,7 @@ class MailSentEvent extends Event
         ?array $additionalData = null,
         ?string $errorType = null,
         ?User $user = null,
+        string $logTarget = MailLogTarget::MAIN, // valor por defecto
     ) {
         $this->recipient = $recipient;
         $this->subject = $subject;
@@ -42,6 +44,7 @@ class MailSentEvent extends Event
         $this->additionalData = $additionalData;
         $this->user = $user;
         $this->errorType = $errorType;
+        $this->logTarget = $logTarget;
     }
 
     // Getters...
@@ -93,5 +96,10 @@ class MailSentEvent extends Event
     public function getErrorType(): ?string
     {
         return $this->errorType;
+    }
+
+    public function getLogTarget(): string
+    {
+        return $this->logTarget;
     }
 }
