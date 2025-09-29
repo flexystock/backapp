@@ -334,6 +334,13 @@ services:
         arguments:
             $senderEmail: '%stock_alert_email_sender%'
 
+    App\Ttn\Application\OutputPorts\WeightVariationAlertNotifierInterface:
+        alias: App\Ttn\Infrastructure\OutputAdapters\Services\EmailWeightVariationAlertNotifier
+
+    App\Ttn\Infrastructure\OutputAdapters\Services\EmailWeightVariationAlertNotifier:
+        arguments:
+            $senderEmail: '%stock_alert_email_sender%'
+
     App\Ttn\Application\InputPorts\UnassignTtnDeviceUseCaseInterface:
         alias: App\Ttn\Application\UseCases\UnassignTtnDeviceUseCase
 

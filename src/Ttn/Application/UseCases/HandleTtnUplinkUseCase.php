@@ -2,15 +2,20 @@
 
 namespace App\Ttn\Application\UseCases;
 
+use App\Entity\Client\BusinessHour;
+use App\Entity\Client\Holiday;
 use App\Entity\Client\WeightsLog;
 use App\Entity\Main\Client as MainClient;
 use App\Infrastructure\Services\ClientConnectionManager;
 use App\Scales\Application\OutputPorts\ScalesRepositoryInterface;
 use App\Ttn\Application\DTO\MinimumStockNotification;
+use App\Ttn\Application\DTO\WeightVariationAlertNotification;
 use App\Ttn\Application\DTO\TtnUplinkRequest;
 use App\Ttn\Application\InputPorts\HandleTtnUplinkUseCaseInterface;
 use App\Ttn\Application\OutputPorts\MinimumStockNotificationInterface;
 use App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface;
+use App\Ttn\Application\OutputPorts\WeightVariationAlertNotifierInterface;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -22,6 +27,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
     private LoggerInterface $logger;
     private EntityManagerInterface $mainEntityManager;
     private MinimumStockNotificationInterface $minimumStockNotifier;
+    private WeightVariationAlertNotifierInterface $weightVariationNotifier;
 
     public function __construct(
         PoolTtnDeviceRepositoryInterface $poolTtnDeviceRepo,
@@ -29,7 +35,8 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         ScalesRepositoryInterface $ScaleRepository,
         LoggerInterface $logger,
         EntityManagerInterface $mainEntityManager,
-        MinimumStockNotificationInterface $minimumStockNotifier
+        MinimumStockNotificationInterface $minimumStockNotifier,
+        WeightVariationAlertNotifierInterface $weightVariationNotifier
     ) {
         $this->poolTtnDeviceRepository = $poolTtnDeviceRepo;
         $this->connectionManager = $connManager;
@@ -37,6 +44,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         $this->logger = $logger;
         $this->mainEntityManager = $mainEntityManager;
         $this->minimumStockNotifier = $minimumStockNotifier;
+        $this->weightVariationNotifier = $weightVariationNotifier;
     }
 
     public function execute(TtnUplinkRequest $request): void
@@ -100,8 +108,17 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         $this->logger->debug('[TTN Uplink] Forzamos la inicialización de product');
         $entityManager->initializeObject($product);
 
-        $weightRange = $product->getWeightRange();
+        $weightRange = $product->getWeightRange() ?? 0.0;
         $this->logger->debug('[TTN Uplink] Obtenido weightRange del product', ['weightRange' => $weightRange]);
+
+        $mainNameUnit = $product->getMainUnit();
+        if (1 == $mainNameUnit) {
+            $nameUnit = $product->getNameUnit1();
+        } elseif (2 == $mainNameUnit) {
+            $nameUnit = $product->getNameUnit2();
+        } else {
+            $nameUnit = 'Kg';
+        }
 
         // Buscar el último WeightsLog de esta báscula, ordenado por fecha desc
         $weightsLogRepo = $entityManager->getRepository(WeightsLog::class);
@@ -121,6 +138,46 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             ]);
 
             return;  // o "return" si no quieres guardar
+        }
+
+        $now = new \DateTimeImmutable();
+        $isHoliday = $this->isHoliday($entityManager, $now);
+        $isWithinBusinessHours = $this->isWithinBusinessHours($entityManager, $now);
+        $mainClient = null;
+
+        if ($isHoliday || !$isWithinBusinessHours) {
+            $this->logger->info('[TTN Uplink] Variación detectada fuera de horario o en día festivo.', [
+                'isHoliday' => $isHoliday,
+                'isWithinBusinessHours' => $isWithinBusinessHours,
+            ]);
+
+            $mainClient = $this->findMainClient($uuidClient);
+
+            if (!$mainClient) {
+                $this->logger->error('[TTN Uplink] CLIENT_NOT_FOUND para alerta de variación de peso.', [
+                    'uuidClient' => $uuidClient,
+                ]);
+            } else {
+                $notification = new WeightVariationAlertNotification(
+                    $uuidClient,
+                    $mainClient->getClientName(),
+                    $mainClient->getCompanyEmail(),
+                    (int) $product->getId(),
+                    $product->getName(),
+                    (int) $scale->getId(),
+                    $deviceId,
+                    (float) $previousWeight,
+                    (float) $newWeight,
+                    (float) $variation,
+                    (float) $weightRange,
+                    $nameUnit ?? 'Kg',
+                    $now,
+                    $isHoliday,
+                    !$isWithinBusinessHours
+                );
+
+                $this->weightVariationNotifier->notify($notification);
+            }
         }
 
         // 3) Insertar en la tabla la “medición”
@@ -146,14 +203,6 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         ]);
 
         $minimumStock = $product->getStock();
-        $mainNameUnit = $product->getMainUnit();
-        if (1 == $mainNameUnit) {
-            $nameUnit = $product->getNameUnit1();
-        } elseif (2 == $mainNameUnit) {
-            $nameUnit = $product->getNameUnit2();
-        } else {
-            $nameUnit = 'Kg';
-        }
         if (null !== $minimumStock && $newWeight <= $minimumStock) {
             $this->logger->info('[TTN Uplink] Peso por debajo del stock mínimo, preparando notificación.', [
                 'currentWeight' => $newWeight,
@@ -162,7 +211,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             ]);
 
             /** @var MainClient|null $mainClient */
-            $mainClient = $this->mainEntityManager->getRepository(MainClient::class)->find($uuidClient);
+            $mainClient = $mainClient ?? $this->findMainClient($uuidClient);
             if (!$mainClient) {
                 $this->logger->error('[TTN Uplink] CLIENT_NOT_FOUND para notificación de stock.', [
                     'uuidClient' => $uuidClient,
@@ -189,6 +238,41 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         }
 
         //ahora guardar en la tabla de sacles la fecha del ultimo envío y el porcentaje de carga
+    }
+
+    private function isHoliday(EntityManagerInterface $entityManager, \DateTimeImmutable $dateTime): bool
+    {
+        $holidayRepo = $entityManager->getRepository(Holiday::class);
+
+        $count = $holidayRepo->createQueryBuilder('h')
+            ->select('COUNT(h.id)')
+            ->where('h.holidayDate = :date')
+            ->setParameter('date', $dateTime->setTime(0, 0), Types::DATE_IMMUTABLE)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return ((int) $count) > 0;
+    }
+
+    private function isWithinBusinessHours(EntityManagerInterface $entityManager, \DateTimeImmutable $dateTime): bool
+    {
+        $dayOfWeek = (int) $dateTime->format('N');
+        $businessHours = $entityManager->getRepository(BusinessHour::class)->findBy([
+            'dayOfWeek' => $dayOfWeek,
+        ]);
+
+        foreach ($businessHours as $businessHour) {
+            if ($businessHour->coversDateTime($dateTime)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function findMainClient(string $uuidClient): ?MainClient
+    {
+        return $this->mainEntityManager->getRepository(MainClient::class)->find($uuidClient);
     }
 
     private function normalizeErrorCode(int|string|null $errorCode): ?int
