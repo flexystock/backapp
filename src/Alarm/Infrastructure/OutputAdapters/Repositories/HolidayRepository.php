@@ -22,6 +22,14 @@ class HolidayRepository implements HolidayRepositoryInterface
         ]);
     }
 
+    /**
+     * @return array<int, Holiday>
+     */
+    public function findAll(): array
+    {
+        return $this->entityManager->getRepository(Holiday::class)->findBy([], ['holidayDate' => 'ASC']);
+    }
+
     public function save(Holiday $holiday): void
     {
         $this->entityManager->persist($holiday);
