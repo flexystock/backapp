@@ -118,6 +118,24 @@ services:
     App\Alarm\Application\InputPorts\CreateAlarmHolidayUseCaseInterface:
       alias: App\Alarm\Application\UseCases\CreateAlarmHolidayUseCase
 
+    App\Alarm\Application\UseCases\GetBusinessHoursUseCase:
+      arguments:
+        $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+        $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+        $logger: '@logger'
+
+    App\Alarm\Application\InputPorts\GetBusinessHoursUseCaseInterface:
+      alias: App\Alarm\Application\UseCases\GetBusinessHoursUseCase
+
+    App\Alarm\Application\UseCases\GetHolidaysUseCase:
+      arguments:
+        $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+        $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+        $logger: '@logger'
+
+    App\Alarm\Application\InputPorts\GetHolidaysUseCaseInterface:
+      alias: App\Alarm\Application\UseCases\GetHolidaysUseCase
+
     App\Alarm\Infrastructure\InputAdapters\:
       resource: '../src/Alarm/Infrastructure/InputAdapters'
       tags: [ 'controller.service_arguments' ]
