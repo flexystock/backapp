@@ -98,7 +98,8 @@ class CreateAlarmHolidayController extends AbstractController
 
             $createRequest->setUuidUser($user->getUuid());
             $createRequest->setTimestamp(new \DateTimeImmutable());
-
+            //var_dump($createRequest);
+            //die("llegamos");
             $response = $this->createAlarmHolidayUseCase->execute($createRequest);
 
             return new JsonResponse([

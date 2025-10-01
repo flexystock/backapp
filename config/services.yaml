@@ -99,6 +99,30 @@ services:
     App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface:
         alias: App\Client\Infrastructure\OutputAdapters\Repositories\ClientRepository
 
+    # Alarm services
+    App\Alarm\Application\UseCases\CreateAlarmOutOfHoursUseCase:
+      arguments:
+        $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+        $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+        $logger: '@logger'
+
+    App\Alarm\Application\InputPorts\CreateAlarmOutOfHoursUseCaseInterface:
+      alias: App\Alarm\Application\UseCases\CreateAlarmOutOfHoursUseCase
+
+    App\Alarm\Application\UseCases\CreateAlarmHolidayUseCase:
+      arguments:
+        $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+        $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+        $logger: '@logger'
+
+    App\Alarm\Application\InputPorts\CreateAlarmHolidayUseCaseInterface:
+      alias: App\Alarm\Application\UseCases\CreateAlarmHolidayUseCase
+
+    App\Alarm\Infrastructure\InputAdapters\:
+      resource: '../src/Alarm/Infrastructure/InputAdapters'
+      tags: [ 'controller.service_arguments' ]
+      public: true
+
     App\MessageHandler\CreateDockerContainerMessageHandler:
         tags: [ 'messenger.message_handler']
 

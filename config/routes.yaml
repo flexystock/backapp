@@ -53,3 +53,8 @@ controllers_stripe:
         path: ../src/Stripe/Infrastructure/InputAdapters/
         namespace: App\Stripe\Infrastructure\InputAdapters
     type: attribute
+controllers_alarm:
+  resource:
+    path: ../src/Alarm/Infrastructure/InputAdapters/
+    namespace: App\Alarm\Infrastructure\InputAdapters
+  type: attribute
