@@ -7,8 +7,8 @@ use App\Alarm\Application\InputPorts\SyncAlarmHolidaysUseCaseInterface;
 use App\Alarm\Infrastructure\OutputAdapters\Repositories\HolidayRepository;
 use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Entity\Client\Holiday;
+use App\Entity\Client\HolidayLog;
 use App\Infrastructure\Services\ClientConnectionManager;
-use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
 final class SyncAlarmHolidaysUseCase implements SyncAlarmHolidaysUseCaseInterface
@@ -28,6 +28,8 @@ final class SyncAlarmHolidaysUseCase implements SyncAlarmHolidaysUseCaseInterfac
 
         $em = $this->connectionManager->getEntityManager($client->getUuidClient());
         $repo = new HolidayRepository($em);
+
+        $previousHolidays = $this->formatHolidays($repo->findAll());
 
         // Normaliza fechas
         $newDates = [];
@@ -100,14 +102,19 @@ final class SyncAlarmHolidaysUseCase implements SyncAlarmHolidaysUseCaseInterfac
         });
 
         // lista final ordenada
-        $final = array_map(
-            fn(Holiday $h) => [
-                'id'           => $h->getId(),
-                'holiday_date' => $h->getHolidayDate()->format('Y-m-d'),
-                'name'         => $h->getName(),
-            ],
-            $repo->findAll()
-        );
+        $final = $this->formatHolidays($repo->findAll());
+
+        if ($created !== [] || $updated !== [] || $deleted !== []) {
+            $log = (new HolidayLog())
+                ->setUuidClient($client->getUuidClient())
+                ->setUuidUserModification($request->uuidUser)
+                ->setDateModification($now)
+                ->setDataBeforeModification($this->encodeForLog($previousHolidays))
+                ->setDataAfterModification($this->encodeForLog($final));
+
+            $em->persist($log);
+            $em->flush();
+        }
 
         // devolvemos el listado final + diffs (útil para depurar)
         return new SyncAlarmHolidaysResponse(
@@ -130,5 +137,46 @@ final class SyncAlarmHolidaysUseCase implements SyncAlarmHolidaysUseCaseInterfac
             $this->logger->warning('INVALID_HOLIDAY_DATE', ['value' => $input]);
             throw new \RuntimeException('INVALID_HOLIDAY_DATE');
         }
+    }
+
+    /**
+     * @param array<int, Holiday> $holidays
+     * @return array<int, array{id: ?int, holiday_date: string, name: ?string}>
+     */
+    private function formatHolidays(array $holidays): array
+    {
+        $data = array_map(
+            static fn (Holiday $h): array => [
+                'id'           => $h->getId(),
+                'holiday_date' => $h->getHolidayDate()->format('Y-m-d'),
+                'name'         => $h->getName(),
+            ],
+            $holidays
+        );
+
+        usort(
+            $data,
+            static fn (array $a, array $b): int => $a['holiday_date'] <=> $b['holiday_date']
+        );
+
+        return $data;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $data
+     */
+    private function encodeForLog(array $data): string
+    {
+        $encoded = json_encode($data, JSON_UNESCAPED_UNICODE);
+
+        if (false === $encoded) {
+            $this->logger->error('FAILED_TO_ENCODE_HOLIDAY_LOG_DATA', [
+                'error' => json_last_error_msg(),
+            ]);
+
+            throw new \RuntimeException('FAILED_TO_ENCODE_HOLIDAY_LOG_DATA');
+        }
+
+        return $encoded;
     }
 }
