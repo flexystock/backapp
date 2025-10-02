@@ -26,7 +26,7 @@ class DashboardMainController extends AbstractController
         $this->permissionService = $permissionService;
     }
 
-    #[Route('/dashboard', name: 'dashboard_summary', methods: ['POST'])]
+    #[Route('/api/dashboard', name: 'dashboard_summary', methods: ['POST'])]
     #[OA\Post(
         path: '/dashboard',
         summary: 'Obtiene un resumen del dashboard principal',
