@@ -80,6 +80,7 @@ security:
         - { path: ^/api/alarm/out-of-hours, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/alarm/holidays, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/alarm/business-hours, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/dashboard, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:
