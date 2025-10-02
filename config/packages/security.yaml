@@ -76,6 +76,10 @@ security:
         - { path: ^/api/payment_method/setup_intent, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/client_info, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/client_update, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/alarm/holiday, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/alarm/out-of-hours, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/alarm/holidays, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/alarm/business-hours, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:
