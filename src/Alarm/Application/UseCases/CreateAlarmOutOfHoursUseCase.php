@@ -8,6 +8,7 @@ use App\Alarm\Application\InputPorts\CreateAlarmOutOfHoursUseCaseInterface;
 use App\Alarm\Infrastructure\OutputAdapters\Repositories\BusinessHourRepository;
 use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Entity\Client\BusinessHour;
+use App\Entity\Client\BusinessHourLog;
 use App\Infrastructure\Services\ClientConnectionManager;
 use Psr\Log\LoggerInterface;
 
@@ -31,7 +32,12 @@ class CreateAlarmOutOfHoursUseCase implements CreateAlarmOutOfHoursUseCaseInterf
         $entityManager = $this->connectionManager->getEntityManager($uuidClient);
         $businessHourRepository = new BusinessHourRepository($entityManager);
 
+        $previousBusinessHours = $this->formatBusinessHours($businessHourRepository->findAll());
+
         $normalizedBusinessHours = $this->normalizeBusinessHours($request->getBusinessHours());
+
+        $timestamp = $request->getTimestamp() ?? new \DateTimeImmutable();
+        $uuidUser = $request->getUuidUser() ?? 'system';
 
         $hasChanges = false;
         foreach ($normalizedBusinessHours as $dayData) {
@@ -49,11 +55,11 @@ class CreateAlarmOutOfHoursUseCase implements CreateAlarmOutOfHoursUseCaseInterf
             if (!$existingBusinessHour) {
                 $existingBusinessHour = new BusinessHour();
                 $existingBusinessHour->setDayOfWeek($dayData['day_of_week']);
-                $existingBusinessHour->setUuidUserCreation($request->getUuidUser() ?? 'system');
-                $existingBusinessHour->setDatehourCreation($request->getTimestamp() ?? new \DateTimeImmutable());
+                $existingBusinessHour->setUuidUserCreation($uuidUser);
+                $existingBusinessHour->setDatehourCreation($timestamp);
             } else {
                 $existingBusinessHour->setUuidUserModification($request->getUuidUser());
-                $existingBusinessHour->setDatehourModification($request->getTimestamp() ?? new \DateTimeImmutable());
+                $existingBusinessHour->setDatehourModification($timestamp);
             }
 
             $existingBusinessHour->setStartTime($dayData['start_time']);
@@ -67,6 +73,20 @@ class CreateAlarmOutOfHoursUseCase implements CreateAlarmOutOfHoursUseCaseInterf
 
         if ($hasChanges) {
             $businessHourRepository->flush();
+
+            $currentBusinessHours = $this->formatBusinessHours($businessHourRepository->findAll());
+
+            if ($previousBusinessHours !== $currentBusinessHours) {
+                $log = (new BusinessHourLog())
+                    ->setUuidClient($uuidClient)
+                    ->setUuidUserModification($uuidUser)
+                    ->setDateModification($timestamp)
+                    ->setDataBeforeModification($this->encodeForLog($previousBusinessHours))
+                    ->setDataAfterModification($this->encodeForLog($currentBusinessHours));
+
+                $entityManager->persist($log);
+                $entityManager->flush();
+            }
         }
 
         $businessHours = array_map(
@@ -168,5 +188,50 @@ class CreateAlarmOutOfHoursUseCase implements CreateAlarmOutOfHoursUseCaseInterf
         ]);
 
         throw new \RuntimeException(sprintf('INVALID_TIME_FORMAT_%s', $field));
+    }
+
+    /**
+     * @param array<int, BusinessHour> $businessHours
+     * @return array<int, array{day_of_week: int, start_time: string, end_time: string, start_time2: ?string, end_time2: ?string}>
+     */
+    private function formatBusinessHours(array $businessHours): array
+    {
+        $data = array_map(
+            static function (BusinessHour $businessHour): array {
+                return [
+                    'day_of_week' => $businessHour->getDayOfWeek(),
+                    'start_time' => $businessHour->getStartTime()->format('H:i:s'),
+                    'end_time' => $businessHour->getEndTime()->format('H:i:s'),
+                    'start_time2' => $businessHour->getStartTime2()?->format('H:i:s'),
+                    'end_time2' => $businessHour->getEndTime2()?->format('H:i:s'),
+                ];
+            },
+            $businessHours
+        );
+
+        usort(
+            $data,
+            static fn (array $a, array $b): int => $a['day_of_week'] <=> $b['day_of_week']
+        );
+
+        return $data;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $data
+     */
+    private function encodeForLog(array $data): string
+    {
+        $encoded = json_encode($data, JSON_UNESCAPED_UNICODE);
+
+        if (false === $encoded) {
+            $this->logger->error('FAILED_TO_ENCODE_BUSINESS_HOUR_LOG_DATA', [
+                'error' => json_last_error_msg(),
+            ]);
+
+            throw new \RuntimeException('FAILED_TO_ENCODE_BUSINESS_HOUR_LOG_DATA');
+        }
+
+        return $encoded;
     }
 }
