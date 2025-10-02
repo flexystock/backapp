@@ -15,202 +15,191 @@ use Symfony\Component\Security\Core\Security;
 
 class RequestLogSubscriber implements EventSubscriberInterface
 {
-    private RequestStack $requestStack;
-    private Security $security;
-    private ClientConnectionManager $clientConnectionManager;
-    private LoggerInterface $logger;
-    private ?Request $masterRequest = null;
-
-    public function __construct(RequestStack $requestStack, Security $security, ClientConnectionManager $clientConnectionManager, LoggerInterface $logger)
-    {
-        $this->requestStack = $requestStack;
-        $this->security = $security;
-        $this->clientConnectionManager = $clientConnectionManager;
-        $this->logger = $logger;
-    }
+    public function __construct(
+        private readonly RequestStack $requestStack,
+        private readonly Security $security,
+        private readonly ClientConnectionManager $clientConnectionManager,
+        private readonly LoggerInterface $logger,
+    ) {}
 
     public static function getSubscribedEvents(): array
     {
         return [
-            KernelEvents::REQUEST => ['onKernelRequest', 100],
-            TerminateEvent::class => 'onKernelTerminate',
+            KernelEvents::REQUEST   => ['onKernelRequest', 100],
+            KernelEvents::TERMINATE => 'onKernelTerminate',
         ];
     }
 
     public function onKernelRequest(RequestEvent $event): void
     {
-        if ($event->isMainRequest()) {
-            $this->masterRequest = $event->getRequest();
-            $this->masterRequest->attributes->set('_start_time', microtime(true));
+        if (!$event->isMainRequest()) {
+            return;
         }
+
+        // Marcamos el inicio para medir tiempo
+        $event->getRequest()->attributes->set('_start_time', microtime(true));
     }
 
     public function onKernelTerminate(TerminateEvent $event): void
     {
-        $this->logger->info('onKernelTerminate: Iniciando el registro de la petición.');
+        $request = $event->getRequest();
 
-        // Si no tenemos una masterRequest, salimos
-        if (!$this->masterRequest) {
-            $this->logger->info('onKernelTerminate: No hay masterRequest, salimos.');
+        // Solo main request
+        if (!$request->attributes->getBoolean('_controller') && !$request->attributes->has('_start_time')) {
+            // Si no es main o no pasó por onKernelRequest, seguimos pero marcamos inicio ahora
+            $request->attributes->set('_start_time', microtime(true));
+        }
 
+        // Filtrado de endpoints
+        $path = $request->getPathInfo();
+        if (!$this->shouldLogPath($path)) {
             return;
         }
 
-        $request = $this->masterRequest;
-
-        // Solo logear si la ruta empieza por /api
-        if (!str_starts_with($request->getPathInfo(), '/api')) {
-            return;
-        }
-
-        // Excluir la ruta de login y api/doc
-        if ('/api/login' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/login, no se registra.');
-
-            return;
-        }
-        if ('/api/doc' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/doc, no se registra.');
-
-            return;
-        }
-        if ('/api/user_register' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/user_register, no se registra.');
-
-            return;
-        }
-
-        if ('/api/client_register' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/client_register, no se registra.');
-
-            return;
-        }
-        if ('/api/device_register' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/device_register, no se registra.');
-
-            return;
-        }
-        if ('/api/app_register' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/app_register, no se registra.');
-
-            return;
-        }
-        if ('/api/clients' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/app_register, no se registra.');
-
-            return;
-        }
-        if ('/api/devices' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/app_register, no se registra.');
-
-            return;
-        }
-        if ('/api/user/clients' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/user/clients, no se registra.');
-
-            return;
-        }
-
-        if ('/api/ttn-uplink' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/ttn-uplink, no se registra.');
-
-            return;
-        }
-        if ('/api/admin' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/admin, no se registra.');
-
-            return;
-        }
-        if ('/api/create_subscription_plan' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/create_subscription_plan, no se registra.');
-
-            return;
-        }
-        if ('/api/subscription_plans' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/create_subscription_plan, no se registra.');
-
-            return;
-        }
-        if ('/api/subscription_plan_update' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/create_subscription_plan, no se registra.');
-
-            return;
-        }
-        if ('/api/subscription_plan_delete' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/create_subscription_plan, no se registra.');
-
-            return;
-        }
-        if ('/api/create_subscription' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/create_subscription, no se registra.');
-
-            return;
-        }
-        if ('/api/stripe/webhook' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/stripe/webhook, no se registra.');
-
-            return;
-        }
-        if ('/api/subscription/stripe_latest_invoice' === $request->getPathInfo()) {
-            $this->logger->info('onKernelTerminate: La ruta es /api/subscription/stripe_latest_invoice, no se registra.');
-
-            return;
-        }
-        // Calcular tiempo de procesamiento
-        $startTime = $request->attributes->get('_start_time');
-        if (!$startTime) {
-            $startTime = microtime(true);
-        }
-        $processingTime = microtime(true) - $startTime;
+        // Tiempo de procesamiento
+        $startTime = $request->attributes->get('_start_time', microtime(true));
+        $processingTime = microtime(true) - (float) $startTime;
 
         $response = $event->getResponse();
-        $httpCode = $response ? $response->getStatusCode() : 0;
+        $httpCode = $response?->getStatusCode() ?? 0;
 
-        // Decodificar el JSON del request en array
-        $data = json_decode($request->getContent(), true);
-        if (!is_array($data)) {
-            $data = [];
+        // Construimos payload de forma segura (query + body JSON si hay)
+        $payload = $this->buildPayload($request);
+
+        // uuidClient desde query/body/atributos de ruta
+        $uuidClient = $this->extractUuidClient($request, $payload);
+
+        // Si no hay uuidClient, evitamos llamar a ClientConnectionManager (suele requerirlo)
+        if (!$uuidClient) {
+            $this->logger->info('RequestLog: no uuidClient, se omite persistencia específica del cliente.', [
+                'path' => $path,
+            ]);
+            return;
         }
 
-        // Obtener el uuid_client de la petición
-        $uuidClientFromRequest = $data['uuidClient'] ?? null;
+        // Datos de request/response
+        $requestDataString = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $responseData = $response?->getContent() ?? '';
 
         $ip = $request->getClientIp() ?? 'unknown';
-        $endpoint = $request->getPathInfo();
-
         $user = $this->security->getUser();
-        $this->logger->info('onKernelTerminate: Usuario => '.($user ? $user->getEmail() : 'no user'));
-        $this->logger->info('onKernelTerminate: Request Path => '.$endpoint);
-        $this->logger->info('onKernelTerminate: Request Content => '.$request->getContent());
-        $this->logger->info('onKernelTerminate: UUID del cliente de la petición => '.($uuidClientFromRequest ?: 'sin uuid'));
 
-        // Como en la entidad ApiCallsLog, setRequestData es string, convertimos el array a JSON
-        $requestDataString = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-
-        // El responseData lo podemos dejar tal cual (es un string)
-        $responseData = $response ? $response->getContent() : '';
+        $this->logger->info('RequestLog: registrando llamada', [
+            'user'         => $user?->getUserIdentifier() ?? 'anonymous',
+            'path'         => $path,
+            'http_code'    => $httpCode,
+            'processing_s' => round($processingTime, 4),
+            'uuid_client'  => $uuidClient,
+        ]);
 
         try {
-            // Obtener el EM del cliente usando el uuid_client de la petición
-            $em = $this->clientConnectionManager->getEntityManager($uuidClientFromRequest);
+            $em = $this->clientConnectionManager->getEntityManager($uuidClient);
 
             $log = new ApiCallsLog();
-            $log->setRequestAt(new \DateTime());
-            $log->setEndpoint($endpoint);
+            $log->setRequestAt(new \DateTimeImmutable());
+            $log->setEndpoint($path);
             $log->setIp($ip);
             $log->setProcessingTime((float) $processingTime);
             $log->setHttpCode($httpCode);
-            $log->setRequestData($requestDataString); // Aquí usamos la versión string del requestData
+            $log->setRequestData($requestDataString);
             $log->setResponseData($responseData);
 
             $em->persist($log);
             $em->flush();
-            $this->logger->info('Llegamos al final: onKernelTerminate se disparó y se registró la petición.');
-        } catch (\Exception $e) {
-            $this->logger->error('Error logging request', [
-                'exception' => $e,
-                'uuid_client' => $uuidClientFromRequest,
+        } catch (\Throwable $e) {
+            $this->logger->error('RequestLog: error persistiendo log', [
+                'exception'   => $e->getMessage(),
+                'uuid_client' => $uuidClient,
+                'path'        => $path,
             ]);
         }
+    }
+
+    /**
+     * Indica si se debe loguear el path.
+     */
+    private function shouldLogPath(string $path): bool
+    {
+        if (!str_starts_with($path, '/api')) {
+            return false;
+        }
+
+        // Rutas exactas a excluir
+        $excludedExact = [
+            '/api/login',
+            '/api/user_register',
+            '/api/client_register',
+            '/api/device_register',
+            '/api/app_register',
+            '/api/clients',
+            '/api/devices',
+            '/api/user/clients',
+            '/api/ttn-uplink',
+            '/api/admin',
+            '/api/create_subscription_plan',
+            '/api/subscription_plans',
+            '/api/subscription_plan_update',
+            '/api/subscription_plan_delete',
+            '/api/create_subscription',
+            '/api/stripe/webhook',
+            '/api/subscription/stripe_latest_invoice',
+        ];
+
+        if (in_array($path, $excludedExact, true)) {
+            return false;
+        }
+
+        // Prefijos a excluir (por ejemplo, documentación)
+        $excludedPrefixes = [
+            '/api/doc',
+        ];
+
+        foreach ($excludedPrefixes as $prefix) {
+            if (str_starts_with($path, $prefix)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Construye el payload combinando query y body JSON (si hay).
+     */
+    private function buildPayload(Request $request): array
+    {
+        $payload = $request->query->all();
+
+        $contentType = (string) $request->headers->get('Content-Type', '');
+        $raw = $request->getContent(); // Symfony lo cachea; llamadas repetidas son seguras
+
+        if ($raw !== '' && str_contains($contentType, 'application/json')) {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) {
+                // Lo del body tiene preferencia sobre query
+                $payload = array_merge($payload, $decoded);
+            }
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Intenta obtener uuidClient desde diferentes fuentes.
+     */
+    private function extractUuidClient(Request $request, array $payload): ?string
+    {
+        $uuid = $payload['uuidClient'] ?? null;
+        if (is_string($uuid) && $uuid !== '') {
+            return $uuid;
+        }
+
+        // Atributos de la ruta (por si defines {uuidClient} en la ruta)
+        $attrUuid = $request->attributes->get('uuidClient');
+        if (is_string($attrUuid) && $attrUuid !== '') {
+            return $attrUuid;
+        }
+
+        return null;
     }
 }

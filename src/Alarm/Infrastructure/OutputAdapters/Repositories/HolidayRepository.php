@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Alarm\Infrastructure\OutputAdapters\Repositories;
 
 use App\Alarm\Application\OutputPorts\Repositories\HolidayRepositoryInterface;
@@ -8,12 +7,7 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class HolidayRepository implements HolidayRepositoryInterface
 {
-    private EntityManagerInterface $entityManager;
-
-    public function __construct(EntityManagerInterface $entityManager)
-    {
-        $this->entityManager = $entityManager;
-    }
+    public function __construct(private EntityManagerInterface $entityManager) {}
 
     public function findByHolidayDate(\DateTimeInterface $holidayDate): ?Holiday
     {
@@ -22,12 +16,11 @@ class HolidayRepository implements HolidayRepositoryInterface
         ]);
     }
 
-    /**
-     * @return array<int, Holiday>
-     */
+    /** @return array<int, Holiday> */
     public function findAll(): array
     {
-        return $this->entityManager->getRepository(Holiday::class)->findBy([], ['holidayDate' => 'ASC']);
+        return $this->entityManager->getRepository(Holiday::class)
+            ->findBy([], ['holidayDate' => 'ASC']);
     }
 
     public function save(Holiday $holiday): void
@@ -43,5 +36,22 @@ class HolidayRepository implements HolidayRepositoryInterface
     public function flush(): void
     {
         $this->entityManager->flush();
+    }
+
+    /**
+     * Borra en lote por fechas exactas (DATE). Si pasas array vacío no hace nada.
+     * @param array<int, \DateTimeInterface> $dates
+     */
+    public function deleteByDates(array $dates): void
+    {
+        if (empty($dates)) {
+            return;
+        }
+        $qb = $this->entityManager->createQueryBuilder();
+        $qb->delete(Holiday::class, 'h')
+            ->where($qb->expr()->in('h.holidayDate', ':dates'))
+            ->setParameter('dates', $dates)
+            ->getQuery()
+            ->execute();
     }
 }

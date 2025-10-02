@@ -653,9 +653,12 @@ services:
         alias: 'App\Stripe\Application\UseCases\SetupIntentUseCase'
     App\Stripe\Application\OutputPorts\SetupIntentRepositoryInterface:
         alias: 'App\Stripe\Infrastructure\OutputAdapters\Repositories\SetupIntentRepository'
+  # Alarm services (añade estas dos entradas)
+    App\Alarm\Application\UseCases\SyncAlarmHolidaysUseCase:
+      arguments:
+        $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+        $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+        $logger: '@logger'
 
-
-
-
-
-
+    App\Alarm\Application\InputPorts\SyncAlarmHolidaysUseCaseInterface:
+      alias: App\Alarm\Application\UseCases\SyncAlarmHolidaysUseCase

@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -22,6 +23,7 @@ class GetAlarmsHolidaysController extends AbstractController
 
     public function __construct(
         private readonly GetHolidaysUseCaseInterface $getHolidaysUseCase,
+        private readonly SerializerInterface $serializer,
         private readonly ValidatorInterface $validator,
         private readonly LoggerInterface $logger,
         PermissionService $permissionService,
@@ -46,7 +48,25 @@ class GetAlarmsHolidaysController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Festivos recuperados correctamente'
+                description: 'Festivos recuperados correctamente',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', example: 'success'),
+                        new OA\Property(property: 'message', type: 'string', example: 'HOLIDAYS_RETRIEVED'),
+                        new OA\Property(
+                            property: 'holidays',
+                            type: 'array',
+                            items: new OA\Items(
+                                type: 'object',
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                                    new OA\Property(property: 'holiday_date', type: 'string', example: '2024-12-25'),
+                                    new OA\Property(property: 'name', type: 'string', nullable: true, example: 'Navidad'),
+                                ]
+                            )
+                        ),
+                    ]
+                )
             ),
             new OA\Response(response: 400, description: 'Datos inválidos'),
             new OA\Response(response: 401, description: 'Usuario no autenticado'),
@@ -62,15 +82,29 @@ class GetAlarmsHolidaysController extends AbstractController
                 return $permissionCheck;
             }
 
-            $uuidClient = $this->extractUuidClient($request);
-            if (!$uuidClient) {
+            // Unificamos entrada: primero query, si no hay miramos body
+            $payload = $request->query->all();
+            if (empty($payload) && '' !== $request->getContent()) {
+                $decoded = json_decode($request->getContent(), true);
+                if (is_array($decoded)) {
+                    $payload = $decoded;
+                }
+            }
+
+            if (empty($payload['uuidClient']) || !is_string($payload['uuidClient'])) {
                 return new JsonResponse([
                     'status' => 'error',
                     'message' => 'REQUIRED_CLIENT_ID',
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            $dto = new GetHolidaysRequest($uuidClient);
+            /** @var GetHolidaysRequest $dto */
+            $dto = $this->serializer->deserialize(
+                json_encode(['uuidClient' => $payload['uuidClient']], JSON_THROW_ON_ERROR),
+                GetHolidaysRequest::class,
+                'json'
+            );
+
             $errors = $this->validator->validate($dto);
             if (count($errors) > 0) {
                 return $this->validationErrorResponse($errors);
@@ -103,28 +137,6 @@ class GetAlarmsHolidaysController extends AbstractController
                 'message' => 'UNEXPECTED_ERROR',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-    }
-
-    private function extractUuidClient(Request $request): ?string
-    {
-        $uuidClient = $request->query->get('uuidClient');
-        if (is_string($uuidClient) && '' !== $uuidClient) {
-            return $uuidClient;
-        }
-
-        $content = $request->getContent();
-        if ('' === $content) {
-            return null;
-        }
-
-        $data = json_decode($content, true);
-        if (!is_array($data)) {
-            return null;
-        }
-
-        $uuidClientFromBody = $data['uuidClient'] ?? null;
-
-        return is_string($uuidClientFromBody) && '' !== $uuidClientFromBody ? $uuidClientFromBody : null;
     }
 
     private function validationErrorResponse(ConstraintViolationListInterface $errors): JsonResponse
