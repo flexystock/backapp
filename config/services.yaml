@@ -277,6 +277,15 @@ services:
     App\Product\Application\InputPorts\GetInfoToDashboardMainUseCaseInterface:
         alias: App\Product\Application\UseCases\GetInfoToDashboardMainUseCase
 
+    App\Dashboard\Application\UseCases\GetDashboardSummaryUseCase:
+        arguments:
+            $getInfoToDashboardMainUseCase: '@App\\Product\\Application\\InputPorts\\GetInfoToDashboardMainUseCaseInterface'
+            $getInfoScalesToDashboardMainUseCase: '@App\\Scales\\Application\\InputPorts\\GetInfoScalesToDashboardMainUseCaseInterface'
+            $logger: '@logger'
+
+    App\Dashboard\Application\InputPorts\GetDashboardSummaryUseCaseInterface:
+        alias: App\Dashboard\Application\UseCases\GetDashboardSummaryUseCase
+
     # Registrar el Repositorio
     App\Product\Infrastructure\OutputAdapters\Repositories\ProductRepository:
         arguments:
@@ -445,6 +454,12 @@ services:
     App\Scales\Application\InputPorts\GetInfoScalesToDashboardMainUseCaseInterface:
         alias: App\Scales\Application\UseCases\GetInfoScalesToDashboardMainUseCase
 
+
+
+    App\Dashboard\Infrastructure\InputAdapters\:
+        resource: '../src/Dashboard/Infrastructure/InputAdapters'
+        tags: [ 'controller.service_arguments' ]
+        public: true
 
 
     # Controller
