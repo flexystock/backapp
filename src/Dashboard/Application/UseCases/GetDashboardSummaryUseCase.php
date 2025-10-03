@@ -2,6 +2,10 @@
 
 namespace App\Dashboard\Application\UseCases;
 
+use App\Alarm\Application\DTO\GetBusinessHoursRequest;
+use App\Alarm\Application\DTO\GetHolidaysRequest;
+use App\Alarm\Application\InputPorts\GetBusinessHoursUseCaseInterface;
+use App\Alarm\Application\InputPorts\GetHolidaysUseCaseInterface;
 use App\Dashboard\Application\DTO\GetDashboardSummaryRequest;
 use App\Dashboard\Application\DTO\GetDashboardSummaryResponse;
 use App\Dashboard\Application\InputPorts\GetDashboardSummaryUseCaseInterface;
@@ -10,6 +14,7 @@ use App\Product\Application\InputPorts\GetInfoToDashboardMainUseCaseInterface;
 use App\Scales\Application\DTO\GetInfoScalesToDashboardMainRequest;
 use App\Scales\Application\InputPorts\GetInfoScalesToDashboardMainUseCaseInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 class GetDashboardSummaryUseCase implements GetDashboardSummaryUseCaseInterface
@@ -19,6 +24,8 @@ class GetDashboardSummaryUseCase implements GetDashboardSummaryUseCaseInterface
     public function __construct(
         private readonly GetInfoToDashboardMainUseCaseInterface $getInfoToDashboardMainUseCase,
         private readonly GetInfoScalesToDashboardMainUseCaseInterface $getInfoScalesToDashboardMainUseCase,
+        private readonly GetBusinessHoursUseCaseInterface $getBusinessHoursUseCase,
+        private readonly GetHolidaysUseCaseInterface $getHolidaysUseCase,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -33,7 +40,7 @@ class GetDashboardSummaryUseCase implements GetDashboardSummaryUseCaseInterface
             );
 
             if (200 !== $productResponse->getStatusCode()) {
-                return new GetDashboardSummaryResponse(null, null, $productResponse->getError(), $productResponse->getStatusCode());
+                return new GetDashboardSummaryResponse(null, null, null, null, $productResponse->getError(), $productResponse->getStatusCode());
             }
 
             $scalesResponse = $this->getInfoScalesToDashboardMainUseCase->execute(
@@ -41,20 +48,43 @@ class GetDashboardSummaryUseCase implements GetDashboardSummaryUseCaseInterface
             );
 
             if (200 !== $scalesResponse->getStatusCode()) {
-                return new GetDashboardSummaryResponse(null, null, $scalesResponse->getError(), $scalesResponse->getStatusCode());
+                return new GetDashboardSummaryResponse(null, null, null, null, $scalesResponse->getError(), $scalesResponse->getStatusCode());
             }
 
             $lowStockProducts = $this->extractLowStockProducts($productResponse->getProduct() ?? []);
             $lowBatteryScales = $this->extractLowBatteryScales($scalesResponse->getScale() ?? []);
 
-            return new GetDashboardSummaryResponse($lowStockProducts, $lowBatteryScales, null, 200);
+            try {
+                $businessHoursResponse = $this->getBusinessHoursUseCase->execute(
+                    new GetBusinessHoursRequest($uuidClient)
+                );
+            } catch (RuntimeException $exception) {
+                return $this->buildErrorResponseFromRuntimeException($exception);
+            }
+
+            try {
+                $holidaysResponse = $this->getHolidaysUseCase->execute(
+                    new GetHolidaysRequest($uuidClient)
+                );
+            } catch (RuntimeException $exception) {
+                return $this->buildErrorResponseFromRuntimeException($exception);
+            }
+
+            return new GetDashboardSummaryResponse(
+                $lowStockProducts,
+                $lowBatteryScales,
+                $businessHoursResponse->getBusinessHours(),
+                $holidaysResponse->getHolidays(),
+                null,
+                200
+            );
         } catch (Throwable $exception) {
             $this->logger->error('GetDashboardSummaryUseCase: unexpected error while aggregating dashboard data', [
                 'uuid_client' => $uuidClient,
                 'exception' => $exception,
             ]);
 
-            return new GetDashboardSummaryResponse(null, null, 'Internal Server Error', 500);
+            return new GetDashboardSummaryResponse(null, null, null, null, 'Internal Server Error', 500);
         }
     }
 
@@ -107,5 +137,15 @@ class GetDashboardSummaryUseCase implements GetDashboardSummaryUseCaseInterface
 
             return (float) $voltage <= self::LOW_BATTERY_THRESHOLD;
         }));
+    }
+
+    private function buildErrorResponseFromRuntimeException(RuntimeException $exception): GetDashboardSummaryResponse
+    {
+        $statusCode = match ($exception->getMessage()) {
+            'CLIENT_NOT_FOUND' => 404,
+            default => 400,
+        };
+
+        return new GetDashboardSummaryResponse(null, null, null, null, $exception->getMessage(), $statusCode);
     }
 }

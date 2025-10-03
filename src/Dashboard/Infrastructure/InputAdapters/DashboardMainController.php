@@ -62,6 +62,16 @@ class DashboardMainController extends AbstractController
                             type: 'array',
                             items: new OA\Items(type: 'object')
                         ),
+                        new OA\Property(
+                            property: 'businessHours',
+                            type: 'array',
+                            items: new OA\Items(type: 'object')
+                        ),
+                        new OA\Property(
+                            property: 'holidays',
+                            type: 'array',
+                            items: new OA\Items(type: 'object')
+                        ),
                     ],
                     type: 'object'
                 )
@@ -158,6 +168,8 @@ class DashboardMainController extends AbstractController
                 [
                     'lowStockProducts' => $summaryResponse->getLowStockProducts(),
                     'lowBatteryScales' => $summaryResponse->getLowBatteryScales(),
+                    'businessHours' => $summaryResponse->getBusinessHours(),
+                    'holidays' => $summaryResponse->getHolidays(),
                 ],
                 Response::HTTP_OK
             );
@@ -173,8 +185,8 @@ class DashboardMainController extends AbstractController
     private function isValidUuid(string $uuid): bool
     {
         return 1 === preg_match(
-            '/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/',
-            $uuid
-        );
+                '/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/',
+                $uuid
+            );
     }
 }

@@ -349,6 +349,8 @@ services:
     arguments:
       $getInfoToDashboardMainUseCase: '@App\Product\Application\InputPorts\GetInfoToDashboardMainUseCaseInterface'
       $getInfoScalesToDashboardMainUseCase: '@App\Scales\Application\InputPorts\GetInfoScalesToDashboardMainUseCaseInterface'
+      $getBusinessHoursUseCase: '@App\Alarm\Application\InputPorts\GetBusinessHoursUseCaseInterface'
+      $getHolidaysUseCase: '@App\Alarm\Application\InputPorts\GetHolidaysUseCaseInterface'
       $logger: '@logger'
 
   App\Dashboard\Application\InputPorts\GetDashboardSummaryUseCaseInterface:
