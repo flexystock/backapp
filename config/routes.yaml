@@ -58,3 +58,8 @@ controllers_alarm:
     path: ../src/Alarm/Infrastructure/InputAdapters/
     namespace: App\Alarm\Infrastructure\InputAdapters
   type: attribute
+controllers_dashboard:
+  resource:
+    path: ../src/Dashboard/Infrastructure/InputAdapters/
+    namespace: App\Dashboard\Infrastructure\InputAdapters
+  type: attribute

@@ -2,663 +2,699 @@
 # Files in the packages/ subdirectory configure your dependencies.
 
 parameters:
-    stripe_webhook_secret: '%env(STRIPE_WEBHOOK_SECRET)%'
-    ttn_device_script_email_recipient: 'flexystock@gmail.com'
-    ttn_device_script_email_sender: 'flexystock@gmail.com'
-    stock_alert_email_sender: 'flexystock@gmail.com'
+  stripe_webhook_secret: '%env(STRIPE_WEBHOOK_SECRET)%'
+  ttn_device_script_email_recipient: 'flexystock@gmail.com'
+  ttn_device_script_email_sender: 'flexystock@gmail.com'
+  stock_alert_email_sender: 'flexystock@gmail.com'
+
 services:
-    # Configuración predeterminada para autowire y autoconfigure
-    _defaults:
-        autowire: true
-        autoconfigure: true
-
-    # Autoload de los servicios de la aplicación
-    App\:
-        resource: '../src/*'
-        exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php, var}'
-
-    # Configuración del LoginUserUseCase
-    App\User\Application\UseCases\Auth\LoginUserUseCase:
-        arguments:
-            $userRepository: '@App\User\Application\OutputPorts\Repositories\UserRepositoryInterface'
-            # Esta línea asegura que el password hasher sea inyectado automáticamente
-            $passwordHasher: '@Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface'
-
-    App\User\Application\UseCases\Auth\RegisterUserUseCase:
-        arguments:
-            $userRepositoryInterface: '@App\User\Infrastructure\OutputAdapters\Repositories\UserRepository'
-            $passwordHasher: '@security.password_hasher'
-            $validator: '@validator'
-
-#    App\User\Infrastructure\InputAdapters\RegisterUserController:
-#        arguments:
-#            $registerUseCase: '@App\User\Application\RegisterUserUseCase'
-
-    # Configura controladores para que sean públicos y tengan las etiquetas adecuadas
-    App\User\Infrastructure\InputAdapters\:
-        resource: '../src/User/Infrastructure/InputAdapters'
-        tags: ['controller.service_arguments']
-        public: true
-
-    # Configura los servicios para el manejo de repositorios y tokens
-    App\User\Infrastructure\OutputAdapters\Repositories\UserRepository:
-        arguments:
-            $registry: '@doctrine' # Este debe ser un alias para ManagerRegistry si es que está configurado así
-        tags:
-            - { name: 'doctrine.repository_service' }
-
-    App\User\Infrastructure\OutputAdapters\JWTTokenManager:
-        arguments:
-            - '%env(APP_SECRET)%'
-
-    App\User\Application\InputPorts\Auth\ResendEmailVerificationTokenInterface:
-        alias: App\User\Application\UseCases\Auth\ResendEmailVerificationTokenUseCase
-        public: true
-
-    # Configuración de servicios para la sección de Client
-    App\User\Application\UseCases\Auth\ResendEmailVerificationTokenUseCase:
-        arguments:
-            $userRepository: '@App\User\Application\OutputPorts\Repositories\UserRepositoryInterface'
-            $notificationService: '@App\User\Application\OutputPorts\NotificationServiceInterface'
-    # Configuración de servicios para la sección de Client
-    App\Client\Application\UseCases\CreateClientUseCase:
-        arguments:
-            $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
-
-    App\Client\Application\UseCases\GetInfoClientUseCase:
-        arguments:
-            $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
-
-    App\Client\Application\UseCases\UpdateInfoClientUseCase:
-        arguments:
-            $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
-
-    App\Client\Infrastructure\InputAdapters\CreateClientController:
-        arguments:
-            $createClientUseCase: '@App\Client\Application\UseCases\CreateClientUseCase'
-
-    App\Client\Infrastructure\InputAdapters\GetInfoClientController:
-        arguments:
-          $GetInfoClientUseCase: '@App\Client\Application\UseCases\GetInfoClientUseCase'
-
-    App\Client\Infrastructure\InputAdapters\UpdateInfoClientController:
-      arguments:
-        $UpdateInfoClientUseCase: '@App\Client\Application\UseCases\UpdateInfoClientUseCase'
-
-    App\Client\Infrastructure\InputAdapters\:
-        resource: '../src/Client/Infrastructure/InputAdapters'
-        tags: [ 'controller.service_arguments' ]
-        public: true
-
-    App\Client\Infrastructure\OutputAdapters\Repositories\ClientRepository:
-        arguments:
-            $registry: '@doctrine'
-        tags:
-            - { name: 'doctrine.repository_service' }
-
-    App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface:
-        alias: App\Client\Infrastructure\OutputAdapters\Repositories\ClientRepository
-
-    # Alarm services
-    App\Alarm\Application\UseCases\CreateAlarmOutOfHoursUseCase:
-      arguments:
-        $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
-        $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-        $logger: '@logger'
-
-    App\Alarm\Application\InputPorts\CreateAlarmOutOfHoursUseCaseInterface:
-      alias: App\Alarm\Application\UseCases\CreateAlarmOutOfHoursUseCase
-
-    App\Alarm\Application\UseCases\CreateAlarmHolidayUseCase:
-      arguments:
-        $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
-        $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-        $logger: '@logger'
-
-    App\Alarm\Application\InputPorts\CreateAlarmHolidayUseCaseInterface:
-      alias: App\Alarm\Application\UseCases\CreateAlarmHolidayUseCase
-
-    App\Alarm\Application\UseCases\GetBusinessHoursUseCase:
-      arguments:
-        $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
-        $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-        $logger: '@logger'
-
-    App\Alarm\Application\InputPorts\GetBusinessHoursUseCaseInterface:
-      alias: App\Alarm\Application\UseCases\GetBusinessHoursUseCase
-
-    App\Alarm\Application\UseCases\GetHolidaysUseCase:
-      arguments:
-        $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
-        $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-        $logger: '@logger'
-
-    App\Alarm\Application\InputPorts\GetHolidaysUseCaseInterface:
-      alias: App\Alarm\Application\UseCases\GetHolidaysUseCase
-
-    App\Alarm\Infrastructure\InputAdapters\:
-      resource: '../src/Alarm/Infrastructure/InputAdapters'
-      tags: [ 'controller.service_arguments' ]
-      public: true
-
-    App\MessageHandler\CreateDockerContainerMessageHandler:
-        tags: [ 'messenger.message_handler']
-
-    App\Service\DockerService:
-        arguments:
-            $logger: '@logger'
-            $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
-            $projectDir: '%kernel.project_dir%'
-
-    App\User\Application\OutputPorts\NotificationServiceInterface:
-        alias: App\User\Infrastructure\OutputAdapters\Services\EmailNotificationService
-
-    App\Ttn\Application\OutputPorts\DeviceScriptNotifierInterface:
-        alias: App\Ttn\Infrastructure\OutputAdapters\Services\EmailDeviceScriptNotifier
-
-    App\Ttn\Infrastructure\OutputAdapters\Services\EmailDeviceScriptNotifier:
-        arguments:
-            $recipientEmail: '%ttn_device_script_email_recipient%'
-            $senderEmail: '%ttn_device_script_email_sender%'
-
-    App\User\Application\InputPorts\RequestPasswordResetInterface:
-        alias: App\User\Application\UseCases\Password\RequestPasswordResetUseCase
-
-    App\User\Application\InputPorts\ResetPasswordInterface:
-        alias: App\User\Application\UseCases\Password\ResetPasswordUseCase
-
-    # OutputPorts Implementations
-    App\User\Application\OutputPorts\PasswordResetRepositoryInterface:
-        alias: App\User\Infrastructure\OutputAdapters\Repositories\PasswordResetRepository
-
-    App\User\Application\OutputPorts\Repositories\UserRepositoryInterface:
-        alias: App\User\Infrastructure\OutputAdapters\Repositories\UserRepository
-
-    App\User\Application\InputPorts\Profile\GetUserInfoUseCaseInterface:
-        alias: App\User\Application\UseCases\Profile\GetUserInfoUseCase
-
-
-    # Controladores
-    App\User\Infrastructure\InputAdapters\PasswordResetController:
-        tags: [ 'controller.service_arguments' ]
-
-    App\EventSubscriber\MailSentSubscriber:
-        tags: [ 'kernel.event_subscriber' ]
-
-    App\User\Application\InputPorts\GetUserClientsInterface:
-        alias: App\User\Application\UseCases\GetUserClientsUseCase
-
-    App\User\Application\InputPorts\GetUsersByClientInputPort:
-        alias: App\User\Application\UseCases\GetUsersByClientUseCase
-
-    # Controlador
-    App\User\Infrastructure\InputAdapters\GenericUserController:
-        tags: [ 'controller.service_arguments' ]
-
-    App\EventListener\JWTCreatedListener:
-        tags:
-            - { name: 'kernel.event_listener', event: 'lexik_jwt_authentication.on_jwt_created', method: 'onJWTCreated' }
-
-    App\EventListener\JWTDecodedListener:
-        tags:
-            - { name: 'kernel.event_listener', event: 'lexik_jwt_authentication.on_jwt_decoded', method: 'onJWTDecoded' }
-
-    App\User\Application\UseCases\Auth\SelectClientUseCase:
-        arguments:
-            $jwtManager: '@lexik_jwt_authentication.jwt_manager'
-        tags: [ 'app.use_case' ]
-
-    App\User\Infrastructure\InputAdapters\AuthController:
-        public: true
-        autowire: true
-        autoconfigure: true
-        tags: [ 'controller.service_arguments' ]
-
-    App\Infrastructure\Services\ClientConnectionManager:
-        arguments:
-            $mainEntityManager: '@doctrine.orm.main_entity_manager'
-            $logger: '@logger'
-            $params: '@parameter_bag'
-        public: true
-
-    # PRODUCT
-    # Registrar la Interfaz del Repositorio (alias)
-    App\Product\Application\OutputPorts\Repositories\ProductRepositoryInterface:
-        alias: App\Product\Infrastructure\OutputAdapters\Repositories\ProductRepository
-    App\Product\Application\OutputPorts\Repositories\WeightsLogRepositoryInterface:
-        alias: App\Product\Infrastructure\OutputAdapters\Repositories\WeightsLogRepository
-
-    # Registrar el Repositorio (no inyectado directamente, se crea dinámicamente)
-    # No es necesario registrar aquí ya que se crea en el UseCase
-
-
-    # Registrar el Caso de Uso
-    App\Product\Application\UseCases\GetProductUseCase:
-        arguments:
-            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-            $logger: '@logger'
-    App\Product\Application\UseCases\GetAllProductsUseCase:
-        arguments:
-            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-            $logger: '@logger'
-
-    App\Product\Application\UseCases\CreateProductUseCase:
-        arguments:
-            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-            $logger: '@logger'
-    App\Product\Application\UseCases\DeleteProductUseCase:
-        arguments:
-            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-            $logger: '@logger'
-    App\Product\Application\UseCases\UpdateProductUseCase:
-        arguments:
-            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-            $logger: '@logger'
-    App\Product\Application\UseCases\GetInfoToDashboardMainUseCase:
-        arguments:
-            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-
-    # Registrar la Interfaz del Caso de Uso y vincularla con la implementación
-    App\Product\Application\InputPorts\GetProductUseCaseInterface:
-        alias: App\Product\Application\UseCases\GetProductUseCase
-    # Registrar la Interfaz del Caso de Uso y vincularla con la implementación
-    App\Product\Application\InputPorts\GetAllProductsUseCaseInterface:
-        alias: App\Product\Application\UseCases\GetAllProductsUseCase
-
-    App\Product\Application\InputPorts\CreateProductUseCaseInterface:
-        alias: App\Product\Application\UseCases\CreateProductUseCase
-
-    App\Product\Application\InputPorts\DeleteProductUseCaseInterface:
-        alias: App\Product\Application\UseCases\DeleteProductUseCase
-
-    App\Product\Application\InputPorts\UpdateProductUseCaseInterface:
-        alias: App\Product\Application\UseCases\UpdateProductUseCase
-
-    App\Product\Application\InputPorts\GetInfoToDashboardMainUseCaseInterface:
-        alias: App\Product\Application\UseCases\GetInfoToDashboardMainUseCase
-
-    # Registrar el Repositorio
-    App\Product\Infrastructure\OutputAdapters\Repositories\ProductRepository:
-        arguments:
-            $em: '@doctrine.orm.main_entity_manager' # Este EntityManager se reemplazará dinámicamente en el caso de uso
-
-    App\Product\Infrastructure\OutputAdapters\Repositories\WeightsLogRepository:
-        arguments:
-            $em: '@doctrine.orm.main_entity_manager' # Este EntityManager se reemplazará dinámicamente en el caso de uso
-
-    doctrine.dbal.logger:
-        class: App\Logger\DoctrineSQLLogger
-        arguments:
-            $logger: '@monolog.logger'
-
-    App\Logger\DoctrineSQLMiddleware:
-        arguments:
-            $logger: '@monolog.logger.doctrine'
-        tags:
-            - { name: 'doctrine.dbal.middleware', connection: 'main' }
-
-    App\Logger\DoctrineSQLLogger:
-        arguments:
-            $logger: '@monolog.logger.doctrine'
-        tags: [ 'doctrine.dbal.logger' ]
-    App\EventListener\RequestTimeListener:
-        tags:
-            - { name: 'kernel.event_listener', event: 'kernel.request', method: 'onKernelRequest', priority: 100 }
-
-    App\EventSubscriber\RequestLogSubscriber:
-        tags:
-            - { name: 'kernel.event_subscriber' }
-    # TTN
-    App\Ttn\Infrastructure\OutputAdapters\Services\TtnApiClient:
-        arguments:
-            $apiBase: '%env(TTN_API_BASE_URL)%'
-            $apiKey: '%env(TTN_API_KEY)%'
-            $tenantId: '%env(TTN_DEFAULT_APPLICATION_ID)%'
-            $apiUserKey: '%env(TTN_USER_APP_KEY)%'
-            $apiAppKey: '%env(TTN_APP_KEY)%'
-
-
-    App\Ttn\Infrastructure\OutputAdapters\Services\TtnService:
-        arguments:
-            $apiClient: '@App\Ttn\Infrastructure\OutputAdapters\Services\TtnApiClient'
-            $applicationId: '%env(TTN_APPLICATION_ID)%'
-            $networkServerAddress: '%env(TTN_NETWORK_SERVER_ADDRESS)%'
-            $applicationServerAddress: '%env(TTN_APPLICATION_SERVER_ADDRESS)%'
-            $joinServerAddress: '%env(TTN_JOIN_SERVER_ADDRESS)%'
-            $lorawanVersion: '%env(TTN_LORAWAN_VERSION)%'
-            $lorawanPhyVersion: '%env(TTN_LORAWAN_PHY_VERSION)%'
-            $frequencyPlanId: '%env(TTN_FREQUENCY_PLAN_ID)%'
-            $apiUserKey: '%env(TTN_USER_APP_KEY)%'
-            $apiAppKey: '%env(TTN_APP_KEY)%'
-
-    App\Ttn\Application\OutputPorts\TtnServiceInterface:
-        alias: App\Ttn\Infrastructure\OutputAdapters\Services\TtnService
-
-    App\Ttn\Application\UseCases\RegisterTtnAppUseCase:
-        arguments:
-            $ttnService: '@App\Ttn\Application\OutputPorts\TtnServiceInterface'
-
-    App\Ttn\Application\UseCases\RegisterTtnDeviceUseCase:
-        arguments:
-            $ttnService: '@App\Ttn\Application\OutputPorts\TtnServiceInterface'
-            $deviceRepository: '@App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface'
-            $poolScaleRepository: '@App\Scales\Application\OutputPorts\PoolScalesRepositoryInterface'
-
-    App\Ttn\Application\InputPorts\RegisterTtnDeviceUseCaseInterface:
-        alias: App\Ttn\Application\UseCases\RegisterTtnDeviceUseCase
-
-    App\Ttn\Application\InputPorts\RegisterTtnAppUseCaseInterface:
-        alias: App\Ttn\Application\UseCases\RegisterTtnAppUseCase
-
-    App\Ttn\Infrastructure\InputAdapters\TtnController:
-        public: true
-        autowire: true
-        autoconfigure: true
-        tags: [ 'controller.service_arguments' ]
-
-    App\Ttn\Application\InputPorts\GetAllTtnDevicesUseCaseInterface:
-        alias: App\Ttn\Application\UseCases\GetAllTtnDevicesUseCase
-
-    App\Ttn\Application\InputPorts\GetAllTtnAppsUseCaseInterface:
-        alias: App\Ttn\Application\UseCases\GetAllTtnAppsUseCase
-
-    App\Ttn\Infrastructure\OutputAdapters\Repositories\PoolTtnDeviceRepository:
-        arguments:
-            $em: '@doctrine.orm.main_entity_manager' # Este EntityManager se reemplazará dinámicamente en el caso de uso
-
-    App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface:
-        alias: App\Ttn\Infrastructure\OutputAdapters\Repositories\PoolTtnDeviceRepository
-
-    App\Ttn\Application\OutputPorts\MinimumStockNotificationInterface:
-        alias: App\Ttn\Infrastructure\OutputAdapters\Services\EmailMinimumStockNotifier
-
-    App\Ttn\Infrastructure\OutputAdapters\Services\EmailMinimumStockNotifier:
-        arguments:
-            $senderEmail: '%stock_alert_email_sender%'
-
-    App\Ttn\Application\OutputPorts\WeightVariationAlertNotifierInterface:
-        alias: App\Ttn\Infrastructure\OutputAdapters\Services\EmailWeightVariationAlertNotifier
-
-    App\Ttn\Infrastructure\OutputAdapters\Services\EmailWeightVariationAlertNotifier:
-        arguments:
-            $senderEmail: '%stock_alert_email_sender%'
-
-    App\Ttn\Application\InputPorts\UnassignTtnDeviceUseCaseInterface:
-        alias: App\Ttn\Application\UseCases\UnassignTtnDeviceUseCase
-
-    App\Ttn\Application\UseCases\UnassignTtnDeviceUseCase:
-        arguments:
-            $ttnService: '@App\Ttn\Application\OutputPorts\TtnServiceInterface'
-            $deviceRepository: '@App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface'
-
-    # Scales UseCase
-    App\Scales\Application\UseCases\RegisterScalesUseCase:
-        arguments:
-            $scalesRepository: '@App\Scales\Application\OutputPorts\ScalesRepositoryInterface'
-
-    # Scales Repository
-    App\Scales\Infrastructure\OutputAdapters\Repositories\ScalesRepository:
-        arguments:
-            $em: '@doctrine.orm.main_entity_manager' # Este EntityManager se reemplazará dinámicamente en el caso de uso
-
-    # Alias OutputPort
-    App\Scales\Application\OutputPorts\ScalesRepositoryInterface:
-        alias: App\Scales\Infrastructure\OutputAdapters\Repositories\ScalesRepository
-
-    App\Scales\Application\OutputPorts\PoolScalesRepositoryInterface:
-        alias: App\Scales\Infrastructure\OutputAdapters\Repositories\PoolScalesRepository
-
-    # Alias InputPort
-    App\Scales\Application\InputPorts\RegisterScalesUseCaseInterface:
-        alias: App\Scales\Application\UseCases\RegisterScalesUseCase
-
-    App\Scales\Application\UseCases\GetScaleUseCase:
-        arguments:
-            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-            $logger: '@logger'
-    App\Scales\Application\UseCases\GetAllScalesUseCase:
-        arguments:
-            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-            $logger: '@logger'
-    App\Scales\Application\UseCases\UpdateScaleUseCase:
-        arguments:
-            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-            $logger: '@logger'
-    App\Scales\Application\UseCases\DeleteScaleUseCase:
-        arguments:
-            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-            $logger: '@logger'
-
-
-    App\Scales\Application\UseCases\GetInfoScalesToDashboardMainUseCase:
-        arguments:
-            $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-            $logger: '@logger'
-    App\Scales\Application\InputPorts\GetScaleUseCaseInterface:
-        alias: App\Scales\Application\UseCases\GetScaleUseCase
-    App\Scales\Application\InputPorts\GetAllScalesUseCaseInterface:
-        alias: App\Scales\Application\UseCases\GetAllScalesUseCase
-    App\Scales\Application\InputPorts\UpdateScaleUseCaseInterface:
-        alias: App\Scales\Application\UseCases\UpdateScaleUseCase
-    App\Scales\Application\InputPorts\DeleteScaleUseCaseInterface:
-        alias: App\Scales\Application\UseCases\DeleteScaleUseCase
-    App\Scales\Application\InputPorts\GetInfoScalesToDashboardMainUseCaseInterface:
-        alias: App\Scales\Application\UseCases\GetInfoScalesToDashboardMainUseCase
-
-
-
-    # Controller
-    App\Scales\Infrastructure\InputAdapters\ScalesController:
-        arguments:
-            $registerScalesUseCase: '@App\Scales\Application\InputPorts\RegisterScalesUseCaseInterface'
-            $logger: '@logger'
-        tags: [ 'controller.service_arguments' ]
-        public: true
-
-    App\Scales\Infrastructure\InputAdapters\:
-        resource: '../src/Scales/Infrastructure/InputAdapters'
-        tags: [ 'controller.service_arguments' ]
-        public: true
-
-    App\Ttn\Infrastructure\InputAdapters\:
-        resource: '../src/Ttn/Infrastructure/InputAdapters'
-        tags: [ 'controller.service_arguments' ]
-        public: true
-
-    App\Ttn\Application\InputPorts\HandleTtnUplinkUseCaseInterface:
-        alias: App\Ttn\Application\UseCases\HandleTtnUplinkUseCase
-
-    App\Ttn\Application\UseCases\HandleTtnUplinkUseCase:
-        arguments:
-            $poolTtnDeviceRepo: '@App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface'
-            $connManager: '@App\Infrastructure\Services\ClientConnectionManager'
-            $ScaleRepository: '@App\Scales\Application\OutputPorts\ScalesRepositoryInterface'
-            $minimumStockNotifier: '@App\Ttn\Application\OutputPorts\MinimumStockNotificationInterface'
-
-    App\Admin\Role\Application\InputPorts\AssignRoleUseCaseInterface:
-        alias: App\Admin\Role\Application\UseCases\AssignRoleUseCase
-
-    App\Admin\Role\Infrastructure\OutputAdapters\Repositories\RoleRepository:
-        arguments:
-            $registry: '@doctrine'
-        tags:
-            - { name: 'doctrine.repository_service' }
-
-    App\Admin\Role\Application\OutputPorts\Repositories\RoleRepositoryInterface:
-        alias: App\Admin\Role\Infrastructure\OutputAdapters\Repositories\RoleRepository
-
-    App\Admin\Role\Infrastructure\InputAdapters\AssignRoleController:
-        tags: ['controller.service_arguments']
-        public: true
-
-
-    App\Admin\Infrastructure\InputAdapters\DashboardController:
-        tags: ['controller.service_arguments']
-        public: true
-
-    # Subscriptions
-    App\Subscription\Application\UseCases\CreateSubscriptionPlanUseCase:
-        arguments:
-            $subscriptionPlanRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface'
-            $logger: '@logger'
-
-    App\Subscription\Application\InputPorts\CreateSubscriptionPlanUseCaseInterface:
-        alias: App\Subscription\Application\UseCases\CreateSubscriptionPlanUseCase
-    App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionPlanRepository:
-        arguments:
-            $registry: '@doctrine'
-            $entityManager: '@doctrine.orm.main_entity_manager' # Este EntityManager se reemplazará dinámicamente en el caso de uso
-
-    App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface:
-        alias: App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionPlanRepository
-
-    App\Subscription\Infrastructure\InputAdapters\CreateSubscriptionPlanController:
-        tags: ['controller.service_arguments']
-        public: true
-
-
-    App\Subscription\Application\UseCases\GetInfoSubscriptionPlansUseCase:
-        arguments:
-            $subscriptionPlanRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface'
-            $logger: '@logger'
-
-    App\Subscription\Application\InputPorts\GetInfoSubscriptionPlansUseCaseInterface:
-        alias: App\Subscription\Application\UseCases\GetInfoSubscriptionPlansUseCase
-
-
-    App\Subscription\Infrastructure\InputAdapters\GetInfoSubscriptionPlansController:
-        tags: [ 'controller.service_arguments' ]
-        public: true
-
-    App\Subscription\Application\UseCases\UpdateSubscriptionPlanUseCase:
-        arguments:
-            $subscriptionPlanRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface'
-            $logger: '@logger'
-
-    App\Subscription\Application\InputPorts\UpdateSubscriptionPlanUseCaseInterface:
-        alias: App\Subscription\Application\UseCases\UpdateSubscriptionPlanUseCase
-
-    App\Subscription\Infrastructure\InputAdapters\UpdateSubscriptionPlanController:
-        tags: ['controller.service_arguments']
-        public: true
-
-    App\Subscription\Application\UseCases\DeleteSubscriptionPlanUseCase:
-        arguments:
-            $subscriptionPlanRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface'
-            $logger: '@logger'
-
-    App\Subscription\Application\InputPorts\DeleteSubscriptionPlanUseCaseInterface:
-        alias: App\Subscription\Application\UseCases\DeleteSubscriptionPlanUseCase
-
-    App\Subscription\Infrastructure\InputAdapters\DeleteSubscriptionPlanController:
-        tags: ['controller.service_arguments']
-        public: true
-
-    App\Subscription\Application\UseCases\CreateSubscriptionUseCase:
-        arguments:
-            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
-            $entityManager: '@doctrine.orm.main_entity_manager'
-            $logger: '@logger'
-            $paymentGateway: '@App\Infrastructure\Services\PaymentGatewayService'
-
-    App\Subscription\Application\InputPorts\CreateSubscriptionUseCaseInterface:
-        alias: App\Subscription\Application\UseCases\CreateSubscriptionUseCase
-    App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionRepository:
-        arguments:
-            $registry: '@doctrine'
-            $entityManager: '@doctrine.orm.main_entity_manager'
-
-    App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface:
-        alias: App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionRepository
-
-    App\Subscription\Infrastructure\InputAdapters\CreateSubscriptionController:
-        tags: ['controller.service_arguments']
-        public: true
-
-    App\Subscription\Application\UseCases\GetInfoSubscriptionUseCase:
-        arguments:
-            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
-            $logger: '@logger'
-
-    App\Subscription\Application\InputPorts\GetInfoSubscriptionUseCaseInterface:
-        alias: App\Subscription\Application\UseCases\GetInfoSubscriptionUseCase
-
-    App\Subscription\Infrastructure\InputAdapters\GetInfoSubscriptionController:
-        tags: ['controller.service_arguments']
-        public: true
-
-    App\Subscription\Application\UseCases\UpdateSubscriptionUseCase:
-        arguments:
-            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
-            $entityManager: '@doctrine.orm.main_entity_manager'
-            $logger: '@logger'
-
-    App\Subscription\Application\InputPorts\UpdateSubscriptionUseCaseInterface:
-        alias: App\Subscription\Application\UseCases\UpdateSubscriptionUseCase
-
-    App\Subscription\Infrastructure\InputAdapters\UpdateSubscriptionController:
-        tags: ['controller.service_arguments']
-        public: true
-
-    App\Subscription\Application\UseCases\DeleteSubscriptionUseCase:
-        arguments:
-            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
-            $logger: '@logger'
-
-    App\Subscription\Application\InputPorts\DeleteSubscriptionUseCaseInterface:
-        alias: App\Subscription\Application\UseCases\DeleteSubscriptionUseCase
-
-    App\Subscription\Infrastructure\InputAdapters\DeleteSubscriptionController:
-        tags: ['controller.service_arguments']
-        public: true
-
-    App\Security\PermissionVoter:
-        tags: ['security.voter']
-
-    App\Security\PermissionService:
-        arguments:
-            $tokenStorage: '@security.token_storage'
-            $authorizationChecker: '@security.authorization_checker'
-
-    Stripe\StripeClient:
-        arguments: ['%env(STRIPE_SECRET_KEY)%']
-
-    App\Infrastructure\Services\PaymentGatewayService:
-        arguments:
-            $entityManager: '@doctrine.orm.main_entity_manager'
-            $stripe: '@Stripe\StripeClient'
-            $logger: '@logger'
-    App\Infrastructure\Services\StripeWebhookController:
-        arguments:
-            $stripeWebhookSecret: '%stripe_webhook_secret%'
-        tags: [ 'controller.service_arguments' ]
-        public: true
-    App\Subscription\Application\InputPorts\GetSubscriptionStripeLatestInvoiceUseCaseInterface:
-        alias: App\Subscription\Application\UseCases\GetSubscriptionStripeLatestInvoiceUseCase
-        public: true
-
-    App\Subscription\Application\UseCases\GetSubscriptionStripeLatestInvoiceUseCase:
-        arguments:
-            $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
-            $paymentGateway: '@App\Infrastructure\Services\PaymentGatewayService'
-            $logger: '@logger'
-
-    App\Subscription\Infrastructure\InputAdapters\GetSubscriptionStripeLatestInvoiceController:
-        arguments:
-            $useCase: '@App\Subscription\Application\InputPorts\GetSubscriptionStripeLatestInvoiceUseCaseInterface'
-    App\Service\Stripe\StripeClientFactory:
-        arguments:
-            $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
-    App\Stripe\Application\InputPorts\SetupIntentUseCaseInterface:
-        alias: 'App\Stripe\Application\UseCases\SetupIntentUseCase'
-    App\Stripe\Application\OutputPorts\SetupIntentRepositoryInterface:
-        alias: 'App\Stripe\Infrastructure\OutputAdapters\Repositories\SetupIntentRepository'
-  # Alarm services (añade estas dos entradas)
-    App\Alarm\Application\UseCases\SyncAlarmHolidaysUseCase:
-      arguments:
-        $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
-        $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
-        $logger: '@logger'
-
-    App\Alarm\Application\InputPorts\SyncAlarmHolidaysUseCaseInterface:
-      alias: App\Alarm\Application\UseCases\SyncAlarmHolidaysUseCase
+  # Configuración predeterminada para autowire y autoconfigure
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  # Autoload de los servicios de la aplicación
+  App\:
+    resource: '../src/*'
+    exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
+
+  # --------------------------
+  # USER AUTH / PROFILE
+  # --------------------------
+  App\User\Application\UseCases\Auth\LoginUserUseCase:
+    arguments:
+      $userRepository: '@App\User\Application\OutputPorts\Repositories\UserRepositoryInterface'
+      $passwordHasher: '@Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface'
+
+  App\User\Application\UseCases\Auth\RegisterUserUseCase:
+    arguments:
+      $userRepositoryInterface: '@App\User\Infrastructure\OutputAdapters\Repositories\UserRepository'
+      $passwordHasher: '@security.password_hasher'
+      $validator: '@validator'
+
+  App\User\Infrastructure\InputAdapters\:
+    resource: '../src/User/Infrastructure/InputAdapters'
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\User\Infrastructure\OutputAdapters\Repositories\UserRepository:
+    arguments:
+      $registry: '@doctrine'
+    tags:
+      - { name: 'doctrine.repository_service' }
+
+  App\User\Infrastructure\OutputAdapters\JWTTokenManager:
+    arguments:
+      - '%env(APP_SECRET)%'
+
+  App\User\Application\InputPorts\Auth\ResendEmailVerificationTokenInterface:
+    alias: App\User\Application\UseCases\Auth\ResendEmailVerificationTokenUseCase
+    public: true
+
+  App\User\Application\UseCases\Auth\ResendEmailVerificationTokenUseCase:
+    arguments:
+      $userRepository: '@App\User\Application\OutputPorts\Repositories\UserRepositoryInterface'
+      $notificationService: '@App\User\Application\OutputPorts\NotificationServiceInterface'
+
+  App\User\Application\OutputPorts\PasswordResetRepositoryInterface:
+    alias: App\User\Infrastructure\OutputAdapters\Repositories\PasswordResetRepository
+
+  App\User\Application\OutputPorts\Repositories\UserRepositoryInterface:
+    alias: App\User\Infrastructure\OutputAdapters\Repositories\UserRepository
+
+  App\User\Application\InputPorts\Profile\GetUserInfoUseCaseInterface:
+    alias: App\User\Application\UseCases\Profile\GetUserInfoUseCase
+
+  # Controladores
+  App\User\Infrastructure\InputAdapters\PasswordResetController:
+    tags: ['controller.service_arguments']
+
+  App\User\Application\InputPorts\GetUserClientsInterface:
+    alias: App\User\Application\UseCases\GetUserClientsUseCase
+
+  App\User\Application\InputPorts\GetUsersByClientInputPort:
+    alias: App\User\Application\UseCases\GetUsersByClientUseCase
+
+  App\User\Infrastructure\InputAdapters\GenericUserController:
+    tags: ['controller.service_arguments']
+
+  App\User\Application\InputPorts\RequestPasswordResetInterface:
+    alias: App\User\Application\UseCases\Password\RequestPasswordResetUseCase
+
+  App\User\Application\InputPorts\ResetPasswordInterface:
+    alias: App\User\Application\UseCases\Password\ResetPasswordUseCase
+
+  App\User\Application\OutputPorts\NotificationServiceInterface:
+    alias: App\User\Infrastructure\OutputAdapters\Services\EmailNotificationService
+
+  # --------------------------
+  # CLIENT
+  # --------------------------
+  App\Client\Application\UseCases\CreateClientUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+
+  App\Client\Application\UseCases\GetInfoClientUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+
+  App\Client\Application\UseCases\UpdateInfoClientUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+
+  App\Client\Infrastructure\InputAdapters\CreateClientController:
+    arguments:
+      $createClientUseCase: '@App\Client\Application\UseCases\CreateClientUseCase'
+
+  App\Client\Infrastructure\InputAdapters\GetInfoClientController:
+    arguments:
+      $GetInfoClientUseCase: '@App\Client\Application\UseCases\GetInfoClientUseCase'
+
+  App\Client\Infrastructure\InputAdapters\UpdateInfoClientController:
+    arguments:
+      $UpdateInfoClientUseCase: '@App\Client\Application\UseCases\UpdateInfoClientUseCase'
+
+  App\Client\Infrastructure\InputAdapters\:
+    resource: '../src/Client/Infrastructure/InputAdapters'
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Client\Infrastructure\OutputAdapters\Repositories\ClientRepository:
+    arguments:
+      $registry: '@doctrine'
+    tags:
+      - { name: 'doctrine.repository_service' }
+
+  App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface:
+    alias: App\Client\Infrastructure\OutputAdapters\Repositories\ClientRepository
+
+  # --------------------------
+  # INFRA / COMMON
+  # --------------------------
+  App\MessageHandler\CreateDockerContainerMessageHandler:
+    tags: ['messenger.message_handler']
+
+  App\Service\DockerService:
+    arguments:
+      $logger: '@logger'
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $projectDir: '%kernel.project_dir%'
+
+  App\Infrastructure\Services\ClientConnectionManager:
+    arguments:
+      $mainEntityManager: '@doctrine.orm.main_entity_manager'
+      $logger: '@logger'
+      $params: '@parameter_bag'
+    public: true
+
+  App\EventSubscriber\MailSentSubscriber:
+    tags: ['kernel.event_subscriber']
+
+  App\EventListener\JWTCreatedListener:
+    tags:
+      - { name: 'kernel.event_listener', event: 'lexik_jwt_authentication.on_jwt_created', method: 'onJWTCreated' }
+
+  App\EventListener\JWTDecodedListener:
+    tags:
+      - { name: 'kernel.event_listener', event: 'lexik_jwt_authentication.on_jwt_decoded', method: 'onJWTDecoded' }
+
+  App\User\Application\UseCases\Auth\SelectClientUseCase:
+    arguments:
+      $jwtManager: '@lexik_jwt_authentication.jwt_manager'
+    tags: ['app.use_case']
+
+  App\User\Infrastructure\InputAdapters\AuthController:
+    public: true
+    autowire: true
+    autoconfigure: true
+    tags: ['controller.service_arguments']
+
+  doctrine.dbal.logger:
+    class: App\Logger\DoctrineSQLLogger
+    arguments:
+      $logger: '@monolog.logger'
+
+  App\Logger\DoctrineSQLMiddleware:
+    arguments:
+      $logger: '@monolog.logger.doctrine'
+    tags:
+      - { name: 'doctrine.dbal.middleware', connection: 'main' }
+
+  App\Logger\DoctrineSQLLogger:
+    arguments:
+      $logger: '@monolog.logger.doctrine'
+    tags: ['doctrine.dbal.logger']
+
+  App\EventListener\RequestTimeListener:
+    tags:
+      - { name: 'kernel.event_listener', event: 'kernel.request', method: 'onKernelRequest', priority: 100 }
+
+  App\EventSubscriber\RequestLogSubscriber:
+    tags: ['kernel.event_subscriber']
+
+  App\Security\PermissionVoter:
+    tags: ['security.voter']
+
+  App\Security\PermissionService:
+    arguments:
+      $tokenStorage: '@security.token_storage'
+      $authorizationChecker: '@security.authorization_checker'
+
+  # --------------------------
+  # PRODUCT
+  # --------------------------
+  # Repositorios (implementaciones)
+  App\Product\Infrastructure\OutputAdapters\Repositories\ProductRepository:
+    arguments:
+      $em: '@doctrine.orm.main_entity_manager'
+
+  App\Product\Infrastructure\OutputAdapters\Repositories\WeightsLogRepository:
+    arguments:
+      $em: '@doctrine.orm.main_entity_manager'
+
+  # OutputPorts -> Implementaciones
+  App\Product\Application\OutputPorts\Repositories\ProductRepositoryInterface:
+    alias: App\Product\Infrastructure\OutputAdapters\Repositories\ProductRepository
+
+  App\Product\Application\OutputPorts\Repositories\WeightsLogRepositoryInterface:
+    alias: App\Product\Infrastructure\OutputAdapters\Repositories\WeightsLogRepository
+
+  # UseCases
+  App\Product\Application\UseCases\GetProductUseCase:
+    arguments:
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Product\Application\UseCases\GetAllProductsUseCase:
+    arguments:
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Product\Application\UseCases\CreateProductUseCase:
+    arguments:
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Product\Application\UseCases\DeleteProductUseCase:
+    arguments:
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Product\Application\UseCases\UpdateProductUseCase:
+    arguments:
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Product\Application\UseCases\GetInfoToDashboardMainUseCase:
+    arguments:
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+
+  # InputPorts -> UseCases (aliases)
+  App\Product\Application\InputPorts\GetProductUseCaseInterface:
+    alias: App\Product\Application\UseCases\GetProductUseCase
+
+  App\Product\Application\InputPorts\GetAllProductsUseCaseInterface:
+    alias: App\Product\Application\UseCases\GetAllProductsUseCase
+
+  App\Product\Application\InputPorts\CreateProductUseCaseInterface:
+    alias: App\Product\Application\UseCases\CreateProductUseCase
+
+  App\Product\Application\InputPorts\DeleteProductUseCaseInterface:
+    alias: App\Product\Application\UseCases\DeleteProductUseCase
+
+  App\Product\Application\InputPorts\UpdateProductUseCaseInterface:
+    alias: App\Product\Application\UseCases\UpdateProductUseCase
+
+  App\Product\Application\InputPorts\GetInfoToDashboardMainUseCaseInterface:
+    alias: App\Product\Application\UseCases\GetInfoToDashboardMainUseCase
+
+  # --------------------------
+  # SCALES
+  # --------------------------
+  App\Scales\Application\UseCases\RegisterScalesUseCase:
+    arguments:
+      $scalesRepository: '@App\Scales\Application\OutputPorts\ScalesRepositoryInterface'
+
+  App\Scales\Infrastructure\OutputAdapters\Repositories\ScalesRepository:
+    arguments:
+      $em: '@doctrine.orm.main_entity_manager'
+
+  App\Scales\Application\OutputPorts\ScalesRepositoryInterface:
+    alias: App\Scales\Infrastructure\OutputAdapters\Repositories\ScalesRepository
+
+  App\Scales\Application\OutputPorts\PoolScalesRepositoryInterface:
+    alias: App\Scales\Infrastructure\OutputAdapters\Repositories\PoolScalesRepository
+
+  App\Scales\Application\InputPorts\RegisterScalesUseCaseInterface:
+    alias: App\Scales\Application\UseCases\RegisterScalesUseCase
+
+  App\Scales\Application\UseCases\GetScaleUseCase:
+    arguments:
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Scales\Application\UseCases\GetAllScalesUseCase:
+    arguments:
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Scales\Application\UseCases\UpdateScaleUseCase:
+    arguments:
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Scales\Application\UseCases\DeleteScaleUseCase:
+    arguments:
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Scales\Application\UseCases\GetInfoScalesToDashboardMainUseCase:
+    arguments:
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Scales\Application\InputPorts\GetScaleUseCaseInterface:
+    alias: App\Scales\Application\UseCases\GetScaleUseCase
+
+  App\Scales\Application\InputPorts\GetAllScalesUseCaseInterface:
+    alias: App\Scales\Application\UseCases\GetAllScalesUseCase
+
+  App\Scales\Application\InputPorts\UpdateScaleUseCaseInterface:
+    alias: App\Scales\Application\UseCases\UpdateScaleUseCase
+
+  App\Scales\Application\InputPorts\DeleteScaleUseCaseInterface:
+    alias: App\Scales\Application\UseCases\DeleteScaleUseCase
+
+  App\Scales\Application\InputPorts\GetInfoScalesToDashboardMainUseCaseInterface:
+    alias: App\Scales\Application\UseCases\GetInfoScalesToDashboardMainUseCase
+
+  # Controller específico con argumentos
+  App\Scales\Infrastructure\InputAdapters\ScalesController:
+    arguments:
+      $registerScalesUseCase: '@App\Scales\Application\InputPorts\RegisterScalesUseCaseInterface'
+      $logger: '@logger'
+    tags: ['controller.service_arguments']
+    public: true
+
+  # Controladores de Scales (carpeta)
+  App\Scales\Infrastructure\InputAdapters\:
+    resource: '../src/Scales/Infrastructure/InputAdapters'
+    tags: ['controller.service_arguments']
+    public: true
+
+  # --------------------------
+  # DASHBOARD
+  # --------------------------
+  App\Dashboard\Application\UseCases\GetDashboardSummaryUseCase:
+    arguments:
+      $getInfoToDashboardMainUseCase: '@App\Product\Application\InputPorts\GetInfoToDashboardMainUseCaseInterface'
+      $getInfoScalesToDashboardMainUseCase: '@App\Scales\Application\InputPorts\GetInfoScalesToDashboardMainUseCaseInterface'
+      $getBusinessHoursUseCase: '@App\Alarm\Application\InputPorts\GetBusinessHoursUseCaseInterface'
+      $getHolidaysUseCase: '@App\Alarm\Application\InputPorts\GetHolidaysUseCaseInterface'
+      $logger: '@logger'
+
+  App\Dashboard\Application\InputPorts\GetDashboardSummaryUseCaseInterface:
+    alias: App\Dashboard\Application\UseCases\GetDashboardSummaryUseCase
+
+  App\Dashboard\Infrastructure\InputAdapters\:
+    resource: '../src/Dashboard/Infrastructure/InputAdapters'
+    tags: ['controller.service_arguments']
+    public: true
+
+  # --------------------------
+  # TTN
+  # --------------------------
+  App\Ttn\Infrastructure\OutputAdapters\Services\TtnApiClient:
+    arguments:
+      $apiBase: '%env(TTN_API_BASE_URL)%'
+      $apiKey: '%env(TTN_API_KEY)%'
+      $tenantId: '%env(TTN_DEFAULT_APPLICATION_ID)%'
+      $apiUserKey: '%env(TTN_USER_APP_KEY)%'
+      $apiAppKey: '%env(TTN_APP_KEY)%'
+
+  App\Ttn\Infrastructure\OutputAdapters\Services\TtnService:
+    arguments:
+      $apiClient: '@App\Ttn\Infrastructure\OutputAdapters\Services\TtnApiClient'
+      $applicationId: '%env(TTN_APPLICATION_ID)%'
+      $networkServerAddress: '%env(TTN_NETWORK_SERVER_ADDRESS)%'
+      $applicationServerAddress: '%env(TTN_APPLICATION_SERVER_ADDRESS)%'
+      $joinServerAddress: '%env(TTN_JOIN_SERVER_ADDRESS)%'
+      $lorawanVersion: '%env(TTN_LORAWAN_VERSION)%'
+      $lorawanPhyVersion: '%env(TTN_LORAWAN_PHY_VERSION)%'
+      $frequencyPlanId: '%env(TTN_FREQUENCY_PLAN_ID)%'
+      $apiUserKey: '%env(TTN_USER_APP_KEY)%'
+      $apiAppKey: '%env(TTN_APP_KEY)%'
+
+  App\Ttn\Application\OutputPorts\TtnServiceInterface:
+    alias: App\Ttn\Infrastructure\OutputAdapters\Services\TtnService
+
+  App\Ttn\Application\UseCases\RegisterTtnAppUseCase:
+    arguments:
+      $ttnService: '@App\Ttn\Application\OutputPorts\TtnServiceInterface'
+
+  App\Ttn\Application\UseCases\RegisterTtnDeviceUseCase:
+    arguments:
+      $ttnService: '@App\Ttn\Application\OutputPorts\TtnServiceInterface'
+      $deviceRepository: '@App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface'
+      $poolScaleRepository: '@App\Scales\Application\OutputPorts\PoolScalesRepositoryInterface'
+
+  App\Ttn\Application\InputPorts\RegisterTtnDeviceUseCaseInterface:
+    alias: App\Ttn\Application\UseCases\RegisterTtnDeviceUseCase
+
+  App\Ttn\Application\InputPorts\RegisterTtnAppUseCaseInterface:
+    alias: App\Ttn\Application\UseCases\RegisterTtnAppUseCase
+
+  App\Ttn\Infrastructure\InputAdapters\TtnController:
+    public: true
+    autowire: true
+    autoconfigure: true
+    tags: ['controller.service_arguments']
+
+  App\Ttn\Application\InputPorts\GetAllTtnDevicesUseCaseInterface:
+    alias: App\Ttn\Application\UseCases\GetAllTtnDevicesUseCase
+
+  App\Ttn\Application\InputPorts\GetAllTtnAppsUseCaseInterface:
+    alias: App\Ttn\Application\UseCases\GetAllTtnAppsUseCase
+
+  App\Ttn\Infrastructure\OutputAdapters\Repositories\PoolTtnDeviceRepository:
+    arguments:
+      $em: '@doctrine.orm.main_entity_manager'
+
+  App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface:
+    alias: App\Ttn\Infrastructure\OutputAdapters\Repositories\PoolTtnDeviceRepository
+
+  App\Ttn\Application\OutputPorts\MinimumStockNotificationInterface:
+    alias: App\Ttn\Infrastructure\OutputAdapters\Services\EmailMinimumStockNotifier
+
+  App\Ttn\Infrastructure\OutputAdapters\Services\EmailMinimumStockNotifier:
+    arguments:
+      $senderEmail: '%stock_alert_email_sender%'
+
+  App\Ttn\Application\OutputPorts\WeightVariationAlertNotifierInterface:
+    alias: App\Ttn\Infrastructure\OutputAdapters\Services\EmailWeightVariationAlertNotifier
+
+  App\Ttn\Infrastructure\OutputAdapters\Services\EmailWeightVariationAlertNotifier:
+    arguments:
+      $senderEmail: '%stock_alert_email_sender%'
+
+  App\Ttn\Infrastructure\OutputAdapters\Services\EmailDeviceScriptNotifier:
+    arguments:
+      $recipientEmail: '%ttn_device_script_email_recipient%'
+      $senderEmail: '%ttn_device_script_email_sender%'
+
+  App\Ttn\Application\InputPorts\UnassignTtnDeviceUseCaseInterface:
+    alias: App\Ttn\Application\UseCases\UnassignTtnDeviceUseCase
+
+  App\Ttn\Application\UseCases\UnassignTtnDeviceUseCase:
+    arguments:
+      $ttnService: '@App\Ttn\Application\OutputPorts\TtnServiceInterface'
+      $deviceRepository: '@App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface'
+
+  App\Ttn\Infrastructure\InputAdapters\:
+    resource: '../src/Ttn/Infrastructure/InputAdapters'
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Ttn\Application\InputPorts\HandleTtnUplinkUseCaseInterface:
+    alias: App\Ttn\Application\UseCases\HandleTtnUplinkUseCase
+
+  App\Ttn\Application\UseCases\HandleTtnUplinkUseCase:
+    arguments:
+      $poolTtnDeviceRepo: '@App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface'
+      $connManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $ScaleRepository: '@App\Scales\Application\OutputPorts\ScalesRepositoryInterface'
+      $minimumStockNotifier: '@App\Ttn\Application\OutputPorts\MinimumStockNotificationInterface'
+
+  # --------------------------
+  # ALARM
+  # --------------------------
+  App\Alarm\Application\UseCases\CreateAlarmOutOfHoursUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Alarm\Application\InputPorts\CreateAlarmOutOfHoursUseCaseInterface:
+    alias: App\Alarm\Application\UseCases\CreateAlarmOutOfHoursUseCase
+
+  App\Alarm\Application\UseCases\CreateAlarmHolidayUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Alarm\Application\InputPorts\CreateAlarmHolidayUseCaseInterface:
+    alias: App\Alarm\Application\UseCases\CreateAlarmHolidayUseCase
+
+  App\Alarm\Application\UseCases\GetBusinessHoursUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Alarm\Application\InputPorts\GetBusinessHoursUseCaseInterface:
+    alias: App\Alarm\Application\UseCases\GetBusinessHoursUseCase
+
+  App\Alarm\Application\UseCases\GetHolidaysUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Alarm\Application\InputPorts\GetHolidaysUseCaseInterface:
+    alias: App\Alarm\Application\UseCases\GetHolidaysUseCase
+
+  App\Alarm\Infrastructure\InputAdapters\:
+    resource: '../src/Alarm/Infrastructure/InputAdapters'
+    tags: ['controller.service_arguments']
+    public: true
+
+  # SyncAlarmHolidaysUseCase (corregido)
+  App\Alarm\Application\UseCases\SyncAlarmHolidaysUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Alarm\Application\InputPorts\SyncAlarmHolidaysUseCaseInterface:
+    alias: App\Alarm\Application\UseCases\SyncAlarmHolidaysUseCase
+
+  # --------------------------
+  # ADMIN / ROLES
+  # --------------------------
+  App\Admin\Role\Application\InputPorts\AssignRoleUseCaseInterface:
+    alias: App\Admin\Role\Application\UseCases\AssignRoleUseCase
+
+  App\Admin\Role\Infrastructure\OutputAdapters\Repositories\RoleRepository:
+    arguments:
+      $registry: '@doctrine'
+    tags:
+      - { name: 'doctrine.repository_service' }
+
+  App\Admin\Role\Application\OutputPorts\Repositories\RoleRepositoryInterface:
+    alias: App\Admin\Role\Infrastructure\OutputAdapters\Repositories\RoleRepository
+
+  App\Admin\Role\Infrastructure\InputAdapters\AssignRoleController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Admin\Infrastructure\InputAdapters\DashboardController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  # --------------------------
+  # SUBSCRIPTIONS / STRIPE
+  # --------------------------
+  App\Subscription\Application\UseCases\CreateSubscriptionPlanUseCase:
+    arguments:
+      $subscriptionPlanRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface'
+      $logger: '@logger'
+
+  App\Subscription\Application\InputPorts\CreateSubscriptionPlanUseCaseInterface:
+    alias: App\Subscription\Application\UseCases\CreateSubscriptionPlanUseCase
+
+  App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionPlanRepository:
+    arguments:
+      $registry: '@doctrine'
+      $entityManager: '@doctrine.orm.main_entity_manager'
+
+  App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface:
+    alias: App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionPlanRepository
+
+  App\Subscription\Infrastructure\InputAdapters\CreateSubscriptionPlanController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Subscription\Application\UseCases\GetInfoSubscriptionPlansUseCase:
+    arguments:
+      $subscriptionPlanRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface'
+      $logger: '@logger'
+
+  App\Subscription\Application\InputPorts\GetInfoSubscriptionPlansUseCaseInterface:
+    alias: App\Subscription\Application\UseCases\GetInfoSubscriptionPlansUseCase
+
+  App\Subscription\Infrastructure\InputAdapters\GetInfoSubscriptionPlansController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Subscription\Application\UseCases\UpdateSubscriptionPlanUseCase:
+    arguments:
+      $subscriptionPlanRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface'
+      $logger: '@logger'
+
+  App\Subscription\Application\InputPorts\UpdateSubscriptionPlanUseCaseInterface:
+    alias: App\Subscription\Application\UseCases\UpdateSubscriptionPlanUseCase
+
+  App\Subscription\Infrastructure\InputAdapters\UpdateSubscriptionPlanController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Subscription\Application\UseCases\DeleteSubscriptionPlanUseCase:
+    arguments:
+      $subscriptionPlanRepository: '@App\Subscription\Application\OutputPorts\Repositories\SubscriptionPlanRepositoryInterface'
+      $logger: '@logger'
+
+  App\Subscription\Application\InputPorts\DeleteSubscriptionPlanUseCaseInterface:
+    alias: App\Subscription\Application\UseCases\DeleteSubscriptionPlanUseCase
+
+  App\Subscription\Infrastructure\InputAdapters\DeleteSubscriptionPlanController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Subscription\Application\UseCases\CreateSubscriptionUseCase:
+    arguments:
+      $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
+      $entityManager: '@doctrine.orm.main_entity_manager'
+      $logger: '@logger'
+      $paymentGateway: '@App\Infrastructure\Services\PaymentGatewayService'
+
+  App\Subscription\Application\InputPorts\CreateSubscriptionUseCaseInterface:
+    alias: App\Subscription\Application\UseCases\CreateSubscriptionUseCase
+
+  App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionRepository:
+    arguments:
+      $registry: '@doctrine'
+      $entityManager: '@doctrine.orm.main_entity_manager'
+
+  App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface:
+    alias: App\Subscription\Infrastructure\OutputAdapters\Repositories\SubscriptionRepository
+
+  App\Subscription\Infrastructure\InputAdapters\CreateSubscriptionController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Subscription\Application\UseCases\GetInfoSubscriptionUseCase:
+    arguments:
+      $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
+      $logger: '@logger'
+
+  App\Subscription\Application\InputPorts\GetInfoSubscriptionUseCaseInterface:
+    alias: App\Subscription\Application\UseCases\GetInfoSubscriptionUseCase
+
+  App\Subscription\Infrastructure\InputAdapters\GetInfoSubscriptionController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Subscription\Application\UseCases\UpdateSubscriptionUseCase:
+    arguments:
+      $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
+      $entityManager: '@doctrine.orm.main_entity_manager'
+      $logger: '@logger'
+
+  App\Subscription\Application\InputPorts\UpdateSubscriptionUseCaseInterface:
+    alias: App\Subscription\Application\UseCases\UpdateSubscriptionUseCase
+
+  App\Subscription\Infrastructure\InputAdapters\UpdateSubscriptionController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Subscription\Application\UseCases\DeleteSubscriptionUseCase:
+    arguments:
+      $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
+      $logger: '@logger'
+
+  App\Subscription\Application\InputPorts\DeleteSubscriptionUseCaseInterface:
+    alias: App\Subscription\Application\UseCases\DeleteSubscriptionUseCase
+
+  App\Subscription\Infrastructure\InputAdapters\DeleteSubscriptionController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Infrastructure\Services\PaymentGatewayService:
+    arguments:
+      $entityManager: '@doctrine.orm.main_entity_manager'
+      $stripe: '@Stripe\StripeClient'
+      $logger: '@logger'
+
+  Stripe\StripeClient:
+    arguments: ['%env(STRIPE_SECRET_KEY)%']
+
+  App\Infrastructure\Services\StripeWebhookController:
+    arguments:
+      $stripeWebhookSecret: '%stripe_webhook_secret%'
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Subscription\Application\InputPorts\GetSubscriptionStripeLatestInvoiceUseCaseInterface:
+    alias: App\Subscription\Application\UseCases\GetSubscriptionStripeLatestInvoiceUseCase
+    public: true
+
+  App\Subscription\Application\UseCases\GetSubscriptionStripeLatestInvoiceUseCase:
+    arguments:
+      $subscriptionRepository: '@App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface'
+      $paymentGateway: '@App\Infrastructure\Services\PaymentGatewayService'
+      $logger: '@logger'
+
+  App\Subscription\Infrastructure\InputAdapters\GetSubscriptionStripeLatestInvoiceController:
+    arguments:
+      $useCase: '@App\Subscription\Application\InputPorts\GetSubscriptionStripeLatestInvoiceUseCaseInterface'
+
+  App\Service\Stripe\StripeClientFactory:
+    arguments:
+      $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
+
+  App\Stripe\Application\InputPorts\SetupIntentUseCaseInterface:
+    alias: 'App\Stripe\Application\UseCases\SetupIntentUseCase'
+
+  App\Stripe\Application\OutputPorts\SetupIntentRepositoryInterface:
+    alias: 'App\Stripe\Infrastructure\OutputAdapters\Repositories\SetupIntentRepository'

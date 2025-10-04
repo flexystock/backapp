@@ -86,7 +86,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             throw new \RuntimeException('SCALE_NOT_FOUND');
         }
         //porcentaje de las pilas
-        $percentage = max(0, min(100, ($request->getVoltage() - 3.2) / (3.6 - 3.2) * 100));
+        $percentage = max(0, min(100, ($request->getVoltage() - 3.2) / (9.6 - 3.2) * 100));
         $this->logger->debug('[TTN Uplink] Calculado voltagePercentage', [
             'percentage' => $percentage,
         ]);
