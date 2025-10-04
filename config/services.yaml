@@ -87,6 +87,9 @@ services:
   App\User\Application\OutputPorts\NotificationServiceInterface:
     alias: App\User\Infrastructure\OutputAdapters\Services\EmailNotificationService
 
+  App\User\Application\InputPorts\CreateClientUserInputPort:
+    alias: App\User\Application\UseCases\Management\CreateClientUserUseCase
+
   # --------------------------
   # CLIENT
   # --------------------------

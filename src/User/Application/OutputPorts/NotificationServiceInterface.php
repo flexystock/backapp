@@ -19,4 +19,6 @@ interface NotificationServiceInterface
     public function sendSuccesfullPasswordResetEmail(User $user): void;
 
     public function sendEmailAccountVerifiedToUser(User $user): void;
+
+    public function sendNewUserInvitationEmail(User $user, string $forgotPasswordUrl): void;
 }
