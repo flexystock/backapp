@@ -51,7 +51,10 @@ class LoginUserUseCase implements LoginUserInputPort
         }
 
         $this->resetFailedAttempts($user);
-        $this->registerLogin($user, $ipAddress);
+
+        if ($user->isActive()) {
+            $this->registerLogin($user, $ipAddress);
+        }
 
         return $user;
     }

@@ -221,6 +221,7 @@ class GenericUserController extends AbstractController
             return ['email' => $user->getEmail(),
                     'name' => $user->getName(),
                     'verified' => $user->isVerified(),
+                    'active' => $user->isActive(),
                     'role' => $user->getRoles(), ];
         }, $users);
 
