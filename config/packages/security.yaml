@@ -45,7 +45,7 @@ security:
         - { path: ^/api/user_register, roles: PUBLIC_ACCESS }
         - { path: ^/api/user_create, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/user_verify, roles: IS_AUTHENTICATED_FULLY }
-        - { path: ^/api/user_toggle_active, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/user_active, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/client_register, roles: PUBLIC_ACCESS }
         - { path: ^/api/client_create, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/forgot-password, roles: PUBLIC_ACCESS}

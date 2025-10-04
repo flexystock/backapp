@@ -30,10 +30,10 @@ class UserActiveController extends AbstractController
         $this->permissionService = $permissionService;
     }
 
-    #[Route('/api/user_toggle_active', name: 'user_toggle_active', methods: ['POST'])]
+    #[Route('/api/user_active', name: 'user_active', methods: ['POST'])]
     #[RequiresPermission('user.update')]
     #[OA\Post(
-        path: '/api/user_toggle_active',
+        path: '/api/user_active',
         summary: 'Activar o desactivar un usuario asociado a un cliente',
         tags: ['User'],
         requestBody: new OA\RequestBody(
