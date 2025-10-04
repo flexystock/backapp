@@ -71,6 +71,7 @@ class PermissionService
             'product.dashboard',
             'product.view',
             'scale.view',
+            'scale.dashboard'
         ],
     ];
 
