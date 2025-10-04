@@ -275,6 +275,40 @@ class EmailNotificationService implements NotificationServiceInterface
         );
     }
 
+    public function sendNewUserInvitationEmail(User $user, string $forgotPasswordUrl): void
+    {
+        $email = (new Email())
+            ->from('flexystock@gmail.com')
+            ->to($user->getEmail())
+            ->subject('Invitación a FlexyStock')
+            ->html(
+                '<p>Hola '.htmlspecialchars($user->getName()).',</p>'.
+                '<p>Se ha creado una cuenta para ti en FlexyStock.</p>'.
+                '<p>Para establecer tu contraseña inicial accede al siguiente enlace:</p>'.
+                '<p><a href="'.$forgotPasswordUrl.'">Generar contraseña</a></p>'.
+                '<p>Si el enlace no funciona, copia y pega la siguiente URL en tu navegador:</p>'.
+                '<p>'.htmlspecialchars($forgotPasswordUrl).'</p>'
+            );
+
+        [$status, $errorMessage, $errorCode, $errorType] = $this->sendCatching($email);
+
+        $this->dispatchToMain(
+            recipient: $user->getEmail(),
+            subject: (string) $email->getSubject(),
+            body: $email->getHtmlBody() ?? $email->getTextBody(),
+            status: $status,
+            errorMessage: $errorMessage,
+            errorCode: $errorCode,
+            errorType: $errorType,
+            type: 'user_invitation',
+            additional: [
+                'userId' => $user->getUuid(),
+                'forgotPasswordUrl' => $forgotPasswordUrl,
+            ],
+            user: $user
+        );
+    }
+
     /**
      * Envía el mail y devuelve [status, errorMessage, errorCode, errorType].
      */
