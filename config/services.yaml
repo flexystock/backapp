@@ -98,6 +98,9 @@ services:
   App\User\Application\InputPorts\VerifyUserInputPort:
     alias: App\User\Application\UseCases\Management\VerifyUserUseCase
 
+  App\User\Application\InputPorts\ToggleUserActiveInputPort:
+    alias: App\User\Application\UseCases\Management\ToggleUserActiveUseCase
+
   # --------------------------
   # CLIENT
   # --------------------------
