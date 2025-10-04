@@ -6,6 +6,7 @@ parameters:
   ttn_device_script_email_recipient: 'flexystock@gmail.com'
   ttn_device_script_email_sender: 'flexystock@gmail.com'
   stock_alert_email_sender: 'flexystock@gmail.com'
+  frontend_base_url: '%env(resolve:FRONTEND_BASE_URL)%'
 
 services:
   # Configuración predeterminada para autowire y autoconfigure
@@ -31,6 +32,10 @@ services:
       $userRepositoryInterface: '@App\User\Infrastructure\OutputAdapters\Repositories\UserRepository'
       $passwordHasher: '@security.password_hasher'
       $validator: '@validator'
+
+  App\User\Application\UseCases\Management\CreateClientUserUseCase:
+    arguments:
+      $frontendBaseUrl: '%frontend_base_url%'
 
   App\User\Infrastructure\InputAdapters\:
     resource: '../src/User/Infrastructure/InputAdapters'

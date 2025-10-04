@@ -19,6 +19,8 @@ class CreateClientUserUseCase implements CreateClientUserInputPort
     private const DEFAULT_TIMEZONE = 'UTC';
     private const DEFAULT_LANGUAGE = 'es';
 
+    private const RECOVER_PASSWORD_PATH = '/recoverPassword';
+
     public function __construct(
         private readonly UserRepositoryInterface $userRepository,
         private readonly ClientRepositoryInterface $clientRepository,
@@ -26,6 +28,7 @@ class CreateClientUserUseCase implements CreateClientUserInputPort
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly NotificationServiceInterface $notificationService,
         private readonly ValidatorInterface $validator,
+        private readonly string $frontendBaseUrl,
     ) {
     }
 
@@ -71,7 +74,9 @@ class CreateClientUserUseCase implements CreateClientUserInputPort
         $this->userRepository->save($user);
 
         $forgotPasswordUrl = sprintf(
-            'http://localhost:5173/api/forgot-password?email=%s',
+            '%s%s?email=%s',
+            rtrim($this->frontendBaseUrl, '/'),
+            self::RECOVER_PASSWORD_PATH,
             urlencode($user->getEmail())
         );
         $this->notificationService->sendNewUserInvitationEmail($user, $forgotPasswordUrl);
