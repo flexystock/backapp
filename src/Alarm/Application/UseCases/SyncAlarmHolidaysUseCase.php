@@ -43,7 +43,7 @@ final class SyncAlarmHolidaysUseCase implements SyncAlarmHolidaysUseCaseInterfac
             $newDates[] = $key;
             $byDate[$key] = [
                 'date' => $date,
-                'name' => $h['name'] ?? null,
+                'name' => $h['name'] ?? 'Dia festivo',
             ];
         }
         $newDates = array_values(array_unique($newDates));
