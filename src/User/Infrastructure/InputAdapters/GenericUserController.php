@@ -220,6 +220,8 @@ class GenericUserController extends AbstractController
         $usersArray = array_map(function ($user) {
             return ['email' => $user->getEmail(),
                     'name' => $user->getName(),
+                    'verified' => $user->isVerified(),
+                    'active' => $user->isActive(),
                     'role' => $user->getRoles(), ];
         }, $users);
 
