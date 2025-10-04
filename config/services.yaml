@@ -95,6 +95,9 @@ services:
   App\User\Application\InputPorts\CreateClientUserInputPort:
     alias: App\User\Application\UseCases\Management\CreateClientUserUseCase
 
+  App\User\Application\InputPorts\VerifyUserInputPort:
+    alias: App\User\Application\UseCases\Management\VerifyUserUseCase
+
   # --------------------------
   # CLIENT
   # --------------------------
