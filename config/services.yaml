@@ -101,6 +101,20 @@ services:
   App\User\Application\InputPorts\ToggleUserActiveInputPort:
     alias: App\User\Application\UseCases\Management\ToggleUserActiveUseCase
 
+  App\User\Application\InputPorts\DeleteUserInputPort:
+    alias: App\User\Application\UseCases\Management\DeleteUserUseCase
+
+  App\User\Application\InputPorts\UpdateUserRoleInputPort:
+    alias: App\User\Application\UseCases\Management\UpdateUserRoleUseCase
+
+  App\User\Application\UseCases\Management\DeleteUserUseCase:
+    arguments:
+      $entityManager: '@doctrine.orm.main_entity_manager'
+
+  App\User\Application\UseCases\Management\UpdateUserRoleUseCase:
+    arguments:
+      $entityManager: '@doctrine.orm.main_entity_manager'
+
   # --------------------------
   # CLIENT
   # --------------------------
