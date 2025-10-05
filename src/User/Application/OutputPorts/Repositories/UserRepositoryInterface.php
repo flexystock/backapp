@@ -21,4 +21,6 @@ interface UserRepositoryInterface
     public function findByClientUuid(string $uuidClient): array;
 
     public function findOneByUuid(string $uuidUser): ?User;
+
+    public function delete(User $user): void;
 }

@@ -4,6 +4,11 @@ controllers_user:
         namespace: App\User\Infrastructure\InputAdapters
     type: attribute
 
+api_user_rol_update:
+  path: /api/user_rol_update
+  controller: App\User\Infrastructure\InputAdapters\UpdateUserRoleController
+  methods: [PUT]
+
 controllers_client:
     resource:
         path: ../src/Client/Infrastructure/InputAdapters/
