@@ -30,7 +30,8 @@ class UpdateUserRoleController extends AbstractController
         $this->permissionService = $permissionService;
     }
 
-    #[Route('/api/user_role_update', name: 'user_role_update', methods: ['PUT'])]
+
+    #[Route('/api/user_role_update', name: 'api_user_role_update', methods: ['PUT'])]
     #[RequiresPermission('user.update')]
     #[OA\Put(
         path: '/api/user_role_update',
