@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\User\Infrastructure\InputAdapters;
 
+use App\Entity\Main\User;
 use App\Security\PermissionControllerTrait;
 use App\Security\PermissionService;
 use App\Security\RequiresPermission;
@@ -67,6 +68,11 @@ class DeleteUserController extends AbstractController
             return $permissionCheck;
         }
 
+        $currentUser = $this->getUser();
+        if (!$currentUser instanceof User || null === $currentUser->getUuid()) {
+            return $this->json(['message' => 'USER_NOT_AUTHENTICATED'], Response::HTTP_UNAUTHORIZED);
+        }
+
         $payload = json_decode($request->getContent(), true);
         if (!is_array($payload)) {
             return $this->json(['message' => 'INVALID_JSON'], Response::HTTP_BAD_REQUEST);
@@ -75,6 +81,7 @@ class DeleteUserController extends AbstractController
         $dto = new DeleteUserRequest(
             (string) ($payload['uuidClient'] ?? ''),
             (string) ($payload['userEmail'] ?? ''),
+            $currentUser->getUuid(),
         );
 
         $errors = $this->validator->validate($dto);

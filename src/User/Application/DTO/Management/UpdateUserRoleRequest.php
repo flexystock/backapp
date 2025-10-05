@@ -23,11 +23,17 @@ class UpdateUserRoleRequest
     #[SerializedName('userRol')]
     private string $userRol;
 
-    public function __construct(string $uuidClient, string $userEmail, string $userRol)
+    #[Assert\NotBlank(message: 'REQUIRED_UUID_USER_MODIFICATION')]
+    #[Assert\Uuid(message: 'INVALID_UUID_USER_MODIFICATION')]
+    #[SerializedName('uuidUserModification')]
+    private string $uuidUserModification;
+
+    public function __construct(string $uuidClient, string $userEmail, string $userRol, string $uuidUserModification)
     {
         $this->uuidClient = $uuidClient;
         $this->userEmail = $userEmail;
         $this->userRol = $userRol;
+        $this->uuidUserModification = $uuidUserModification;
     }
 
     public function getUuidClient(): string
@@ -43,5 +49,10 @@ class UpdateUserRoleRequest
     public function getUserRol(): string
     {
         return $this->userRol;
+    }
+
+    public function getUuidUserModification(): string
+    {
+        return $this->uuidUserModification;
     }
 }

@@ -19,10 +19,16 @@ class DeleteUserRequest
     #[SerializedName('userEmail')]
     private string $userEmail;
 
-    public function __construct(string $uuidClient, string $userEmail)
+    #[Assert\NotBlank(message: 'REQUIRED_UUID_USER_MODIFICATION')]
+    #[Assert\Uuid(message: 'INVALID_UUID_USER_MODIFICATION')]
+    #[SerializedName('uuidUserModification')]
+    private string $uuidUserModification;
+
+    public function __construct(string $uuidClient, string $userEmail, string $uuidUserModification)
     {
         $this->uuidClient = $uuidClient;
         $this->userEmail = $userEmail;
+        $this->uuidUserModification = $uuidUserModification;
     }
 
     public function getUuidClient(): string
@@ -33,5 +39,10 @@ class DeleteUserRequest
     public function getUserEmail(): string
     {
         return $this->userEmail;
+    }
+
+    public function getUuidUserModification(): string
+    {
+        return $this->uuidUserModification;
     }
 }
