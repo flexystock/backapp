@@ -101,6 +101,12 @@ services:
   App\User\Application\InputPorts\ToggleUserActiveInputPort:
     alias: App\User\Application\UseCases\Management\ToggleUserActiveUseCase
 
+  App\User\Application\InputPorts\DeleteUserInputPort:
+    alias: App\User\Application\UseCases\Management\DeleteUserUseCase
+
+  App\User\Application\InputPorts\UpdateUserRoleInputPort:
+    alias: App\User\Application\UseCases\Management\UpdateUserRoleUseCase
+
   # --------------------------
   # CLIENT
   # --------------------------
