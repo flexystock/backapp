@@ -2,8 +2,8 @@
 
 namespace App\Subscription\Application\UseCases;
 
-use App\Subscription\Application\DTO\UpdateSubscriptionPlanRequest;
 use App\Subscription\Application\DTO\UpdateSubcriptionPlanResponse;
+use App\Subscription\Application\DTO\UpdateSubscriptionPlanRequest;
 use App\Subscription\Application\InputPorts\UpdateSubscriptionPlanUseCaseInterface;
 use App\Subscription\Application\OutputPorts\SubscriptionPlanRepositoryInterface;
 use Psr\Log\LoggerInterface;
@@ -53,6 +53,7 @@ class UpdateSubscriptionPlanUseCase implements UpdateSubscriptionPlanUseCaseInte
             return new UpdateSubcriptionPlanResponse($data, null, 200);
         } catch (\Exception $e) {
             $this->logger->error('UpdateSubscriptionPlanUseCase: Error', ['exception' => $e]);
+
             return new UpdateSubcriptionPlanResponse(null, 'Internal Server Error', 500);
         }
     }

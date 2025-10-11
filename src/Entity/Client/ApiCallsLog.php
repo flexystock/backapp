@@ -113,6 +113,4 @@ class ApiCallsLog
     {
         $this->response_data = $response_data;
     }
-
-
 }

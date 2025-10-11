@@ -2,14 +2,12 @@
 
 namespace App\Subscription\Application\UseCases;
 
-use App\Subscription\Application\InputPorts\CreateSubscriptionPlanUseCaseInterface;
+use App\Entity\Main\SubscriptionPlan;
 use App\Subscription\Application\DTO\CreateSubscriptionPlanRequest;
 use App\Subscription\Application\DTO\CreateSubscriptionPlanResponse;
-use App\Entity\Main\SubscriptionPlan;
+use App\Subscription\Application\InputPorts\CreateSubscriptionPlanUseCaseInterface;
 use App\Subscription\Application\OutputPorts\SubscriptionPlanRepositoryInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
 
 class CreateSubscriptionPlanUseCase implements CreateSubscriptionPlanUseCaseInterface
 {
@@ -67,5 +65,4 @@ class CreateSubscriptionPlanUseCase implements CreateSubscriptionPlanUseCaseInte
 
         return new CreateSubscriptionPlanResponse($planData, null, 201);
     }
-
 }

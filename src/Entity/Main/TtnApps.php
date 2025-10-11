@@ -243,5 +243,3 @@ class TtnApps
         return $this;
     }
 }
-
-

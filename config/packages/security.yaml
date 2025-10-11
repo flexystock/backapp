@@ -43,6 +43,11 @@ security:
         - { path: ^/api/doc, roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/user_register, roles: PUBLIC_ACCESS }
+        - { path: ^/api/user_create, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/user_verify, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/user_active, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/user_role_update, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/user_delete, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/client_register, roles: PUBLIC_ACCESS }
         - { path: ^/api/client_create, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/forgot-password, roles: PUBLIC_ACCESS}
@@ -62,12 +67,25 @@ security:
         - { path: ^/api/ttn-uplink, roles: PUBLIC_ACCESS }
         - { path: ^/api/product_dashboard, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/admin, roles: ROLE_ROOT }
-        - { path: ^/api/assign_sacale_product, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/assign_scale_product, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/weight_analytics/product_weight_summary , roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/user/get_info, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/create_subscription_plan, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/subscription_plans, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/subscription_plan_update, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/subscription_plan_delete, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/create_subscription, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/stripe/webhook, roles: PUBLIC_ACCESS }
+        - { path: ^/api/subscription/stripe_latest_invoice, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/payment_method/default, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/payment_method/setup_intent, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/client_info, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/client_update, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/alarm/holiday, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/alarm/out-of-hours, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/alarm/holidays, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/alarm/business-hours, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/dashboard, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:

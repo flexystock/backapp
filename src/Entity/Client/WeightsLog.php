@@ -4,7 +4,6 @@ namespace App\Entity\Client;
 
 // asumiendo que la clase se llama Scale
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Client\Scales;
 
 /**
  * Representa la tabla weights_log, donde se registran los históricos de pesadas.
@@ -150,7 +149,6 @@ class WeightsLog
 
         return $this;
     }
-
 
     public function getProductId(): ?int
     {

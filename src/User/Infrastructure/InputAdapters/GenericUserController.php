@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\User\Infrastructure\InputAdapters;
 
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
+use App\Security\RequiresPermission;
 use App\User\Application\InputPorts\GetAllUsersInputPort;
 use App\User\Application\InputPorts\GetUserClientsInterface;
 use App\User\Application\InputPorts\GetUsersByClientInputPort;
@@ -19,6 +22,8 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class GenericUserController extends AbstractController
 {
+    use PermissionControllerTrait;
+
     private GetAllUsersInputPort $getAllUsersInputPort;
     private GetUserClientsInterface $getUserClientsUseCase;
     private GetUsersByClientInputPort $getUsersByClientUseCase;
@@ -32,7 +37,8 @@ class GenericUserController extends AbstractController
         GetUserClientsInterface $getUserClientsUseCase,
         GetUsersByClientInputPort $getUsersByClientUseCase,
         SerializerInterface $serializer,
-        UserRepositoryInterface $userRepository
+        UserRepositoryInterface $userRepository,
+        PermissionService $permissionService
     ) {
         $this->getAllUsersInputPort = $getAllUsersInputPort;
         $this->security = $security;
@@ -40,9 +46,11 @@ class GenericUserController extends AbstractController
         $this->getUsersByClientUseCase = $getUsersByClientUseCase;
         $this->serializer = $serializer;
         $this->userRepository = $userRepository;
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/users', name: 'get_all_users', methods: ['GET'])]
+    #[RequiresPermission('user.view')]
     #[OA\Get(
         path: '/api/users',
         summary: 'Get All Users',
@@ -83,6 +91,11 @@ class GenericUserController extends AbstractController
     )]
     public function getAllUsers(): JsonResponse
     {
+        $permissionCheck = $this->checkPermissionJson('user.view');
+        if ($permissionCheck) {
+            return $permissionCheck;
+        }
+
         $users = $this->getAllUsersInputPort->getAll();
 
         $usersArray = array_map(function ($user) {
@@ -174,23 +187,25 @@ class GenericUserController extends AbstractController
     }
 
     #[Route('/api/users_client', name: 'get_users_by_client', methods: ['POST'])]
+    #[RequiresPermission('users.dashboard')]
     #[OA\Get(
         path: '/api/users_client',
         summary: 'Get Users for a client',
         tags: ['User'],
         parameters: [
-            new OA\Parameter(name: 'uuidClient', in: 'query', required: true, schema: new OA\Schema(type: 'string'))
+            new OA\Parameter(name: 'uuidClient', in: 'query', required: true, schema: new OA\Schema(type: 'string')),
         ],
         responses: [
             new OA\Response(response: 200, description: 'List of users'),
             new OA\Response(response: 403, description: 'Access denied'),
-            new OA\Response(response: 404, description: 'No Users Found')
+            new OA\Response(response: 404, description: 'No Users Found'),
         ]
     )]
     public function getUsersByClient(Request $request): JsonResponse
     {
-        if (!$this->isGranted('ROLE_ROOT') && !$this->isGranted('ROLE_SUPERADMIN') && !$this->isGranted('ROLE_ADMIN')) {
-            throw $this->createAccessDeniedException('No tienes permiso.');
+        $permissionCheck = $this->checkPermissionJson('users.dashboard', 'No tiene permiso para ver los usuarios');
+        if ($permissionCheck) {
+            return $permissionCheck;
         }
 
         $data = json_decode($request->getContent(), true);
@@ -205,7 +220,9 @@ class GenericUserController extends AbstractController
         $usersArray = array_map(function ($user) {
             return ['email' => $user->getEmail(),
                     'name' => $user->getName(),
-                    'role' => $user->getRoles()];
+                    'verified' => $user->isVerified(),
+                    'active' => $user->isActive(),
+                    'role' => $user->getRoles(), ];
         }, $users);
 
         if (empty($users)) {

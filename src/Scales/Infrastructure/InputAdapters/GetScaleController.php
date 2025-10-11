@@ -4,6 +4,9 @@ namespace App\Scales\Infrastructure\InputAdapters;
 
 use App\Scales\Application\DTO\GetScaleRequest;
 use App\Scales\Application\InputPorts\GetScaleUseCaseInterface;
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
+use App\Security\RequiresPermission;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -12,18 +15,30 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class GetScaleController extends AbstractController
 {
+    use PermissionControllerTrait;
+
     private GetScaleUseCaseInterface $getScaleUseCase;
     private LoggerInterface $logger;
 
-    public function __construct(GetScaleUseCaseInterface $getScaleUseCase, LoggerInterface $logger)
-    {
+    public function __construct(
+        GetScaleUseCaseInterface $getScaleUseCase, 
+        LoggerInterface $logger,
+        PermissionService $permissionService
+    ) {
         $this->getScaleUseCase = $getScaleUseCase;
         $this->logger = $logger;
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/scale', name: 'api_scale', methods: ['POST'])]
+    #[RequiresPermission('scale.view')]
     public function __invoke(Request $request): JsonResponse
     {
+        $permissionCheck = $this->checkPermissionJson('scale.view');
+        if ($permissionCheck) {
+            return $permissionCheck;
+        }
+
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;
         $uuidScale = $data['uuid'] ?? null;

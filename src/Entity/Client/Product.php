@@ -108,8 +108,6 @@ class Product
      * Set UUID of the product.
      *
      * @param string $uuid product UUID
-     *
-     * @return self
      */
     public function setUuid(string $uuid): self
     {

@@ -6,7 +6,6 @@ use App\Entity\Client\Scales;
 use App\Scales\Application\OutputPorts\ScalesRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
-
 class ScalesRepository implements ScalesRepositoryInterface
 {
     private EntityManagerInterface $em;
@@ -29,6 +28,7 @@ class ScalesRepository implements ScalesRepositoryInterface
         $this->em->persist($scales);
         $this->em->flush();
     }
+
     public function findOneBy(string $endDeviceId): ?Scales
     {
         return $this->em->getRepository(Scales::class)->findOneBy([
@@ -46,7 +46,7 @@ class ScalesRepository implements ScalesRepositoryInterface
     public function findByUuid(string $uuidScale): ?Scales
     {
         return $this->em->getRepository(Scales::class)->findOneBy([
-            'uuid_scale' => $uuidScale
+            'uuid_scale' => $uuidScale,
         ]);
     }
 
@@ -75,6 +75,7 @@ class ScalesRepository implements ScalesRepositoryInterface
     {
         // TODO: Implement findAllIsAvailable() method.
     }
+
     public function findUuidByEndDeviceId(string $endDeviceId): ?string
     {
         $scale = $this->em->getRepository(Scales::class)->findOneBy([
@@ -90,6 +91,7 @@ class ScalesRepository implements ScalesRepositoryInterface
         $qb->select('s')
             ->from(\App\Entity\Client\Scales::class, 's')
             ->where('s.product_id IS NOT NULL');
+
         return $qb->getQuery()->getResult();
     }
 }

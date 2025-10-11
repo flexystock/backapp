@@ -4,33 +4,44 @@ namespace App\Product\Infrastructure\InputAdapters;
 
 use App\Product\Application\DTO\DeleteProductRequest;
 use App\Product\Application\InputPorts\DeleteProductUseCaseInterface;
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
+use App\Security\RequiresPermission;
 use OpenApi\Attributes as OA;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class DeleteProductController extends AbstractController
 {
+    use PermissionControllerTrait;
+
     private DeleteProductUseCaseInterface $deleteProductUseCase;
     private LoggerInterface $logger;
     private SerializerInterface $serializer;
     private ValidatorInterface $validator;
 
-    public function __construct(LoggerInterface $logger, DeleteProductUseCaseInterface $deleteProductUseCase,
+    public function __construct(
+        LoggerInterface $logger, 
+        DeleteProductUseCaseInterface $deleteProductUseCase,
         SerializerInterface $serializer,
         ValidatorInterface $validator,
+        PermissionService $permissionService
     ) {
         $this->logger = $logger;
         $this->deleteProductUseCase = $deleteProductUseCase;
         $this->serializer = $serializer;
         $this->validator = $validator;
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/product_delete', name: 'api_product_delete', methods: ['DELETE'])]
+    #[RequiresPermission('product.delete')]
     #[OA\Delete(
         path: '/api/product_delete',
         summary: 'Eliminar un producto para un cliente',
@@ -111,6 +122,11 @@ class DeleteProductController extends AbstractController
     )]
     public function __invoke(Request $request): JsonResponse
     {
+        $permissionCheck = $this->checkPermissionJson('product.delete');
+        if ($permissionCheck) {
+            return $permissionCheck;
+        }
+
         try {
             // 1) Deserializar JSON => DTO
             $deleteProductRequest = $this->serializer->deserialize(
@@ -178,8 +194,8 @@ class DeleteProductController extends AbstractController
                 'message' => 'Internal Server Error',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
     }
+
     /**
      * Formatea la lista de errores de validación en un array asociativo.
      */

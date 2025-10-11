@@ -2,30 +2,38 @@
 
 namespace App\Scales\Infrastructure\InputAdapters;
 
-use App\Scales\Application\InputPorts\GetInfoScalesToDashboardMainUseCaseInterface;
 use App\Scales\Application\DTO\GetInfoScalesToDashboardMainRequest;
+use App\Scales\Application\InputPorts\GetInfoScalesToDashboardMainUseCaseInterface;
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
+use App\Security\RequiresPermission;
 use OpenApi\Attributes\OpenApi as OA;
 use Psr\Log\LoggerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class GetInfoScalesToDashboardMainController extends AbstractController
 {
+    use PermissionControllerTrait;
+
     private GetInfoScalesToDashboardMainUseCaseInterface $getInfoScalesToDashboardMainUseCase;
     private LoggerInterface $logger;
 
     public function __construct(
         GetInfoScalesToDashboardMainUseCaseInterface $getInfoScalesToDashboardMainUseCase,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        PermissionService $permissionService
     ) {
         $this->getInfoScalesToDashboardMainUseCase = $getInfoScalesToDashboardMainUseCase;
         $this->logger = $logger;
+        $this->permissionService = $permissionService;
     }
+
     #[Route('/api/scales_dashboard', name: 'api_scales_dashboard', methods: ['POST'])]
+    #[RequiresPermission('scale.dashboard')]
     #[OA\Post(
         path: '/api/scales_dashboard',
         summary: 'Obtener información para el dashboard principal',
@@ -148,12 +156,11 @@ class GetInfoScalesToDashboardMainController extends AbstractController
             ),
         ]
     )]
-
     public function getScalesInfoToDashboardMain(Request $request): JsonResponse
     {
-        if (!$this->isGranted('ROLE_ROOT') && !$this->isGranted('ROLE_SUPERADMIN') && !$this->isGranted('ROLE_ADMIN')
-        ) {
-            throw $this->createAccessDeniedException('No tienes permiso.');
+        $permissionCheck = $this->checkPermissionJson('scale.dashboard', 'No tienes permisos para ver las balanzas');
+        if ($permissionCheck) {
+            return $permissionCheck;
         }
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;

@@ -65,6 +65,7 @@ class UpdateScaleUseCase implements UpdateScaleUseCaseInterface
             return new UpdateScaleResponse($data, null, 200);
         } catch (\Exception $e) {
             $this->logger->error('UpdateScaleUseCase: Error', ['exception' => $e]);
+
             return new UpdateScaleResponse(null, 'Internal Server Error', 500);
         }
     }

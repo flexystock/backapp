@@ -86,7 +86,6 @@ class CreateClientUseCase implements CreateClientInputPort
         $client->setCurrency($request->getCurrency());
         $client->setAnnualSalesVolume($request->getAnnualSalesVolume());
 
-
         // Asociar el cliente con el usuario si es necesario
         $user = $this->userRepository->findOneBy(['uuid_user' => $request->getUuidUser()]);
         if ($user) {

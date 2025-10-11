@@ -6,7 +6,6 @@ use App\Client\Infrastructure\OutputAdapters\Repositories\ClientRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Main\Subscription;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
@@ -124,6 +123,9 @@ class Client
     #[ORM\OneToMany(targetEntity: Subscription::class, mappedBy: 'client')]
     private Collection $subscriptions;
 
+    #[ORM\Column(name: 'stripe_customer_id', type: 'string', length: 255, nullable: true)]
+    private ?string $stripeCustomerId = null;
+
     // Constructor
     public function __construct()
     {
@@ -146,8 +148,6 @@ class Client
      * Set client UUID.
      *
      * @param string $uuid_client UUID of the client
-     *
-     * @return self
      */
     public function setUuidClient(string $uuid_client): self
     {
@@ -170,8 +170,6 @@ class Client
      * Set public name of the client.
      *
      * @param string $name name of the client
-     *
-     * @return self
      */
     public function setName(string $name): self
     {
@@ -554,5 +552,15 @@ class Client
     public function setDockVolumeName(string $volumeName): void
     {
         $this->docker_volume_name = $volumeName;
+    }
+
+    public function getStripeCustomerId(): ?string
+    {
+        return $this->stripeCustomerId;
+    }
+
+    public function setStripeCustomerId(?string $stripeCustomerId): void
+    {
+        $this->stripeCustomerId = $stripeCustomerId;
     }
 }

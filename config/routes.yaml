@@ -4,6 +4,11 @@ controllers_user:
         namespace: App\User\Infrastructure\InputAdapters
     type: attribute
 
+api_user_rol_update:
+  path: /api/user_rol_update
+  controller: App\User\Infrastructure\InputAdapters\UpdateUserRoleController
+  methods: [PUT]
+
 controllers_client:
     resource:
         path: ../src/Client/Infrastructure/InputAdapters/
@@ -43,3 +48,23 @@ controller_subscription:
         path: ../src/Subscription/Infrastructure/InputAdapters/
         namespace: App\Subscription\Infrastructure\InputAdapters
     type: attribute
+controllers_infrastructure_services:
+    resource:
+        path: ../src/Infrastructure/Services/
+        namespace: App\Infrastructure\Services
+    type: attribute
+controllers_stripe:
+    resource:
+        path: ../src/Stripe/Infrastructure/InputAdapters/
+        namespace: App\Stripe\Infrastructure\InputAdapters
+    type: attribute
+controllers_alarm:
+  resource:
+    path: ../src/Alarm/Infrastructure/InputAdapters/
+    namespace: App\Alarm\Infrastructure\InputAdapters
+  type: attribute
+controllers_dashboard:
+  resource:
+    path: ../src/Dashboard/Infrastructure/InputAdapters/
+    namespace: App\Dashboard\Infrastructure\InputAdapters
+  type: attribute

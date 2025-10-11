@@ -61,6 +61,7 @@ class PoolTtnDevice
 
         return $this;
     }
+
     public function getEndDeviceName(): ?string
     {
         return $this->end_device_name;
@@ -156,6 +157,4 @@ class PoolTtnDevice
 
         return $this;
     }
-
-
 }

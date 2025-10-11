@@ -1,31 +1,44 @@
 <?php
 
 namespace App\WeightAnalytics\Infrastructure\InputAdapters;
+
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
+use App\Security\RequiresPermission;
 use App\WeightAnalytics\Application\DTO\GetProductWeightSummaryRequest;
-use App\WeightAnalytics\Application\DTO\GetProductWeightSummaryResponse;
+use App\WeightAnalytics\Application\InputPorts\GetProductWeightSummaryUseCaseInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use App\WeightAnalytics\Application\InputPorts\GetProductWeightSummaryUseCaseInterface;
 
 class GetProductWeightSummaryController extends AbstractController
 {
+    use PermissionControllerTrait;
+
     private LoggerInterface $logger;
     private GetProductWeightSummaryUseCaseInterface $getProductWeightSummaryUseCase;
 
     public function __construct(
         LoggerInterface $logger,
-        GetProductWeightSummaryUseCaseInterface $getProductWeightSummaryUseCase
+        GetProductWeightSummaryUseCaseInterface $getProductWeightSummaryUseCase,
+        PermissionService $permissionService
     ) {
         $this->logger = $logger;
         $this->getProductWeightSummaryUseCase = $getProductWeightSummaryUseCase;
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/weight_analytics/product_weight_summary', name: 'api_product_weight_summary', methods: ['POST'])]
+    #[RequiresPermission('analytics.view')]
     public function __invoke(Request $request): JsonResponse
     {
+        $permissionCheck = $this->checkPermissionJson('analytics.view');
+        if ($permissionCheck) {
+            return $permissionCheck;
+        }
+
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;
         $productId = $data['productId'] ?? null;
@@ -46,6 +59,4 @@ class GetProductWeightSummaryController extends AbstractController
 
         return new JsonResponse(['summary' => $response->getSummary()], 200);
     }
-
-
 }

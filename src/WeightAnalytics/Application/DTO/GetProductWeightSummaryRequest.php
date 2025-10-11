@@ -8,6 +8,7 @@ class GetProductWeightSummaryRequest
     private string $productId;
     private string $from;
     private string $to;
+
     public function __construct(
         string $uuidClient,
         string $productId,
@@ -19,21 +20,24 @@ class GetProductWeightSummaryRequest
         $this->from = $from;
         $this->to = $to;
     }
+
     public function getUuidClient(): string
     {
         return $this->uuidClient;
     }
+
     public function getProductId(): string
     {
         return $this->productId;
     }
+
     public function getFrom(): string
     {
         return $this->from;
     }
+
     public function getTo(): string
     {
         return $this->to;
     }
-
 }

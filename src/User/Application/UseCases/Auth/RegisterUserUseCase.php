@@ -2,12 +2,12 @@
 
 namespace App\User\Application\UseCases\Auth;
 
+use App\Admin\Role\Infrastructure\OutputAdapters\Repositories\RoleRepository;
 use App\Entity\Main\User;
 use App\User\Application\DTO\Auth\CreateUserRequest;
 use App\User\Application\InputPorts\Auth\RegisterUserInputPort;
 use App\User\Application\OutputPorts\NotificationServiceInterface;
 use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
-use App\Admin\Role\Infrastructure\OutputAdapters\Repositories\RoleRepository;
 use App\User\Application\RandomException;
 use Cassandra\Exception\ValidationException;
 use Symfony\Component\Mailer\MailerInterface;
@@ -24,7 +24,6 @@ class RegisterUserUseCase implements RegisterUserInputPort
     private UrlGeneratorInterface $urlGenerator;
     private NotificationServiceInterface $notificationService;
     private RoleRepository $roleRepository;
-
 
     public function __construct(UserRepositoryInterface $userRepositoryInterface,
         UserPasswordHasherInterface $passwordHasher,
@@ -57,7 +56,7 @@ class RegisterUserUseCase implements RegisterUserInputPort
             // Puedes lanzar una excepción controlada o devolver un error 400
             throw new \RuntimeException('EMAIL_IN_USE');
         }
-        $user = User::fromCreateUserRequest($data, $this->passwordHasher,$this->roleRepository);
+        $user = User::fromCreateUserRequest($data, $this->passwordHasher, $this->roleRepository);
         $this->userRepositoryInterface->save($user);
 
         return $user;

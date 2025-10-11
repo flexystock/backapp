@@ -3,10 +3,10 @@
 namespace App\Product\Application\UseCases;
 
 use App\Entity\Client\ProductHistory;
+use App\Infrastructure\Services\ClientConnectionManager;
 use App\Product\Application\DTO\UpdateProductRequest;
 use App\Product\Application\DTO\UpdateProductResponse;
 use App\Product\Application\InputPorts\UpdateProductUseCaseInterface;
-use App\Infrastructure\Services\ClientConnectionManager;
 use Psr\Log\LoggerInterface;
 
 class UpdateProductUseCase implements UpdateProductUseCaseInterface
@@ -53,7 +53,9 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
                 'stock' => $product->getStock(),
                 'weight_range' => $product->getWeightRange(),
                 'weight_unit1' => $product->getWeightUnit1(),
+                'name_unit1' => $product->getNameUnit1(),
                 'weight_unit2' => $product->getWeightUnit2(),
+                'name_unit2' => $product->getNameUnit2(),
                 'main_unit' => $product->getMainUnit(),
                 'tare' => $product->getTare(),
                 'sale_price' => $product->getSalePrice(),
@@ -128,6 +130,8 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
                 'stock' => $product->getStock(),
                 'weight_range' => $product->getWeightRange(),
                 'weight_unit1' => $product->getWeightUnit1(),
+                'name_unit1' => $product->getNameUnit1(),
+                'name_unit2' => $product->getNameUnit2(),
                 'weight_unit2' => $product->getWeightUnit2(),
                 'main_unit' => $product->getMainUnit(),
                 'tare' => $product->getTare(),
@@ -148,7 +152,6 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
             $history->setDateModification(new \DateTime());
             // Persistir el historial
             $em->persist($history);
-
 
             // Actualizar uuidUserModification y datehourModification
             $product->setUuidUserModification($request->getUuidUserModification());

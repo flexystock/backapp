@@ -6,6 +6,7 @@ use App\Client\Application\DTO\ClientDTO;
 use App\Client\Application\DTO\ClientDTOCollection;
 use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Entity\Main\User;
+use App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface;
 use App\User\Application\InputPorts\GetUserClientsInterface;
 use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
 
@@ -13,13 +14,16 @@ class GetUserClientsUseCase implements GetUserClientsInterface
 {
     private UserRepositoryInterface $userRepository;
     private ClientRepositoryInterface $clientRepository;
+    private SubscriptionRepositoryInterface $subscriptionRepository;
 
     public function __construct(
         UserRepositoryInterface $userRepository,
         ClientRepositoryInterface $clientRepository,
+        SubscriptionRepositoryInterface $subscriptionRepository
     ) {
         $this->userRepository = $userRepository;
         $this->clientRepository = $clientRepository;
+        $this->subscriptionRepository = $subscriptionRepository;
     }
 
     public function getUserClients(string $userId): ClientDTOCollection
@@ -43,7 +47,10 @@ class GetUserClientsUseCase implements GetUserClientsInterface
         $clientDTOs = new ClientDTOCollection();
 
         foreach ($clients as $client) {
-            $clientDTOs->add(new ClientDTO($client));
+            // Pasamos el objeto, no el uuid
+            $hasActiveSub = $this->subscriptionRepository
+                ->hasActiveSubscriptionForClient($client);
+            $clientDTOs->add(new ClientDTO($client, $hasActiveSub));
         }
 
         return $clientDTOs;

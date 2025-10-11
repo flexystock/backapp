@@ -29,11 +29,12 @@ class GetAllScalesUseCase implements GetAllScalesUseCaseInterface
             $em = $this->connectionManager->getEntityManager($uuidClient);
             $repo = new ScalesRepository($em);
             $scales = $repo->findAllByUuidClient($uuidClient);
-            $data = array_map(fn(Scales $s) => $this->serializeScale($s), $scales);
+            $data = array_map(fn (Scales $s) => $this->serializeScale($s), $scales);
 
             return new GetScaleResponse($data, null, 200);
         } catch (\Exception $e) {
             $this->logger->error('GetAllScalesUseCase: Error', ['exception' => $e]);
+
             return new GetScaleResponse(null, 'Internal Server Error', 500);
         }
     }

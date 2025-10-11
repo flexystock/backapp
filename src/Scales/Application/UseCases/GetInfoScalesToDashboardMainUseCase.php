@@ -2,8 +2,8 @@
 
 namespace App\Scales\Application\UseCases;
 
-use App\Entity\Client\Scales;
 use App\Entity\Client\PoolScale;
+use App\Entity\Client\Scales;
 use App\Infrastructure\Services\ClientConnectionManager;
 use App\Scales\Application\DTO\GetInfoScalesToDashboardMainRequest;
 use App\Scales\Application\DTO\GetInfoScalesToDashboardMainResponse;
@@ -36,15 +36,12 @@ class GetInfoScalesToDashboardMainUseCase implements GetInfoScalesToDashboardMai
             //die("lsndfosnfd");
             $scales2 = $repo->findAllAssignedToProduct();
 
-
             $assignedScales = array_map(fn (Scales $s) => $this->serializeScale($s), $scales2);
 
             // 2. Pool de balanzas disponibles
             $pool = new PoolScalesRepository($em);
             $availablePoolScales = $pool->findAllIsAvailable(true);
             $availableScales = array_map(fn (PoolScale $p) => $this->serializePoolScale($p), $availablePoolScales);
-
-
 
             $data = [
                 'assignedScales' => $assignedScales,

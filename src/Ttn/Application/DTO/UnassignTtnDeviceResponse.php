@@ -22,5 +22,4 @@ class UnassignTtnDeviceResponse
     {
         return $this->error;
     }
-
 }

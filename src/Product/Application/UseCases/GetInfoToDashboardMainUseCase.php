@@ -3,12 +3,12 @@
 namespace App\Product\Application\UseCases;
 
 use App\Entity\Client\Product;
+use App\Infrastructure\Services\ClientConnectionManager;
 use App\Product\Application\DTO\GetInfoToDashboardMainRequest;
 use App\Product\Application\DTO\GetInfoToDashboardMainResponse;
 use App\Product\Application\InputPorts\GetInfoToDashboardMainUseCaseInterface;
 use App\Product\Infrastructure\OutputAdapters\Repositories\ProductRepository;
 use App\Product\Infrastructure\OutputAdapters\Repositories\WeightsLogRepository;
-use App\Infrastructure\Services\ClientConnectionManager;
 use Psr\Log\LoggerInterface;
 
 class GetInfoToDashboardMainUseCase implements GetInfoToDashboardMainUseCaseInterface
@@ -82,13 +82,13 @@ class GetInfoToDashboardMainUseCase implements GetInfoToDashboardMainUseCaseInte
         $conversionFactor = $conversionInfo['conversion_factor'];
 
         // Calcular el stock y el peso en la unidad definida
-        $stockInUnits = $conversionFactor > 0 ? round($stock / $conversionFactor, 2) : 0;
+        //$stockInUnits = $conversionFactor > 0 ? round($stock / $conversionFactor, 2) : 0;
         $realWeightSumInUnits = $conversionFactor > 0 ? round($realWeightSum / $conversionFactor, 1) : 0;
 
         return [
             'uuid' => $product->getUuid(),
             'name' => $product->getName(),
-            //'stock_kg' => $stock,                 // Stock en Kg
+            'stock' => $product->getStock(),                 // Stock minimo
             //'stock_in_units' => $stockInUnits,          // Stock en la unidad definida
             'real_weight_sum_kg' => $realWeightSum,         // Peso acumulado en Kg
             'real_weight_sum_in_units' => $realWeightSumInUnits,    // Peso acumulado en la unidad definida

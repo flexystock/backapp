@@ -35,7 +35,6 @@ class TtnUplinkController extends AbstractController
         $devEui = $data['end_device_ids']['dev_eui'] ?? null;
         $joinEui = $data['end_device_ids']['join_eui'] ?? null;
 
-
         // En “decoded_payload” están los valores “voltage” y “weight”
         $voltage = $data['uplink_message']['decoded_payload']['voltaje_V'] ?? null;
         $weight = $data['uplink_message']['decoded_payload']['peso_kg'] ?? null;

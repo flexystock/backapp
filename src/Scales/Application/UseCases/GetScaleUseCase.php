@@ -34,9 +34,11 @@ class GetScaleUseCase implements GetScaleUseCaseInterface
                 return new GetScaleResponse(null, 'SCALE_NOT_FOUND', 404);
             }
             $data = $this->serializeScale($scale);
+
             return new GetScaleResponse($data, null, 200);
         } catch (\Exception $e) {
             $this->logger->error('GetScaleUseCase: Error', ['exception' => $e]);
+
             return new GetScaleResponse(null, 'Internal Server Error', 500);
         }
     }

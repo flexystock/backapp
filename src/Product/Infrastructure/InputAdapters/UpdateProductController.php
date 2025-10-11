@@ -4,11 +4,15 @@ namespace App\Product\Infrastructure\InputAdapters;
 
 use App\Product\Application\DTO\UpdateProductRequest;
 use App\Product\Application\InputPorts\UpdateProductUseCaseInterface;
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
+use App\Security\RequiresPermission;
 use OpenApi\Attributes as OA;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
@@ -16,22 +20,29 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UpdateProductController extends AbstractController
 {
+    use PermissionControllerTrait;
+
     private UpdateProductUseCaseInterface $updateProductUseCase;
     private LoggerInterface $logger;
     private SerializerInterface $serializer;
     private ValidatorInterface $validator;
 
-    public function __construct(LoggerInterface $logger, UpdateProductUseCaseInterface $updateProductUseCase,
+    public function __construct(
+        LoggerInterface $logger, 
+        UpdateProductUseCaseInterface $updateProductUseCase,
         SerializerInterface $serializer,
         ValidatorInterface $validator,
+        PermissionService $permissionService
     ) {
         $this->logger = $logger;
         $this->updateProductUseCase = $updateProductUseCase;
         $this->serializer = $serializer;
         $this->validator = $validator;
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/product_update', name: 'api_product_update', methods: ['PUT'])]
+    #[RequiresPermission('product.update')]
     #[OA\Put(
         path: '/api/product_update',
         summary: 'Actualizar un producto para un cliente',
@@ -136,6 +147,11 @@ class UpdateProductController extends AbstractController
     )]
     public function invoke(Request $request): JsonResponse
     {
+        $permissionCheck = $this->checkPermissionJson('product.update');
+        if ($permissionCheck) {
+            return $permissionCheck;
+        }
+
         try {
             // 1) Deserializar el JSON al DTO UpdateProductRequest
             $updateRequest = $this->serializer->deserialize(
@@ -167,8 +183,6 @@ class UpdateProductController extends AbstractController
 
             // 5) Asignar fecha de modificación
             $updateRequest->setDatehourModification(new \DateTime());
-
-
 
             // 6) Ejecutar el caso de uso
             $response = $this->updateProductUseCase->execute($updateRequest);

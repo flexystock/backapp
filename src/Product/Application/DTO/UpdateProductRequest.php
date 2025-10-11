@@ -3,6 +3,7 @@
 namespace App\Product\Application\DTO;
 
 use Symfony\Component\Validator\Constraints as Assert;
+
 class UpdateProductRequest
 {
     #[Assert\Uuid(message: 'REQUIRED_CLIENT_ID')]
@@ -135,6 +136,7 @@ class UpdateProductRequest
     {
         return $this->perishable;
     }
+
     public function getStock(): ?float
     {
         return $this->stock;
@@ -219,5 +221,4 @@ class UpdateProductRequest
     {
         $this->uuidUserModification = $uuidUserModification;
     }
-
 }

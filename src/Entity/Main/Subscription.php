@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Entity\Main;
-use App\Entity\Main\Client;
+
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -19,7 +19,7 @@ class Subscription
     private Client $client;
 
     #[ORM\ManyToOne(targetEntity: SubscriptionPlan::class)]
-    #[ORM\JoinColumn(name: 'plan_id', referencedColumnName: 'id')]
+    #[ORM\JoinColumn(name: 'subscription_plan_id', referencedColumnName: 'id')]
     private SubscriptionPlan $plan;
 
     #[ORM\Column(name: 'started_at', type: 'datetime')]
@@ -37,8 +37,20 @@ class Subscription
     #[ORM\Column(name: 'updated_at', type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $updatedAt = null;
 
+    #[ORM\Column(name: 'uuid_user_creation', type: 'string', length: 36, nullable: true)]
+    private ?string $uuidUserCreation = null;
+
+    #[ORM\Column(name: 'uuid_user_modification', type: 'string', length: 36, nullable: true)]
+    private ?string $uuidUserModification = null;
+
+    #[ORM\Column(name: 'payment_status', type: 'string', length: 20, options: ['default' => 'pending'])]
+    private string $paymentStatus = 'pending';
+
     #[ORM\OneToMany(mappedBy: 'subscription', targetEntity: RentedScale::class)]
     private Collection $rentedScales;
+
+    #[ORM\Column(name: 'stripe_subscription_id', type: 'string', length: 255, nullable: true)]
+    private ?string $stripeSubscriptionId = null;
 
     public function __construct()
     {
@@ -53,6 +65,7 @@ class Subscription
     public function setUuidSubscription(string $uuidSubscription): self
     {
         $this->uuidSubscription = $uuidSubscription;
+
         return $this;
     }
 
@@ -64,6 +77,7 @@ class Subscription
     public function setClient(Client $client): self
     {
         $this->client = $client;
+
         return $this;
     }
 
@@ -75,6 +89,7 @@ class Subscription
     public function setPlan(SubscriptionPlan $plan): self
     {
         $this->plan = $plan;
+
         return $this;
     }
 
@@ -86,6 +101,7 @@ class Subscription
     public function setStartedAt(\DateTimeInterface $startedAt): self
     {
         $this->startedAt = $startedAt;
+
         return $this;
     }
 
@@ -97,6 +113,7 @@ class Subscription
     public function setEndedAt(?\DateTimeInterface $endedAt): self
     {
         $this->endedAt = $endedAt;
+
         return $this;
     }
 
@@ -108,6 +125,7 @@ class Subscription
     public function setIsActive(bool $isActive): self
     {
         $this->isActive = $isActive;
+
         return $this;
     }
 
@@ -119,6 +137,7 @@ class Subscription
     public function setCreatedAt(\DateTimeInterface $createdAt): self
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 
@@ -130,6 +149,7 @@ class Subscription
     public function setUpdatedAt(?\DateTimeInterface $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
+
         return $this;
     }
 
@@ -144,12 +164,62 @@ class Subscription
             $this->rentedScales[] = $rentedScale;
             $rentedScale->setSubscription($this);
         }
+
         return $this;
     }
 
     public function removeRentedScale(RentedScale $rentedScale): self
     {
         $this->rentedScales->removeElement($rentedScale);
+
+        return $this;
+    }
+
+    public function getUuidUserCreation(): ?string
+    {
+        return $this->uuidUserCreation;
+    }
+
+    public function setUuidUserCreation(?string $uuidUserCreation): self
+    {
+        $this->uuidUserCreation = $uuidUserCreation;
+
+        return $this;
+    }
+
+    public function getUuidUserModification(): ?string
+    {
+        return $this->uuidUserModification;
+    }
+
+    public function setUuidUserModification(?string $uuidUserModification): self
+    {
+        $this->uuidUserModification = $uuidUserModification;
+
+        return $this;
+    }
+
+    public function getPaymentStatus(): string
+    {
+        return $this->paymentStatus;
+    }
+
+    public function setPaymentStatus(string $paymentStatus): self
+    {
+        $this->paymentStatus = $paymentStatus;
+
+        return $this;
+    }
+
+    public function getStripeSubscriptionId(): ?string
+    {
+        return $this->stripeSubscriptionId;
+    }
+
+    public function setStripeSubscriptionId(?string $stripeSubscriptionId): self
+    {
+        $this->stripeSubscriptionId = $stripeSubscriptionId;
+
         return $this;
     }
 }

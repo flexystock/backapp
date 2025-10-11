@@ -4,26 +4,31 @@ namespace App\Product\Infrastructure\InputAdapters;
 
 use App\Product\Application\DTO\GetInfoToDashboardMainRequest;
 use App\Product\Application\InputPorts\GetInfoToDashboardMainUseCaseInterface;
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
 use OpenApi\Attributes as OA;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Routing\Annotation\Route;
 
 class GetInfoToDashboardMainController extends AbstractController
 {
+    use PermissionControllerTrait;
+
     private GetInfoToDashboardMainUseCaseInterface $getInfoToDashboardMainUseCase;
     private LoggerInterface $logger;
 
     public function __construct(
         LoggerInterface $logger,
         GetInfoToDashboardMainUseCaseInterface $getInfoToDashboardMainUseCase,
+        PermissionService $permissionService
     ) {
         $this->getInfoToDashboardMainUseCase = $getInfoToDashboardMainUseCase;
         $this->logger = $logger;
+        $this->permissionService = $permissionService;
     }
 
     #[Route('/api/product_dashboard', name: 'api_product_dashboard', methods: ['POST'])]
@@ -175,13 +180,14 @@ class GetInfoToDashboardMainController extends AbstractController
             ),
         ]
     )]
-
     public function getProductsInfoToDashboardMain(Request $request): JsonResponse
     {
-        if (!$this->isGranted('ROLE_ROOT') && !$this->isGranted('ROLE_SUPERADMIN') && !$this->isGranted('ROLE_ADMIN')
-        ) {
-            return new JsonResponse(['error' => 'No tienes permisos'], 455);
+        // Modern permission check - replace the old role checks
+        $permissionCheck = $this->checkPermissionJson('product.dashboard', 'No tienes permisos para ver el dashboard');
+        if ($permissionCheck) {
+            return $permissionCheck;
         }
+
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;
 

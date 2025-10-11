@@ -12,7 +12,8 @@ interface WeightsLogRepositoryInterface
      * Encuentra los weightsLog por UID de producto.
      */
     public function getLatestTotalRealWeightByProduct(int $productId): ?float;
-    public function findAllByUuidClient(string $uuidClient): array;
-    public function save(WeightsLog $product): void;
 
+    public function findAllByUuidClient(string $uuidClient): array;
+
+    public function save(WeightsLog $product): void;
 }

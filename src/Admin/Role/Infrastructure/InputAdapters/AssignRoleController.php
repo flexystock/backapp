@@ -31,7 +31,8 @@ class AssignRoleController extends AbstractController
         $response = $this->useCase->execute(new AssignRoleRequest($uuid, $role));
 
         if (!$response->isSuccess()) {
-            $code = $response->getError() === 'USER_NOT_FOUND' ? 404 : 400;
+            $code = 'USER_NOT_FOUND' === $response->getError() ? 404 : 400;
+
             return new JsonResponse(['error' => $response->getError()], $code);
         }
 

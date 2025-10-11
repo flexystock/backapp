@@ -3,29 +3,41 @@
 namespace App\Scales\Infrastructure\InputAdapters;
 
 use App\Scales\Application\DTO\AssignScaleToProductRequest;
+use App\Scales\Application\InputPorts\AssignScaleToProductUseCaseInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Scales\Application\InputPorts\AssignScaleToProductUseCaseInterface;
+use App\Security\PermissionControllerTrait;
+use App\Security\PermissionService;
+use App\Security\RequiresPermission;
 
 class AssignScaleToProduct extends AbstractController
 {
+    use PermissionControllerTrait;
     private LoggerInterface $logger;
     private AssignScaleToProductUseCaseInterface $assignScaleToProductUseCase;
 
     public function __construct(
         LoggerInterface $logger,
-        AssignScaleToProductUseCaseInterface $assignScaleToProductUseCase
+        AssignScaleToProductUseCaseInterface $assignScaleToProductUseCase,
+        PermissionService $permissionService
     ) {
         $this->logger = $logger;
         $this->assignScaleToProductUseCase = $assignScaleToProductUseCase;
+        $this->permissionService = $permissionService;
     }
 
-    #[Route('/api/assign_sacale_product', name: 'api_assign_scales', methods: ['POST'])]
+    #[Route('/api/assign_scale_product', name: 'api_assign_scales', methods: ['POST'])]
+    #[RequiresPermission('scale.assign')]
     public function __invoke(Request $request): JsonResponse
     {
+        $permissionCheck = $this->checkPermissionJson('scale.assign', 'No tiene permiso para asignar balanzas a productos');
+        if ($permissionCheck) {
+            return $permissionCheck;
+        }
+
         $data = json_decode($request->getContent(), true);
         $uuidClient = $data['uuidClient'] ?? null;
         $endDeviceId = $data['end_device_id'] ?? null;

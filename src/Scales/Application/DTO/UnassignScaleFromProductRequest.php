@@ -29,5 +29,4 @@ class UnassignScaleFromProductRequest
     {
         return $this->uuidUser;
     }
-
 }

@@ -4,12 +4,12 @@ namespace App\Product\Application\UseCases;
 
 use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Entity\Client\Product;
+use App\Infrastructure\Services\ClientConnectionManager;
 use App\Product\Application\DTO\CreateProductRequest;
 use App\Product\Application\DTO\CreateProductResponse;
 use App\Product\Application\InputPorts\CreateProductUseCaseInterface;
 use App\Product\Application\OutputPorts\Repositories\ProductRepositoryInterface;
 use App\Product\Infrastructure\OutputAdapters\Repositories\ProductRepository;
-use App\Infrastructure\Services\ClientConnectionManager;
 use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Uid\Uuid;
@@ -82,6 +82,5 @@ class CreateProductUseCase implements CreateProductUseCaseInterface
         ];
 
         return new CreateProductResponse($productData, null, 200);
-
     }
 }

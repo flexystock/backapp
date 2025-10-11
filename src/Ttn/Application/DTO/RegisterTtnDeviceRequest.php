@@ -31,7 +31,6 @@ class RegisterTtnDeviceRequest
         $this->deviceId = $deviceId;
     }
 
-
     public function getDevEui(): ?string
     {
         return $this->devEui;
@@ -56,10 +55,12 @@ class RegisterTtnDeviceRequest
     {
         return $this->datehourCreation;
     }
+
     public function getUuidClient(): ?string
     {
         return $this->uuidClient;
     }
+
     public function getDeviceId(): ?string
     {
         return $this->deviceId;

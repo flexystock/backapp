@@ -5,10 +5,10 @@
 namespace App\Product\Application\UseCases;
 
 use App\Entity\Client\Product;
+use App\Infrastructure\Services\ClientConnectionManager;
 use App\Product\Application\DTO\GetProductRequest;
 use App\Product\Application\DTO\GetProductResponse;
 use App\Product\Application\InputPorts\GetProductUseCaseInterface;
-use App\Infrastructure\Services\ClientConnectionManager;
 use Psr\Log\LoggerInterface;
 
 class GetProductUseCase implements GetProductUseCaseInterface

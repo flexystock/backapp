@@ -5,6 +5,7 @@ namespace App\Scales\Infrastructure\OutputAdapters\Repositories;
 use App\Entity\Client\PoolScale;
 use App\Scales\Application\OutputPorts\PoolScalesRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
+
 class PoolScalesRepository implements PoolScalesRepositoryInterface
 {
     private EntityManagerInterface $em;
@@ -27,6 +28,7 @@ class PoolScalesRepository implements PoolScalesRepositoryInterface
         $this->em->persist($scales);
         $this->em->flush();
     }
+
     public function findOneBy(string $endDeviceId): ?PoolScale
     {
         return $this->em->getRepository(PoolScale::class)->findOneBy([
@@ -41,6 +43,7 @@ class PoolScalesRepository implements PoolScalesRepositoryInterface
             'available' => true,
         ]);
     }
+
     public function findAllIsAvailable(string $available): array
     {
         return $this->em->getRepository(PoolScale::class)->findBy([

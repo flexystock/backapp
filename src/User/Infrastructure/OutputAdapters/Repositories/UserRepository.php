@@ -71,8 +71,14 @@ class UserRepository extends ServiceEntityRepository implements UserRepositoryIn
             ->getResult();
     }
 
-    public function findOneByUuid(string $uuidUser):?User
+    public function findOneByUuid(string $uuidUser): ?User
     {
         return $this->findOneBy(['uuid_user' => $uuidUser]);
+    }
+
+    public function delete(User $user): void
+    {
+        $this->entityManager->remove($user);
+        $this->entityManager->flush();
     }
 }

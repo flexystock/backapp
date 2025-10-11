@@ -12,7 +12,6 @@ use App\Scales\Infrastructure\OutputAdapters\Repositories\PoolScalesRepository;
 use App\Scales\Infrastructure\OutputAdapters\Repositories\ScalesRepository;
 use DateTime;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 class UnassignScaleFromProductUseCase implements UnassignScaleFromProductUseCaseInterface
 {
@@ -32,6 +31,7 @@ class UnassignScaleFromProductUseCase implements UnassignScaleFromProductUseCase
         $this->scalesRepository = $scalesRepository;
         $this->logger = $logger;
     }
+
     public function execute(UnassignScaleFromProductRequest $request): UnassignScaleFromProductResponse
     {
         $uuidClient = $request->getUuidClient();
@@ -46,7 +46,7 @@ class UnassignScaleFromProductUseCase implements UnassignScaleFromProductUseCase
             $connection = $em->getConnection();
             $this->logger->info('DEBUG CLIENT DB', [
                 'uuidClient' => $uuidClient,
-                'dbname'     => $connection->getDatabase(),
+                'dbname' => $connection->getDatabase(),
             ]);
             // -------------------------------------
             $repo = new ScalesRepository($em);
@@ -60,7 +60,7 @@ class UnassignScaleFromProductUseCase implements UnassignScaleFromProductUseCase
 
             $this->logger->info('DEBUG CLIENT DB', [
                 'uuidScale' => $uuidScale,
-                '$scale'     => $scale,
+                '$scale' => $scale,
             ]);
             // Unassign the scale from the product
             $scale->setProduct(null);
@@ -73,11 +73,11 @@ class UnassignScaleFromProductUseCase implements UnassignScaleFromProductUseCase
             $poolScale = $pool->findOneByUuidScale($uuidScale);
             $this->logger->info('DEBUG CLIENT DB ANTES ', [
                 'poolsacle' => $pool,
-                'uuidScale'     => $uuidScale,
+                'uuidScale' => $uuidScale,
                 'available' => $poolScale->isAvailable(),
             ]);
             if ($poolScale) {
-                $poolScale->setAvailable(TRUE);
+                $poolScale->setAvailable(true);
                 $poolScale->setUuidUserModification($request->getUuidUser());
                 $poolScale->setDatehourModification(new DateTime());
                 $pool->savePoolScale($poolScale);
@@ -86,8 +86,8 @@ class UnassignScaleFromProductUseCase implements UnassignScaleFromProductUseCase
             return new UnassignScaleFromProductResponse(['status' => 'SCALE_UNASSIGNED_SUCCESSFULLY'], null, 200);
         } catch (\Exception $e) {
             $this->logger->error('UnassignScaleFromProductUseCase: Error', ['exception' => $e]);
+
             return new UnassignScaleFromProductResponse(null, 'Internal Server Error', 500);
         }
-
     }
 }

@@ -1,12 +1,12 @@
 <?php
 
 namespace App\Subscription\Application\UseCases;
+
 use App\Entity\Main\SubscriptionPlan;
-use Psr\Log\LoggerInterface;
-use App\Subscription\Application\DTO\GetInfoSubscriptionPlansRequest;
 use App\Subscription\Application\DTO\GetInfoSubscriptionPlansResponse;
 use App\Subscription\Application\InputPorts\GetInfoSubscriptionPlansUseCaseInterface;
 use App\Subscription\Application\OutputPorts\SubscriptionPlanRepositoryInterface;
+use Psr\Log\LoggerInterface;
 
 class GetInfoSubscriptionPlansUseCase implements GetInfoSubscriptionPlansUseCaseInterface
 {

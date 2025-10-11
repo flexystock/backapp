@@ -29,5 +29,4 @@ class UnassignScaleFromProductResponse
     {
         return $this->statusCode;
     }
-
 }

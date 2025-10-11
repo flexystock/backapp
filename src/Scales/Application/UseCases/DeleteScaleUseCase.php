@@ -38,6 +38,7 @@ class DeleteScaleUseCase implements DeleteScaleUseCaseInterface
             return new DeleteScaleResponse('SCALE_DELETED_SUCCESSFULLY', null, 200);
         } catch (\Exception $e) {
             $this->logger->error('DeleteScaleUseCase: Error', ['exception' => $e]);
+
             return new DeleteScaleResponse(null, 'Internal Server Error', 500);
         }
     }

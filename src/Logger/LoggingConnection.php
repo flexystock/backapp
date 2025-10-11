@@ -23,12 +23,14 @@ class LoggingConnection implements Connection
     public function prepare(string $sql): \Doctrine\DBAL\Driver\Statement
     {
         $this->logger->debug('Doctrine SQL Prepare', ['sql' => $sql]);
+
         return $this->connection->prepare($sql);
     }
 
     public function query(string $sql): \Doctrine\DBAL\Driver\Result
     {
         $this->logger->debug('Doctrine SQL Query', ['sql' => $sql]);
+
         return $this->connection->query($sql);
     }
 
@@ -37,6 +39,7 @@ class LoggingConnection implements Connection
     public function exec(string $sql): int
     {
         $this->logger->debug('Doctrine SQL Exec', ['sql' => $sql]);
+
         return $this->connection->exec($sql);
     }
 

@@ -2,14 +2,10 @@
 
 namespace App\Ttn\Infrastructure\OutputAdapters\Services;
 
-use App\Entity\Main\PoolTtnDevice;
 use App\Entity\Main\TtnApps;
 use App\Ttn\Application\DTO\RegisterTtnAppRequest;
 use App\Ttn\Application\DTO\RegisterTtnAppResponse;
 use App\Ttn\Application\DTO\RegisterTtnDeviceRequest;
-use App\Ttn\Application\DTO\RegisterTtnDeviceResponse;
-use App\Ttn\Application\DTO\UnassignTtnDeviceRequest;
-use App\Ttn\Application\DTO\UnassignTtnDeviceResponse;
 use App\Ttn\Application\OutputPorts\TtnServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -196,7 +192,6 @@ class TtnService implements TtnServiceInterface
 
             $this->apiClient->put("/ns/applications/{$this->applicationId}/devices/{$deviceId}", $nsPayload);
 
-
             // 4. Application Server
             $asPayload = [
                 'end_device' => [
@@ -213,7 +208,6 @@ class TtnService implements TtnServiceInterface
 
             $this->apiClient->put("/as/applications/{$this->applicationId}/devices/{$deviceId}", $asPayload);
             $this->logger->info('Device register successfully');
-
         } catch (\Exception $e) {
             $this->logger->error('Error registering device: '.$e->getMessage());
 
@@ -221,8 +215,6 @@ class TtnService implements TtnServiceInterface
             throw new \RuntimeException('Error unassigning device in TTN', 0, $e);
         }
     }
-
-
 
     public function unassignDevice(string $deviceId): void
     {

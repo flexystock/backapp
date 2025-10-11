@@ -4,11 +4,11 @@ namespace App\Product\Application\UseCases;
 
 use App\Entity\Client\ScaleHistory;
 use App\Entity\Main\User;
+use App\Infrastructure\Services\ClientConnectionManager;
 use App\Product\Application\DTO\DeleteProductRequest;
 use App\Product\Application\DTO\DeleteProductResponse;
-use App\Product\Application\InputPorts\DeleteProductUseCaseInterface;
 //use App\Product\Infrastructure\OutputAdapters\Services\ClientConnectionManager;
-use App\Infrastructure\Services\ClientConnectionManager;
+use App\Product\Application\InputPorts\DeleteProductUseCaseInterface;
 use Psr\Log\LoggerInterface;
 
 class DeleteProductUseCase implements DeleteProductUseCaseInterface

@@ -87,5 +87,4 @@ class ProductHistory
     {
         $this->date_modification = $dateModification;
     }
-
 }

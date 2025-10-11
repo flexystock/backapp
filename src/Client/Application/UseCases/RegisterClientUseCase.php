@@ -90,7 +90,7 @@ class RegisterClientUseCase implements RegisterClientInputPort
         $client->setIndustrySector($request->getIndustrySector());
         $client->setAverageInventoryVolume($request->getAverageInventoryVolume());
         $client->setCurrency($request->getCurrency());
-        $client->setNumberWarehouses($request->getNumberWarehouses());
+        $client->setNumberWarehouses($request->getNumberWarehouses() ?? 1); // Default to 1 warehouse if not provided
         $client->setAnnualSalesVolume($request->getAnnualSalesVolume());
 
         // 3) Asociar el cliente con el usuario si es necesario

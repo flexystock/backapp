@@ -25,3 +25,7 @@
 /.php-cs-fixer.cache
 ###< friendsofphp/php-cs-fixer ###
 /src/var/
+CLAUDE.md
+public/.env
+.php_cs.cache
+

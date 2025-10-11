@@ -131,9 +131,19 @@ class AuthController
             // No revelar si el usuario no existe
             return $this->jsonResponse(['message' => 'INVALID_CREDENTIALS'], Response::HTTP_UNAUTHORIZED);
         }
+        if (!$user->isActive()) {
+            $this->logger->notice('Inactive user login attempt', [
+                'username' => $mail,
+                'userId' => $user->getUuid(),
+            ]);
+
+            return $this->jsonResponse(['message' => 'USER_INACTIVE'], Response::HTTP_UNAUTHORIZED);
+        }
+
         $verified = $user->isVerified();
         if (!$verified) {
             $this->logger->info('User not verified', ['username' => $mail, 'userId' => $user->getUuid()]);
+
             return $this->jsonResponse(['message' => 'USER_NOT_VERIFIED'], Response::HTTP_UNAUTHORIZED);
         }
         // Verificar si la cuenta está bloqueada

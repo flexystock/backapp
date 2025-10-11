@@ -8,6 +8,8 @@ interface SubscriptionPlanRepositoryInterface
 {
     public function save(SubscriptionPlan $subscriptionPlan): void;
 
+    public function remove(SubscriptionPlan $subscriptionPlan): void;
+
     public function findByUuid(string $id): ?SubscriptionPlan;
 
     public function findByName(string $name): ?SubscriptionPlan;
@@ -16,5 +18,4 @@ interface SubscriptionPlanRepositoryInterface
      * @return SubscriptionPlan[]
      */
     public function findAll(): array;
-
 }
