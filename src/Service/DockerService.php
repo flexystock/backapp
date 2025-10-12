@@ -37,10 +37,9 @@ class DockerService
         $databaseName  = $this->generateDatabaseName($clientName, $uuid);
         $user          = $this->generateDatabaseUser($clientName, $uuid);
         $password      = $this->generateRandomPassword();
-        $port          = $this->findAvailablePort();
-        $client->setPortBbdd($port);
+        $candidatePort = $this->findAvailablePort(); // candidato; NO lo guardamos aún
 
-        // init.sql en host
+        // init.sql en host (para primer arranque de MySQL)
         $initSqlPath = $this->buildHostInitPath($clientName, $uuid);
         $initSqlContent = "ALTER USER '{$user}'@'%' IDENTIFIED WITH mysql_native_password BY '{$password}';\nFLUSH PRIVILEGES;\n";
         if (false === @file_put_contents($initSqlPath, $initSqlContent)) {
@@ -48,7 +47,7 @@ class DockerService
         }
 
         try {
-            // --- NUEVA LÓGICA: reusar si existe ---
+            // --- Reusar si existe ---
             if ($this->containerExists($containerName)) {
                 $this->logger->info("El contenedor $containerName ya existe");
 
@@ -58,50 +57,49 @@ class DockerService
                     } else {
                         $this->logger->info("$containerName running pero no healthy, esperamos health...");
                         $this->waitForMysqlByHealth($containerName);
-                        $this->ensureUserAndGrants($containerName, $databaseName, $user, $password);
-
                     }
                 } else {
                     $this->logger->info("$containerName existe pero está parado, se hace start.");
                     $this->startContainer($containerName);
                     $this->waitForMysqlByHealth($containerName);
-                    $this->ensureUserAndGrants($containerName, $databaseName, $user, $password);
                 }
+
+                // asegura usuario/privilegios (por si init.sql no se aplicó)
+                $this->ensureUserAndGrants($containerName, $databaseName, $user, $password);
             } else {
                 // No existe: se crea
-                $this->runDockerContainer($containerName, $volumeName, $databaseName, $user, $password, $port, $initSqlPath);
+                $this->runDockerContainer($containerName, $volumeName, $databaseName, $user, $password, $candidatePort, $initSqlPath);
                 $this->waitForMysqlByHealth($containerName);
                 $this->ensureUserAndGrants($containerName, $databaseName, $user, $password);
             }
-            // 3.1) Fuerza usuario/clave/permisos del cliente (por si init.sql no se aplicó)
-            $this->ensureClientUser($containerName, $databaseName, $user, $password);
 
-            // 3.2) Ejecuta migraciones del cliente recién creado
-            $this->runMigrationsForClient($client);
-            // Persistimos datos en la entidad
+            // Puerto REAL publicado por Docker para 3306/tcp
+            $publishedPort = $this->getPublishedPort($containerName);
+
+            // Persistimos datos finales en la entidad
             $client->setDatabaseName($databaseName);
             $client->setDatabaseUserName($user);
             $client->setDatabasePassword($password);
             $client->setContainerName($containerName);
-            $client->setHost($containerName);
+            $client->setHost($containerName);          // para acceso interno por red docker
             $client->setDockVolumeName($volumeName);
+            $client->setPortBbdd((int)$publishedPort); // para acceso externo (Workbench)
+
+            // (opcional) lanzar migraciones solo de este cliente
+            $this->runMigrationsForClient($client);
 
             return $client;
 
         } catch (\Throwable $e) {
             $this->logger->error('Fallo creando DB cliente', ['ex' => $e]);
-            // NO borrar volumen aquí. Tampoco rm -f si está corriendo.
+            // NO borrar volumen ni rm -f aquí.
             throw $e;
         }
     }
 
     private function generateContainerName(string $clientName, string $uuid): string
     {
-        // 1) Quitar o reemplazar espacios y caracteres no permitidos.
-        //    Reemplazamos con subrayado `_`.
         $safeClientName = preg_replace('/[^A-Za-z0-9_.-]+/', '_', $clientName);
-
-        // 2) Armar el nombre final
         return 'client_db_'.$safeClientName.'_'.substr($uuid, 0, 12);
     }
 
@@ -112,22 +110,13 @@ class DockerService
 
     private function generateDatabaseName(string $clientName, string $uuid): string
     {
-        // 1) Quitar o reemplazar espacios y caracteres no permitidos.
-        //    Reemplazamos con subrayado `_`.
         $safeClientName = preg_replace('/[^A-Za-z0-9_.-]+/', '_', $clientName);
-
-        // 2) Armar el nombre final
-
         return 'client_db_'.$safeClientName.'_'.substr($uuid, 0, 4);
     }
 
     private function generateDatabaseUser(string $clientName, string $uuid): string
     {
-        // 1) Quitar o reemplazar espacios y caracteres no permitidos.
-        //    Reemplazamos con subrayado `_`.
         $safeClientName = preg_replace('/[^A-Za-z0-9_.-]+/', '_', $clientName);
-
-        // 2) Armar el nombre final
         return 'client_user_'.$safeClientName.'_'.substr($uuid, 0, 4);
     }
 
@@ -136,7 +125,7 @@ class DockerService
      */
     private function generateRandomPassword(): string
     {
-        return bin2hex(random_bytes(8)); // Genera una contraseña segura
+        return bin2hex(random_bytes(8));
     }
 
     private function removeExistingContainer(string $containerName): void
@@ -160,7 +149,7 @@ class DockerService
     }
 
     private function runDockerContainer(string $containerName, string $volumeName, string $databaseName, string $user,
-        string $password, int $port, string $initSqlPath): void
+                                        string $password, int $port, string $initSqlPath): void
     {
         $command = [
             '/usr/bin/docker','run','-d',
@@ -194,12 +183,40 @@ class DockerService
     }
 
     /**
+     * Lee el puerto REAL publicado por Docker (HostPort) para 3306/tcp.
+     */
+    private function getPublishedPort(string $containerName): int
+    {
+        $fmt = '{{ (index (index .NetworkSettings.Ports "3306/tcp") 0).HostPort }}';
+        $p = new Process(['/usr/bin/docker', 'inspect', '--format', $fmt, $containerName]);
+        $p->run();
+
+        if (!$p->isSuccessful()) {
+            $this->logger->error('No se pudo inspeccionar el puerto publicado', [
+                'container' => $containerName,
+                'stderr' => $p->getErrorOutput(),
+            ]);
+            return 3306; // fallback
+        }
+
+        $port = trim($p->getOutput());
+        if ($port === '' || !ctype_digit($port)) {
+            $this->logger->warning('Valor de HostPort inesperado', [
+                'container' => $containerName,
+                'raw' => $port,
+            ]);
+            return 3306;
+        }
+        return (int)$port;
+    }
+
+    /**
      * @throws \Exception
      */
     private function findAvailablePort(): int
     {
         $startPort = 40000;
-        $endPort = 50000; // Puedes ajustar el rango según tus necesidades
+        $endPort = 50000;
         for ($port = $startPort; $port <= $endPort; ++$port) {
             if (!$this->isPortInUse($port)) {
                 return $port;
@@ -248,7 +265,6 @@ class DockerService
 
         if (!$removeProcess->isSuccessful()) {
             $this->logger->error('Error al eliminar el volumen existente: '.$removeProcess->getErrorOutput());
-        // No lanzamos excepción aquí para no ocultar el error original
         } else {
             $this->logger->info('Volumen existente eliminado: '.$volumeName);
         }
@@ -266,7 +282,6 @@ class DockerService
     {
         $delays = [3,5,8,13,21,34,55]; // ~139s total
         foreach ($delays as $s) {
-            // usa mysqladmin ping dentro del contenedor por puerto publicado
             $proc = new Process(['bash','-lc', "mysqladmin --connect-timeout=2 -h {$host} -P {$port} -u {$user} -p'{$password}' ping"]);
             $proc->run();
             if ($proc->isSuccessful()) { return; }
@@ -276,12 +291,9 @@ class DockerService
     }
 
     private function waitForMysqlByHealth(string $containerName): void {
-        $retries = 60; // hasta ~5-10 min si quieres
+        $retries = 60;
         while ($retries-- > 0) {
-            $p = new Process([
-                '/usr/bin/docker','inspect','--format',
-                '{{.State.Health.Status}}', $containerName
-            ]);
+            $p = new Process(['/usr/bin/docker','inspect','--format','{{.State.Health.Status}}', $containerName]);
             $p->run();
             if ($p->isSuccessful()) {
                 $status = trim($p->getOutput());
@@ -321,11 +333,11 @@ class DockerService
     private function ensureUserAndGrants(string $containerName, string $dbName, string $user, string $pass): void
     {
         $sql = <<<SQL
-            CREATE USER IF NOT EXISTS '$user'@'%' IDENTIFIED WITH mysql_native_password BY '$pass';
-            ALTER USER '$user'@'%' IDENTIFIED WITH mysql_native_password BY '$pass';
-            GRANT ALL PRIVILEGES ON `$dbName`.* TO '$user'@'%';
-            FLUSH PRIVILEGES;
-            SQL;
+CREATE USER IF NOT EXISTS '$user'@'%' IDENTIFIED WITH mysql_native_password BY '$pass';
+ALTER USER '$user'@'%' IDENTIFIED WITH mysql_native_password BY '$pass';
+GRANT ALL PRIVILEGES ON `$dbName`.* TO '$user'@'%';
+FLUSH PRIVILEGES;
+SQL;
 
         $proc = new Process([
             '/usr/bin/docker','exec','-i',$containerName,
@@ -339,7 +351,6 @@ class DockerService
 
     private function ensureClientUser(string $containerName, string $dbName, string $user, string $password): void
     {
-        // Usa root para asegurar plugin, clave y permisos del usuario del cliente
         $sql = <<<SQL
 ALTER USER '{$user}'@'%' IDENTIFIED WITH mysql_native_password BY '{$password}';
 GRANT ALL PRIVILEGES ON `{$dbName}`.* TO '{$user}'@'%';
@@ -361,8 +372,6 @@ SQL;
                 'user'      => $user,
                 'stderr'    => $p->getErrorOutput(),
             ]);
-            // Decide si quieres hacer throw para bloquear el alta:
-            // throw new ProcessFailedException($p);
         } else {
             $this->logger->info('Usuario/privilegios del cliente asegurados', [
                 'container' => $containerName,
@@ -374,15 +383,11 @@ SQL;
 
     private function runMigrationsForClient(Client $client): void
     {
-        // Ejecuta el script de migraciones del proyecto para SOLO este cliente
         $script = $this->projectDir . '/migrations/client/migrate_client.php';
-
-        // Tu script acepta uuid_client o database_name. Preferimos uuid (único).
         $identifier = $client->getUuidClient() ?: $client->getDatabaseName();
 
-        // Ejecutamos como proceso local (dentro del contenedor BE ya está PHP CLI)
         $proc = new Process(['php', $script, $identifier], $this->projectDir);
-        $proc->setTimeout(600); // por si hay muchas migraciones
+        $proc->setTimeout(600);
         $proc->run();
 
         if (!$proc->isSuccessful()) {
@@ -391,7 +396,7 @@ SQL;
                 'stdout' => $proc->getOutput(),
                 'stderr' => $proc->getErrorOutput(),
             ]);
-            // Si quieres que falle el alta, descomenta:
+            // Si quieres romper el alta:
             // throw new ProcessFailedException($proc);
         } else {
             $this->logger->info('Migraciones cliente OK', [
@@ -400,5 +405,4 @@ SQL;
             ]);
         }
     }
-
 }
