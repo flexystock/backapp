@@ -4,42 +4,38 @@ services:
     container_name: docker-symfony-web
     build:
       context: ./docker/nginx
-      args:
-        UID: 1000
-    ports:
-      - "300:80"
+      args: { UID: 1000 }
+    ports: [ "300:80" ]
     volumes:
       - ./public:/appdata/www/public
-    networks:
-      - docker-symfony-network
-    depends_on:
-      - docker-symfony-be
+    networks: [ docker-symfony-network ]
+    depends_on: [ docker-symfony-be ]
 
   docker-symfony-be:
     container_name: docker-symfony-be
     build:
       context: ./docker/php
-      args:
-        UID: 1000
+      args: { UID: 1000 }
     environment:
       PHP_IDE_CONFIG: "serverName=Docker"
       APP_ENV: dev
+      # 👇 Ruta ABSOLUTA en el HOST a tu repo (se inyecta desde .env de compose)
+      HOST_WORKDIR: "${HOST_WORKDIR}"
     volumes:
       - ./:/appdata/www
       - ~/.ssh/id_rsa:/home/appuser/.ssh/id_rsa
       - /var/run/docker.sock:/var/run/docker.sock
+      # (opcional) si tu imagen no trae docker CLI:
+      # - /usr/bin/docker:/usr/bin/docker
     command: /appdata/www/docker/php/run-with-migrations.sh
-    networks:
-      - docker-symfony-network
-    depends_on:
-      - docker-symfony-dbMain
+    networks: [ docker-symfony-network ]
+    depends_on: [ docker-symfony-dbMain ]
 
   docker-symfony-messenger:
     container_name: docker-symfony-messenger
     build:
       context: ./docker/php
-      args:
-        UID: 1000
+      args: { UID: 1000 }
     environment:
       PHP_IDE_CONFIG: "serverName=Docker"
       APP_ENV: dev
@@ -49,18 +45,14 @@ services:
       - ~/.ssh/id_rsa:/home/appuser/.ssh/id_rsa
       - /var/run/docker.sock:/var/run/docker.sock
     command: /appdata/www/docker/php/wait-for-db.sh
-    networks:
-      - docker-symfony-network
-    depends_on:
-      - docker-symfony-be
-      - docker-symfony-dbMain
+    networks: [ docker-symfony-network ]
+    depends_on: [ docker-symfony-be, docker-symfony-dbMain ]
     restart: always
 
   docker-symfony-dbMain:
     container_name: docker-symfony-dbMain
     image: mysql:8.0
-    ports:
-      - "40099:3306"
+    ports: [ "40099:3306" ]
     environment:
       MYSQL_DATABASE: "docker_symfony_databaseMain"
       MYSQL_USER: "user"
@@ -70,8 +62,7 @@ services:
     command: "mysqld --sql_mode=STRICT_ALL_TABLES,NO_ENGINE_SUBSTITUTION"
     volumes:
       - docker-symfony-databaseMain-data:/var/lib/mysql
-    networks:
-      - docker-symfony-network
+    networks: [ docker-symfony-network ]
 
 volumes:
   docker-symfony-databaseMain-data:
