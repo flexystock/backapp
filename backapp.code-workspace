@@ -4,5 +4,19 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"php.suggest.basic": false,
+		"intelephense.telemetry.enabled": false,
+		"intelephense.format.enable": true,
+		"php-cs-fixer.executablePath": "${workspaceFolder}/vendor/bin/php-cs-fixer",
+		"php-cs-fixer.onsave": true,
+		"php-cs-fixer.rules": "@PSR12",
+		"phpunit.php": "/usr/bin/php",
+		"phpunit.args": [
+			"--colors=always"
+		],
+		"files.associations": {
+			"*.php": "php"
+		}
+	}
 }

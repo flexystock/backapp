@@ -16,6 +16,14 @@
 # Environment files with sensitive data
 *.env
 
+/.vscode/*
+*.code-workspace
+.editorconfig
+.DS_Store
+
+
+
+
 
 ###> lexik/jwt-authentication-bundle ###
 # config/jwt/*.pem
@@ -29,6 +37,8 @@
 /.php-cs-fixer.php
 /.php-cs-fixer.cache
 ###< friendsofphp/php-cs-fixer ###
+
+
 /src/var/
 CLAUDE.md
 public/.env
