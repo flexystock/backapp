@@ -122,7 +122,12 @@ class CreateDockerContainerMessageHandler
                 $this->logger->debug('USERNAME: '.$username);
                 $this->logger->debug('PASSWORD: '.$password);
 
-                $pdo = new \PDO("mysql:host=$host;port=3306;dbname=$databaseName;charset=utf8mb4", "$username", "$password");
+                $pdo = new \PDO(
+                    "mysql:host={$host};port={$port};dbname={$databaseName};charset=utf8mb4",
+                    $username,
+                    $password,
+                    [\PDO::ATTR_TIMEOUT => 3]
+                );
 
                 return true;
             } catch (\PDOException $e) {
