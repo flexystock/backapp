@@ -32,7 +32,7 @@ class EmailVerificationController
         $this->notificationService = $notificationService;
     }
 
-    #[Route('/verify/{token}', name: 'user_verification')]
+    #[Route('/verify/{token}', name: 'user_verification', methods: ['GET'])]
     public function verifyUserEmail(string $token): Response
     {
         $user = $this->userRepository->findOneByVerificationToken($token);

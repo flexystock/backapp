@@ -18,6 +18,9 @@ framework:
     php_errors:
         log: true
 
+    router:
+      default_uri: '%env(DEFAULT_ROUTE_URI)%'
+
 when@test:
     framework:
         test: true
