@@ -29,54 +29,36 @@ class DockerService
      */
     public function createClientDatabase(Client $client): Client
     {
+        // Genera nombres/credenciales...
+        $clientName = $client->getClientName();
+        $uuid       = $client->getUuidClient();
+
+        $containerName = $this->generateContainerName($clientName, $uuid);
+        $volumeName    = $this->generateVolumeName($containerName);
+        $databaseName  = $this->generateDatabaseName($clientName, $uuid);
+        $user          = $this->generateDatabaseUser($clientName, $uuid);
+        $password      = $this->generateRandomPassword();
+        $port          = $this->findAvailablePort();
+        $client->setPortBbdd($port);
+
+        // Generar init.sql (en una ruta que exista en el HOST; ver punto 2)
+        $initSqlPath = $this->buildHostInitPath($clientName, $uuid);
+        $initSqlContent = "ALTER USER '{$user}'@'%' IDENTIFIED WITH mysql_native_password BY '{$password}';\nFLUSH PRIVILEGES;\n";
+        if (false === @file_put_contents($initSqlPath, $initSqlContent)) {
+            throw new \RuntimeException("No se pudo crear init.sql en $initSqlPath");
+        }
+
         try {
-            // Generar nombres y credenciales
-            $clientName = $client->getClientName();
-            $uuid = $client->getUuidClient();
-
-            $containerName = $this->generateContainerName($clientName, $uuid);
-            $volumeName = $this->generateVolumeName($containerName);
-            $databaseName = $this->generateDatabaseName($clientName, $uuid);
-            $user = $this->generateDatabaseUser($clientName, $uuid);
-            $password = $this->generateRandomPassword();
-
-            // Asignar puerto disponible
-            $port = $this->findAvailablePort();
-            //$client->setPortBbdd(3306);
-            $client->setPortBbdd($port);
-
-            // Generar el archivo init.sql con los valores del cliente
-            $initSqlContent = "
-                ALTER USER '{$user}'@'%' IDENTIFIED WITH mysql_native_password BY '{$password}';
-                FLUSH PRIVILEGES;
-                ";
-
-            // Directorio donde se guardará el init.sql
-            $dockerClientsDir = $this->projectDir.'/var/DockerClients';
-            if (!is_dir($dockerClientsDir)) {
-                mkdir($dockerClientsDir, 0755, true);
-            }
-
-            // Ruta completa al archivo init.sql
-            $initSqlFileName = 'init_'.$clientName.'_'.substr($uuid, 0, 4).'.sql';
-            $initSqlPath = $dockerClientsDir.'/'.$initSqlFileName;
-            $this->logger->info('Ruta del archivo init.sql: '.$initSqlPath);
-
-            // Guardar el contenido en el archivo
-            $result = file_put_contents($initSqlPath, $initSqlContent);
-            if (false === $result) {
-                $this->logger->error('Error al escribir el archivo init.sql en '.$initSqlPath);
-                throw new \Exception('No se pudo crear el archivo init.sql');
-            }
-            // Ejecutar comando Docker para crear el contenedor
-            $this->runDockerContainer($containerName, $volumeName, $databaseName, $user, $password, $port, $initSqlPath);
-            // Verificar y eliminar contenedor existente si es necesario
+            // 1) limpia si existe
             $this->removeExistingContainer($containerName);
 
-            // Ejecutar comando Docker para crear el contenedor
+            // 2) crea el contenedor
             $this->runDockerContainer($containerName, $volumeName, $databaseName, $user, $password, $port, $initSqlPath);
 
-            // Actualizar el objeto Client con los nuevos datos
+            // 3) espera a que esté listo (ping con backoff)
+            $this->waitForMysql("127.0.0.1", $port, "root", "UZJIvESy5x");
+
+            // 4) guarda en entidad
             $client->setDatabaseName($databaseName);
             $client->setDatabaseUserName($user);
             $client->setDatabasePassword($password);
@@ -85,12 +67,12 @@ class DockerService
             $client->setDockVolumeName($volumeName);
 
             return $client;
-        } catch (\Exception $e) {
-            // En caso de error, eliminar contenedor y volumen si existen
-            $this->removeExistingContainer($containerName);
-            $this->removeVolume($volumeName);
-
-            throw $e; // Re-lanzar la excepción para que sea manejada por el llamador
+        } catch (\Throwable $e) {
+            // No borres el volumen por fallos de conexión: podrías perder datos o el init incompleto
+            $this->logger->error('Fallo creando DB cliente', ['ex' => $e]);
+            // si quieres, solo intenta parar y limpiar el contenedor (no el volumen):
+            try { $this->removeExistingContainer($containerName); } catch (\Throwable) {}
+            throw $e;
         }
     }
 
@@ -166,17 +148,21 @@ class DockerService
         string $password, int $port, string $initSqlPath): void
     {
         $command = [
-            '/usr/bin/docker', 'run', '-d',
-            '--name', $containerName,
+            '/usr/bin/docker','run','-d',
+            '--name',$containerName,
             '--network=docker-symfony-network',
-            '--restart', 'always',
+            '--restart','always',
+            '--label','com.flexystock=client-db',
+            '--log-driver','json-file','--log-opt','max-size=10m','--log-opt','max-file=3',
+            '--health-cmd','mysqladmin ping -h 127.0.0.1 -uroot -p"$MYSQL_ROOT_PASSWORD" || exit 1',
+            '--health-interval','10s','--health-retries','12','--health-timeout','3s',
             '-p', $port.':3306',
             '--volume', $volumeName.':/var/lib/mysql',
             '--volume', $initSqlPath.':/docker-entrypoint-initdb.d/init.sql',
-            '-e', 'MYSQL_DATABASE='.$databaseName,
-            '-e', 'MYSQL_USER='.$user,
-            '-e', 'MYSQL_PASSWORD='.$password,
-            '-e', 'MYSQL_ROOT_PASSWORD=UZJIvESy5x',
+            '-e','MYSQL_DATABASE='.$databaseName,
+            '-e','MYSQL_USER='.$user,
+            '-e','MYSQL_PASSWORD='.$password,
+            '-e','MYSQL_ROOT_PASSWORD=UZJIvESy5x',
             'mysql:8.0',
         ];
 
@@ -251,5 +237,26 @@ class DockerService
         } else {
             $this->logger->info('Volumen existente eliminado: '.$volumeName);
         }
+    }
+
+    private function buildHostInitPath(string $clientName, string $uuid): string
+    {
+        $hostRoot = getenv('HOST_WORKDIR') ?: '/root/backapp'; // fallback razonable
+        $dir = $hostRoot.'/var/DockerClients';
+        if (!is_dir($dir)) { mkdir($dir, 0755, true); }
+        return $dir.'/init_'.$clientName.'_'.substr($uuid, 0, 4).'.sql';
+    }
+
+    private function waitForMysql(string $host, int $port, string $user, string $password): void
+    {
+        $delays = [3,5,8,13,21,34,55]; // ~139s total
+        foreach ($delays as $s) {
+            // usa mysqladmin ping dentro del contenedor por puerto publicado
+            $proc = new Process(['bash','-lc', "mysqladmin --connect-timeout=2 -h {$host} -P {$port} -u {$user} -p'{$password}' ping"]);
+            $proc->run();
+            if ($proc->isSuccessful()) { return; }
+            sleep($s);
+        }
+        throw new \RuntimeException('MySQL no respondió a tiempo');
     }
 }
