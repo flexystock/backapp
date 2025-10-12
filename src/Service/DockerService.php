@@ -56,7 +56,7 @@ class DockerService
             $this->runDockerContainer($containerName, $volumeName, $databaseName, $user, $password, $port, $initSqlPath);
 
             // 3) espera a que esté listo (ping con backoff)
-            $this->waitForMysql("127.0.0.1", $port, "root", "UZJIvESy5x");
+            $this->waitForMysqlByHealth($containerName);
 
             // 4) guarda en entidad
             $client->setDatabaseName($databaseName);
@@ -70,8 +70,6 @@ class DockerService
         } catch (\Throwable $e) {
             // No borres el volumen por fallos de conexión: podrías perder datos o el init incompleto
             $this->logger->error('Fallo creando DB cliente', ['ex' => $e]);
-            // si quieres, solo intenta parar y limpiar el contenedor (no el volumen):
-            try { $this->removeExistingContainer($containerName); } catch (\Throwable) {}
             throw $e;
         }
     }
@@ -259,4 +257,22 @@ class DockerService
         }
         throw new \RuntimeException('MySQL no respondió a tiempo');
     }
+
+    private function waitForMysqlByHealth(string $containerName): void {
+        $retries = 60; // hasta ~5-10 min si quieres
+        while ($retries-- > 0) {
+            $p = new Process([
+                '/usr/bin/docker','inspect','--format',
+                '{{.State.Health.Status}}', $containerName
+            ]);
+            $p->run();
+            if ($p->isSuccessful()) {
+                $status = trim($p->getOutput());
+                if ($status === 'healthy') return;
+            }
+            sleep(5);
+        }
+        throw new \RuntimeException('MySQL no llegó a healthy a tiempo');
+    }
+
 }
