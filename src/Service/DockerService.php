@@ -41,9 +41,9 @@ class DockerService
             $password = $this->generateRandomPassword();
 
             // Asignar puerto disponible
-            //$port = $this->findAvailablePort();
-            $client->setPortBbdd(3306);
-            //$client->setPortBbdd($port);
+            $port = $this->findAvailablePort();
+            //$client->setPortBbdd(3306);
+            $client->setPortBbdd($port);
 
             // Generar el archivo init.sql con los valores del cliente
             $initSqlContent = "
