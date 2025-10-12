@@ -58,16 +58,20 @@ class DockerService
                     } else {
                         $this->logger->info("$containerName running pero no healthy, esperamos health...");
                         $this->waitForMysqlByHealth($containerName);
+                        $this->ensureUserAndGrants($containerName, $databaseName, $user, $password);
+
                     }
                 } else {
                     $this->logger->info("$containerName existe pero está parado, se hace start.");
                     $this->startContainer($containerName);
                     $this->waitForMysqlByHealth($containerName);
+                    $this->ensureUserAndGrants($containerName, $databaseName, $user, $password);
                 }
             } else {
                 // No existe: se crea
                 $this->runDockerContainer($containerName, $volumeName, $databaseName, $user, $password, $port, $initSqlPath);
                 $this->waitForMysqlByHealth($containerName);
+                $this->ensureUserAndGrants($containerName, $databaseName, $user, $password);
             }
 
             // Persistimos datos en la entidad
@@ -307,6 +311,25 @@ class DockerService
         $p->run();
         if (!$p->isSuccessful()) {
             throw new ProcessFailedException($p);
+        }
+    }
+
+    private function ensureUserAndGrants(string $containerName, string $dbName, string $user, string $pass): void
+    {
+        $sql = <<<SQL
+            CREATE USER IF NOT EXISTS '$user'@'%' IDENTIFIED WITH mysql_native_password BY '$pass';
+            ALTER USER '$user'@'%' IDENTIFIED WITH mysql_native_password BY '$pass';
+            GRANT ALL PRIVILEGES ON `$dbName`.* TO '$user'@'%';
+            FLUSH PRIVILEGES;
+            SQL;
+
+        $proc = new Process([
+            '/usr/bin/docker','exec','-i',$containerName,
+            'mysql','-uroot','-pUZJIvESy5x','-e',$sql
+        ]);
+        $proc->run();
+        if (!$proc->isSuccessful()) {
+            throw new \RuntimeException('No se pudo asegurar usuario/permisos: '.$proc->getErrorOutput());
         }
     }
 
