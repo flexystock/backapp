@@ -29,9 +29,8 @@ class DockerService
      */
     public function createClientDatabase(Client $client): Client
     {
-        // Genera nombres/credenciales...
-        $clientName = $client->getClientName();
-        $uuid       = $client->getUuidClient();
+        $clientName   = $client->getClientName();
+        $uuid         = $client->getUuidClient();
 
         $containerName = $this->generateContainerName($clientName, $uuid);
         $volumeName    = $this->generateVolumeName($containerName);
@@ -41,7 +40,7 @@ class DockerService
         $port          = $this->findAvailablePort();
         $client->setPortBbdd($port);
 
-        // Generar init.sql (en una ruta que exista en el HOST; ver punto 2)
+        // init.sql en host
         $initSqlPath = $this->buildHostInitPath($clientName, $uuid);
         $initSqlContent = "ALTER USER '{$user}'@'%' IDENTIFIED WITH mysql_native_password BY '{$password}';\nFLUSH PRIVILEGES;\n";
         if (false === @file_put_contents($initSqlPath, $initSqlContent)) {
@@ -49,16 +48,29 @@ class DockerService
         }
 
         try {
-            // 1) limpia si existe
-            $this->removeExistingContainer($containerName);
+            // --- NUEVA LÓGICA: reusar si existe ---
+            if ($this->containerExists($containerName)) {
+                $this->logger->info("El contenedor $containerName ya existe");
 
-            // 2) crea el contenedor
-            $this->runDockerContainer($containerName, $volumeName, $databaseName, $user, $password, $port, $initSqlPath);
+                if ($this->containerIsRunning($containerName)) {
+                    if ($this->containerIsHealthy($containerName)) {
+                        $this->logger->info("$containerName está running + healthy, se reutiliza.");
+                    } else {
+                        $this->logger->info("$containerName running pero no healthy, esperamos health...");
+                        $this->waitForMysqlByHealth($containerName);
+                    }
+                } else {
+                    $this->logger->info("$containerName existe pero está parado, se hace start.");
+                    $this->startContainer($containerName);
+                    $this->waitForMysqlByHealth($containerName);
+                }
+            } else {
+                // No existe: se crea
+                $this->runDockerContainer($containerName, $volumeName, $databaseName, $user, $password, $port, $initSqlPath);
+                $this->waitForMysqlByHealth($containerName);
+            }
 
-            // 3) espera a que esté listo (ping con backoff)
-            $this->waitForMysqlByHealth($containerName);
-
-            // 4) guarda en entidad
+            // Persistimos datos en la entidad
             $client->setDatabaseName($databaseName);
             $client->setDatabaseUserName($user);
             $client->setDatabasePassword($password);
@@ -67,9 +79,10 @@ class DockerService
             $client->setDockVolumeName($volumeName);
 
             return $client;
+
         } catch (\Throwable $e) {
-            // No borres el volumen por fallos de conexión: podrías perder datos o el init incompleto
             $this->logger->error('Fallo creando DB cliente', ['ex' => $e]);
+            // NO borrar volumen aquí. Tampoco rm -f si está corriendo.
             throw $e;
         }
     }
@@ -120,26 +133,22 @@ class DockerService
 
     private function removeExistingContainer(string $containerName): void
     {
-        $checkCommand = [
-            '/usr/bin/docker', 'ps', '-a', '--filter', "name=$containerName", '--format', '{{.Names}}',
-        ];
-        $process = new Process($checkCommand);
-        $process->run();
-
-        if ($process->isSuccessful() && trim($process->getOutput()) === $containerName) {
-            $removeCommand = [
-                '/usr/bin/docker', 'rm', '-f', $containerName,
-            ];
-            $removeProcess = new Process($removeCommand);
-            $removeProcess->run();
-
-            if (!$removeProcess->isSuccessful()) {
-                $this->logger->error('Error al eliminar el contenedor existente: '.$removeProcess->getErrorOutput());
-                throw new ProcessFailedException($removeProcess);
-            } else {
-                $this->logger->info('Contenedor existente eliminado: '.$containerName);
-            }
+        if (!$this->containerExists($containerName)) {
+            return;
         }
+
+        if ($this->containerIsRunning($containerName)) {
+            $this->logger->warning("removeExistingContainer: $containerName está RUNNING, no se borra.");
+            return;
+        }
+
+        $rm = new Process(['/usr/bin/docker','rm','-f',$containerName]);
+        $rm->run();
+        if (!$rm->isSuccessful()) {
+            $this->logger->error('Error al eliminar contenedor: '.$rm->getErrorOutput());
+            throw new ProcessFailedException($rm);
+        }
+        $this->logger->info("Contenedor eliminado: $containerName");
     }
 
     private function runDockerContainer(string $containerName, string $volumeName, string $databaseName, string $user,
@@ -273,6 +282,32 @@ class DockerService
             sleep(5);
         }
         throw new \RuntimeException('MySQL no llegó a healthy a tiempo');
+    }
+
+    private function containerExists(string $name): bool {
+        $p = new Process(['/usr/bin/docker','ps','-a','--filter',"name=$name",'--format','{{.Names}}']);
+        $p->run();
+        return $p->isSuccessful() && trim($p->getOutput()) === $name;
+    }
+
+    private function containerIsRunning(string $name): bool {
+        $p = new Process(['/usr/bin/docker','inspect','--format','{{.State.Running}}', $name]);
+        $p->run();
+        return $p->isSuccessful() && trim($p->getOutput()) === 'true';
+    }
+
+    private function containerIsHealthy(string $name): bool {
+        $p = new Process(['/usr/bin/docker','inspect','--format','{{.State.Health.Status}}', $name]);
+        $p->run();
+        return $p->isSuccessful() && trim($p->getOutput()) === 'healthy';
+    }
+
+    private function startContainer(string $name): void {
+        $p = new Process(['/usr/bin/docker','start',$name]);
+        $p->run();
+        if (!$p->isSuccessful()) {
+            throw new ProcessFailedException($p);
+        }
     }
 
 }
