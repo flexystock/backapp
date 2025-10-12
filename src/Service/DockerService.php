@@ -73,7 +73,11 @@ class DockerService
                 $this->waitForMysqlByHealth($containerName);
                 $this->ensureUserAndGrants($containerName, $databaseName, $user, $password);
             }
+            // 3.1) Fuerza usuario/clave/permisos del cliente (por si init.sql no se aplicó)
+            $this->ensureClientUser($containerName, $databaseName, $user, $password);
 
+            // 3.2) Ejecuta migraciones del cliente recién creado
+            $this->runMigrationsForClient($client);
             // Persistimos datos en la entidad
             $client->setDatabaseName($databaseName);
             $client->setDatabaseUserName($user);
@@ -330,6 +334,70 @@ class DockerService
         $proc->run();
         if (!$proc->isSuccessful()) {
             throw new \RuntimeException('No se pudo asegurar usuario/permisos: '.$proc->getErrorOutput());
+        }
+    }
+
+    private function ensureClientUser(string $containerName, string $dbName, string $user, string $password): void
+    {
+        // Usa root para asegurar plugin, clave y permisos del usuario del cliente
+        $sql = <<<SQL
+ALTER USER '{$user}'@'%' IDENTIFIED WITH mysql_native_password BY '{$password}';
+GRANT ALL PRIVILEGES ON `{$dbName}`.* TO '{$user}'@'%';
+FLUSH PRIVILEGES;
+SQL;
+
+        $cmd = [
+            '/usr/bin/docker','exec','-i',$containerName,
+            'mysql','-uroot','-pUZJIvESy5x','-e',$sql
+        ];
+
+        $p = new Process($cmd);
+        $p->run();
+
+        if (!$p->isSuccessful()) {
+            $this->logger->error('ensureClientUser falló', [
+                'container' => $containerName,
+                'db'        => $dbName,
+                'user'      => $user,
+                'stderr'    => $p->getErrorOutput(),
+            ]);
+            // Decide si quieres hacer throw para bloquear el alta:
+            // throw new ProcessFailedException($p);
+        } else {
+            $this->logger->info('Usuario/privilegios del cliente asegurados', [
+                'container' => $containerName,
+                'db'        => $dbName,
+                'user'      => $user,
+            ]);
+        }
+    }
+
+    private function runMigrationsForClient(Client $client): void
+    {
+        // Ejecuta el script de migraciones del proyecto para SOLO este cliente
+        $script = $this->projectDir . '/migrations/client/migrate_client.php';
+
+        // Tu script acepta uuid_client o database_name. Preferimos uuid (único).
+        $identifier = $client->getUuidClient() ?: $client->getDatabaseName();
+
+        // Ejecutamos como proceso local (dentro del contenedor BE ya está PHP CLI)
+        $proc = new Process(['php', $script, $identifier], $this->projectDir);
+        $proc->setTimeout(600); // por si hay muchas migraciones
+        $proc->run();
+
+        if (!$proc->isSuccessful()) {
+            $this->logger->error('Migraciones cliente fallaron', [
+                'client' => $identifier,
+                'stdout' => $proc->getOutput(),
+                'stderr' => $proc->getErrorOutput(),
+            ]);
+            // Si quieres que falle el alta, descomenta:
+            // throw new ProcessFailedException($proc);
+        } else {
+            $this->logger->info('Migraciones cliente OK', [
+                'client' => $identifier,
+                'output' => $proc->getOutput(),
+            ]);
         }
     }
 
