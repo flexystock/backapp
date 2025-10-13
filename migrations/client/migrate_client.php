@@ -20,13 +20,13 @@ $mainPdo = new PDO(
 if ($clientIdentifier !== null) {
     $sql = "SELECT uuid_client, database_name, host, port_bbdd, database_user_name, database_password FROM client WHERE uuid_client = :id OR database_name = :id";
     $stmt = $mainPdo->prepare($sql);
-    $stmt->bindValue(':id', $clientIdentifier);
-    $stmt->execute();
+    $stmt->execute(['id' => $clientIdentifier]);
+    $clients = $stmt->fetchAll();
 } else {
     $sql = "SELECT uuid_client, database_name, host, port_bbdd, database_user_name, database_password FROM client";
     $stmt = $mainPdo->query($sql);
+    $clients = $stmt->fetchAll();
 }
-$clients = $stmt->fetchAll();
 
 if (!$clients) {
     echo "No se encontraron clientes para aplicar las migraciones.\n";
