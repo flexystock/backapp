@@ -16,16 +16,16 @@ $mainPdo = new PDO(
     ]
 );
 
-// Obtener clientes (por uuid o por database_name si se pasa argumento)
-$sql = "SELECT uuid_client, database_name, host, port_bbdd, database_user_name, database_password FROM client";
+/// Obtener clientes (por uuid o por database_name si se pasa argumento)
 if ($clientIdentifier !== null) {
-    $sql .= " WHERE uuid_client = :id OR database_name = :id";
-}
-$stmt = $mainPdo->prepare($sql);
-if ($clientIdentifier !== null) {
+    $sql = "SELECT uuid_client, database_name, host, port_bbdd, database_user_name, database_password FROM client WHERE uuid_client = :id OR database_name = :id";
+    $stmt = $mainPdo->prepare($sql);
     $stmt->bindValue(':id', $clientIdentifier);
+    $stmt->execute();
+} else {
+    $sql = "SELECT uuid_client, database_name, host, port_bbdd, database_user_name, database_password FROM client";
+    $stmt = $mainPdo->query($sql);
 }
-$stmt->execute();
 $clients = $stmt->fetchAll();
 
 if (!$clients) {
