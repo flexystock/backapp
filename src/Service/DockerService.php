@@ -440,8 +440,18 @@ SQL;
 
     private function runMigrationsForClient(Client $client): void
     {
+
         $script = $this->projectDir . '/migrations/client/migrate_client.php';
         $identifier = $client->getUuidClient() ?: $client->getDatabaseName();
+
+        $this->logger->info('=== Iniciando migraciones de cliente ===', [
+            'uuid' => $client->getUuidClient(),
+            'database' => $client->getDatabaseName(),
+            'script' => $script,
+        ]);
+
+        $this->logger->error('Script path: ' . $script);
+        $this->logger->error('Identifier: ' . $identifier);
 
         $proc = new Process(['php', $script, $identifier], $this->projectDir);
         $proc->setTimeout(600);
@@ -452,6 +462,7 @@ SQL;
                 'client' => $identifier,
                 'stdout' => $proc->getOutput(),
                 'stderr' => $proc->getErrorOutput(),
+                'exit_code' => $proc->getExitCode(),
             ]);
             // Si quieres romper el alta:
             // throw new ProcessFailedException($proc);
