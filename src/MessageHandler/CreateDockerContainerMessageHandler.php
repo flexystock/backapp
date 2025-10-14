@@ -114,31 +114,36 @@ class CreateDockerContainerMessageHandler
     private function waitForDatabaseToBeReady($host, $port, $username, $password, $databaseName): bool
     {
         $retries = 0;
+        // IMPORTANTE: Desde docker-symfony-be, conectarse al puerto interno 3306
+        // NO al puerto publicado que es solo para acceso desde fuera
+        $internalPort = 3306;
+
+        $this->logger->info('Intentando conectar a la base de datos del cliente', [
+            'host' => $host,
+            'port_interno' => $internalPort,
+            'port_publicado' => $port,
+            'database' => $databaseName,
+            'username' => $username,
+        ]);
         while ($retries < 10) {
             try {
-                $this->logger->debug('HOST: '.$host);
-                $this->logger->debug('PORT: '.$port);
-                $this->logger->debug('DBNAME: '.$databaseName);
-                $this->logger->debug('USERNAME: '.$username);
-                $this->logger->debug('PASSWORD: '.$password);
-
                 $pdo = new \PDO(
-                    "mysql:host={$host};port={$port};dbname={$databaseName};charset=utf8mb4",
+                    "mysql:host={$host};port={$internalPort};dbname={$databaseName};charset=utf8mb4",
                     $username,
                     $password,
                     [\PDO::ATTR_TIMEOUT => 3]
                 );
 
+                $this->logger->info('Conexión exitosa a la base de datos del cliente');
                 return true;
             } catch (\PDOException $e) {
-                $this->logger->warning("Intento {$retries}: No se puede conectar a la base de datos: {$e->getMessage()}");
+                $this->logger->warning("Intento {$retries}: No se puede conectar: {$e->getMessage()}");
                 ++$retries;
-                sleep(5); // Esperar antes de intentar de nuevo
+                sleep(5);
             }
         }
 
         $this->logger->error('No se pudo conectar a la base de datos después de 10 intentos.');
-
         return false;
     }
 }
