@@ -120,6 +120,8 @@ class DockerService
             // Ejecutar migraciones
             $this->runMigrationsForClient($client);
 
+            return $client;
+
         } catch (\Throwable $e) {
             $this->logger->error('Fallo creando DB cliente', ['ex' => $e]);
             // NO borrar volumen ni rm -f aquí.
