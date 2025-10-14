@@ -113,18 +113,16 @@ class CreateDockerContainerMessageHandler
      */
     private function waitForDatabaseToBeReady($host, $port, $username, $password, $databaseName): bool
     {
-        $retries = 0;
-        // IMPORTANTE: Desde docker-symfony-be, conectarse al puerto interno 3306
-        // NO al puerto publicado que es solo para acceso desde fuera
+        // IMPORTANTE: Puerto interno de Docker, no el publicado
         $internalPort = 3306;
 
         $this->logger->info('Intentando conectar a la base de datos del cliente', [
             'host' => $host,
             'port_interno' => $internalPort,
-            'port_publicado' => $port,
             'database' => $databaseName,
-            'username' => $username,
         ]);
+
+        $retries = 0;
         while ($retries < 10) {
             try {
                 $pdo = new \PDO(
@@ -134,16 +132,16 @@ class CreateDockerContainerMessageHandler
                     [\PDO::ATTR_TIMEOUT => 3]
                 );
 
-                $this->logger->info('Conexión exitosa a la base de datos del cliente');
+                $this->logger->info('✅ Conexión exitosa a la base de datos del cliente');
                 return true;
             } catch (\PDOException $e) {
-                $this->logger->warning("Intento {$retries}: No se puede conectar: {$e->getMessage()}");
+                $this->logger->warning("Intento {$retries}/10: {$e->getMessage()}");
                 ++$retries;
                 sleep(5);
             }
         }
 
-        $this->logger->error('No se pudo conectar a la base de datos después de 10 intentos.');
+        $this->logger->error('❌ No se pudo conectar después de 10 intentos.');
         return false;
     }
 }

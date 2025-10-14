@@ -110,14 +110,15 @@ class DockerService
             $client->setDatabaseUserName($user);
             $client->setDatabasePassword($password);
             $client->setContainerName($containerName);
-            $client->setHost($containerName);          // para acceso interno por red docker
+            $client->setHost($containerName);
             $client->setDockVolumeName($volumeName);
-            $client->setPortBbdd((int)$publishedPort); // para acceso externo (Workbench)
+            $client->setPortBbdd((int)$publishedPort);
 
-            // (opcional) lanzar migraciones solo de este cliente
+            // ✅ IMPORTANTE: Guardar ANTES de ejecutar migraciones
+            // (Comentar esta línea aquí si se guarda en el MessageHandler)
+
+            // Ejecutar migraciones
             $this->runMigrationsForClient($client);
-
-            return $client;
 
         } catch (\Throwable $e) {
             $this->logger->error('Fallo creando DB cliente', ['ex' => $e]);
