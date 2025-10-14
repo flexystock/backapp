@@ -42,60 +42,80 @@ class CreateDockerContainerMessageHandler
     public function __invoke(CreateDockerContainerMessage $message): void
     {
         try {
-            $this->logger->info('Iniciando procesamiento de CreateDockerContainerMessage');
-            // die("llegamos al messageHandler");
+            $this->logger->info('=== Iniciando creación de contenedor Docker para cliente ===');
+
             $clientUuid = $message->getClientId();
-            $this->logger->info("Obteniendo cliente con UUID: {$clientUuid}");
+            $this->logger->info("Buscando cliente con UUID: {$clientUuid}");
+
             $client = $this->clientRepository->findOneBy(['uuid_client' => $clientUuid]);
 
             if (!$client) {
-                $this->logger->warning("CLIENT WHITH UUID {$clientUuid} not found. Discarding message.");
-
+                $this->logger->warning("Cliente con UUID {$clientUuid} no encontrado. Descartando mensaje.");
                 return;
             }
-            $this->logger->info('Propiedades del cliente:', [
-                'uuid_client' => $client->getUuidClient(),
+
+            $this->logger->info('Cliente encontrado:', [
+                'uuid' => $client->getUuidClient(),
                 'name' => $client->getName(),
             ]);
 
+            // 1. Crear contenedor Docker y configurar la base de datos
+            $this->logger->info('Paso 1: Creando contenedor Docker...');
             $client = $this->dockerService->createClientDatabase($client);
+
+            // 2. ✅ IMPORTANTE: Guardar ANTES de ejecutar migraciones
+            $this->logger->info('Paso 2: Guardando configuración del cliente en BBDD principal...');
             $this->clientRepository->save($client);
 
-            // Verificar que la base de datos esté lista antes de aplicar migraciones
+            // 3. Verificar que la base de datos esté lista
+            $this->logger->info('Paso 3: Verificando que la BBDD del cliente esté disponible...');
             $host = $client->getHost();
-            $port = $client->getPortBbdd();
+            $port = 3306; // ✅ Puerto interno Docker, NO el publicado
             $username = $client->getDatabaseUserName();
             $password = $client->getDatabasePassword();
             $databaseName = $client->getDatabaseName();
 
-            if ($this->waitForDatabaseToBeReady($host, $port, $username, $password, $databaseName)) {
-                // Ejecutar el script migrate_client.php para el cliente específico
-                $this->logger->debug('CONSEGUIMOS CONECTAR');
-                $scriptPath = '/appdata/www/migrations/client/migrate_client.php';
-                $clientIdentifier = $client->getUuidClient();
-                $this->logger->debug('IDENTIFICADOR DEL CLIENTE: '.$clientIdentifier);
-                $command = "php {$scriptPath} {$clientIdentifier}";
-                $this->logger->info("Ejecutando comando: {$command}");
+            $this->logger->info('Parámetros de conexión:', [
+                'host' => $host,
+                'port' => $port,
+                'username' => $username,
+                'database' => $databaseName,
+            ]);
 
-                exec($command, $output, $returnVar);
-
-                $this->logger->debug("Valor de retorno: {$returnVar}");
-                $this->logger->debug('Salida del comando: '.implode("\n", $output));
-
-                if (0 !== $returnVar) {
-                    $this->logger->error('Error al ejecutar migrate_client.php: '.implode("\n", $output));
-                    throw new \Exception('Error al ejecutar migrate_client.php');
-                } else {
-                    $this->logger->info("Migraciones aplicadas exitosamente para el cliente {$client->getClientName()}");
-                }
-            } else {
-                throw new \Exception('No se pudo conectar a la base de datos después de múltiples intentos.');
+            if (!$this->waitForDatabaseToBeReady($host, $port, $username, $password, $databaseName)) {
+                throw new \Exception('No se pudo conectar a la base de datos del cliente después de múltiples intentos.');
             }
+
+            // 4. Ejecutar migraciones del cliente
+            $this->logger->info('Paso 4: Ejecutando migraciones del cliente...');
+            $scriptPath = '/appdata/www/migrations/client/migrate_client.php';
+            $clientIdentifier = $client->getUuidClient();
+            $command = "php {$scriptPath} {$clientIdentifier}";
+
+            $this->logger->info("Ejecutando comando de migraciones: {$command}");
+
+            exec($command, $output, $returnVar);
+
+            $this->logger->info('Resultado de migraciones:', [
+                'return_code' => $returnVar,
+                'output' => implode("\n", $output),
+            ]);
+
+            if (0 !== $returnVar) {
+                $this->logger->error('Error al ejecutar migraciones del cliente: '.implode("\n", $output));
+                throw new \Exception('Error al ejecutar migraciones del cliente');
+            }
+
+            $this->logger->info("✅ Cliente configurado exitosamente: {$client->getName()}");
+            $this->logger->info('=== Proceso completado con éxito ===');
+
         } catch (ProcessFailedException $e) {
             $this->logger->error('ERROR al crear el contenedor Docker: '.$e->getMessage());
-            throw $e; // Re-lanzar la excepción para que Messenger gestione el reintento
+            throw $e;
         } catch (\Exception $e) {
-            $this->logger->error('Error inesperado: '.$e->getMessage());
+            $this->logger->error('Error inesperado en el proceso: '.$e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
             throw $e;
         }
     }
