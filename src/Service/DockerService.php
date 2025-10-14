@@ -118,7 +118,7 @@ class DockerService
             // (Comentar esta línea aquí si se guarda en el MessageHandler)
 
             // Ejecutar migraciones
-            $this->runMigrationsForClient($client);
+            //$this->runMigrationsForClient($client);
 
             return $client;
 

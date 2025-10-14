@@ -129,31 +129,36 @@ echo "Base Path for client migrations: $basePath\n";
 foreach ($clients as $c) {
     $dbName   = $c['database_name'];
     $host     = $c['host'];
-    $pubPort  = (int)$c['port_bbdd'];         // puerto publicado en el host
     $user     = $c['database_user_name'];
     $pass     = $c['database_password'];
 
-    // Elegir puerto correcto:
-    // - Si host es 'localhost' o '127.0.0.1' -> usar puerto publicado (host -> contenedor por NAT)
-    // - Si host parece nombre de contenedor (te conectas por la red docker) -> usar 3306
-    $hostLower = strtolower($host);
-    if (in_array($hostLower, ['localhost','127.0.0.1'], true)) {
-        $port = $pubPort ?: 3306;     // para pruebas desde host
-    } else {
-        $port = 3306;                 // desde docker-symfony-be por red interna
-    }
+    // ✅ CORRECCIÓN CRÍTICA: Siempre usar puerto 3306 desde contenedores Docker
+    // El script se ejecuta desde docker-symfony-be, que está en docker-symfony-network
+    // Los contenedores de clientes también están en docker-symfony-network
+    // Por lo tanto, NO usar el puerto publicado (40000+), sino el puerto interno 3306
+    $port = 3306;
 
-    echo "Migrando base de datos del cliente: $dbName en el host: $host:$port\n";
+    echo "========================================\n";
+    echo "Migrando cliente: $dbName\n";
+    echo "Host: $host:$port\n";
+    echo "Usuario: $user\n";
+    echo "========================================\n";
 
     try {
         $dsn = "mysql:host={$host};port={$port};dbname={$dbName};charset=utf8mb4";
+        echo "DSN: $dsn\n";
+
         $pdo = new PDO($dsn, $user, $pass, [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
         ]);
+
+        echo "✅ Conexión exitosa a la base de datos\n";
         applyMigrations($pdo, $basePath);
+        echo "✅ Migraciones aplicadas correctamente\n\n";
+
     } catch (PDOException $e) {
-        echo "Error al conectar con la base de datos ($dbName @ $host:$port): ".$e->getMessage()."\n";
+        echo "❌ Error al conectar con la base de datos ($dbName @ $host:$port): ".$e->getMessage()."\n\n";
     }
 }
