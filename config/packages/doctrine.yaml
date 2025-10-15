@@ -4,6 +4,9 @@ doctrine:
     connections:
       main:
         url: '%env(resolve:DATABASE_URL)%'
+        # Desactivar logging SQL en todos los entornos por defecto
+        logging: false
+        profiling: false
   orm:
     default_entity_manager: main
     # Para entorno dev: creará proxies en var/doctrine/proxies
@@ -25,16 +28,10 @@ doctrine:
             dir: '%kernel.project_dir%/src/Entity/Client'
             prefix: 'App\Entity\Client'
             alias: Client
-monolog:
-  channels: ['doctrine']
-  handlers:
-    doctrine:
-      type: stream
-      path: '%kernel.logs_dir%/doctrine.sql.log'
-      level: debug
-      channels: ['doctrine']
 
-  # Configuraciones específicas de entorno
+# ❌ ELIMINADO: El handler de monolog que registraba todas las queries
+# Esto consumía 169MB de disco sin límite
+
 when@test:
   doctrine:
     dbal:
@@ -42,6 +39,10 @@ when@test:
 
 when@prod:
   doctrine:
+    dbal:
+      # En producción, NUNCA activar logging SQL
+      logging: false
+      profiling: false
     orm:
       auto_generate_proxy_classes: false
       proxy_dir: '%kernel.build_dir%/doctrine/orm/Proxies'
