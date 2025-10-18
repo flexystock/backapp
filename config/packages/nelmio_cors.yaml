@@ -1,15 +1,15 @@
 nelmio_cors:
-    defaults:
-        origin_regex: true
-        allow_origin: ['%env(CORS_ALLOW_ORIGIN)%']
-        allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
-        allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
-        allow_credentials: true
-        max_age: 3600
-    paths:
-        '^/api/':
-            allow_origin: ['%env(CORS_ALLOW_ORIGIN)%']
-            allow_methods: ['GET', 'POST', 'OPTIONS']
-            allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
-            allow_credentials: true
-            max_age: 3600
+  defaults:
+    origin_regex: true
+    allow_origin: ['%env(CORS_ALLOW_ORIGIN)%']
+    allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH']
+    allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+    allow_credentials: true
+    max_age: 3600
+  paths:
+    '^/api/':  # ← Esto debería cubrir TODAS las rutas de /api
+      allow_origin: ['%env(CORS_ALLOW_ORIGIN)%']
+      allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH']
+      allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+      allow_credentials: true
+      max_age: 3600
