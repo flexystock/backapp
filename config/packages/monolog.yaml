@@ -10,7 +10,7 @@ when@dev:
         path: '%kernel.logs_dir%/%kernel.environment%.log'
         level: debug
         channels: ["!event"]
-        max_files: 7
+        max_files: 2
       console:
         type: console
         process_psr_3_messages: false
@@ -43,7 +43,7 @@ when@prod:
         type: rotating_file
         path: '%kernel.logs_dir%/%kernel.environment%.log'
         level: debug
-        max_files: 10
+        max_files: 2
       console:
         type: console
         process_psr_3_messages: false
