@@ -6,7 +6,6 @@ framework:
                 dsn: 'doctrine://main'
                 options:
                     table_name: messenger_messages
-                    memory_limit: 256M
             failed:
                 dsn: 'doctrine://main'
                 options:
