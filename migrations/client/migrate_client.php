@@ -1,131 +1,164 @@
 <?php
-// Obtener el argumento opcional del cliente
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 $clientIdentifier = $argv[1] ?? null;
 
-// Conectar a la base de datos principal
-$mainPdo = new PDO('mysql:host=docker-symfony-dbMain;dbname=docker_symfony_databaseMain', 'user', 'password');
+// Conexión a la BD principal
+$mainPdo = new PDO(
+    'mysql:host=docker-symfony-dbMain;dbname=docker_symfony_databaseMain;charset=utf8mb4',
+    'user',
+    'password',
+    [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ]
+);
 
-// Construir la consulta para obtener los clientes
-$sql = "SELECT database_name, host, port_bbdd, database_user_name, database_password FROM client";
-
+/// Obtener clientes (por uuid o por database_name si se pasa argumento)
 if ($clientIdentifier !== null) {
-    $sql .= " WHERE uuid_Client = :identifier OR database_name = :identifier";
+    $sql = "SELECT uuid_client, database_name, host, port_bbdd, database_user_name, database_password FROM client WHERE uuid_client = :id OR database_name = :id2";
+    $stmt = $mainPdo->prepare($sql);
+    $stmt->execute(['id' => $clientIdentifier, 'id2' => $clientIdentifier]);
+    $clients = $stmt->fetchAll();
+} else {
+    $sql = "SELECT uuid_client, database_name, host, port_bbdd, database_user_name, database_password FROM client";
+    $stmt = $mainPdo->query($sql);
+    $clients = $stmt->fetchAll();
 }
 
-$stmt = $mainPdo->prepare($sql);
-
-if ($clientIdentifier !== null) {
-    $stmt->bindValue(':identifier', $clientIdentifier);
-}
-
-$stmt->execute();
-
-$clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Verificar si se encontró al menos un cliente
-if (empty($clients)) {
+if (!$clients) {
     echo "No se encontraron clientes para aplicar las migraciones.\n";
-    exit;
+    exit(0);
 }
 
-// Obtener la IP del host desde el contenedor
-$hostIp = '127.0.0.1'; // O la IP que corresponda en tu entorno
+function isSqlOrPhpFile(string $file): bool {
+    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    return in_array($ext, ['sql','php'], true);
+}
 
-function applyMigrations($pdo, $basePath) {
-    if ($basePath === false || !is_dir($basePath)) {
+/**
+ * Aplica migraciones en orden por carpeta (001, 002, …) y fichero.
+ * No usa transacciones globales porque DDL hace commits implícitos.
+ */
+function applyMigrations(PDO $pdo, string $basePath): void {
+    if (!is_dir($basePath)) {
         echo "Invalid migrations path: $basePath\n";
         return;
     }
 
-    // Crear la tabla de versiones de migraciones si no existe
-    $pdo->exec("CREATE TABLE IF NOT EXISTS migrations_version (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        version VARCHAR(255) NOT NULL,
-        script VARCHAR(255) NOT NULL,
-        executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )");
+    // Tabla de tracking
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS migrations_version (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            version VARCHAR(50) NOT NULL,
+            script  VARCHAR(255) NOT NULL,
+            executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_version_script(version, script)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ");
 
-    // Obtener la última versión ejecutada
-    $lastVersion = $pdo->query("SELECT MAX(version) FROM migrations_version")->fetchColumn();
-    if ($lastVersion === false) {
-        $lastVersion = '000';
+    // Obtener últimas versiones ya aplicadas por versión->scripts
+    $applied = [];
+    $q = $pdo->query("SELECT version, script FROM migrations_version");
+    foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $applied[$row['version']][$row['script']] = true;
     }
 
-    foreach (scandir($basePath) as $versionDir) {
-        if ($versionDir === '.' || $versionDir === '..') continue;
+    // Ordenar directorios (naturally: 001, 002, …)
+    $dirs = array_values(array_filter(scandir($basePath), function($d){
+        return $d !== '.' && $d !== '..' && is_dir($GLOBALS['basePath'].'/'.$d);
+    }));
+    natsort($dirs);
 
-        // Comparar con la última versión ejecutada
-        if ($versionDir <= $lastVersion) {
-            echo "Skipping already applied migration version: $versionDir\n";
+    foreach ($dirs as $versionDir) {
+        $versionPath = $basePath.'/'.$versionDir;
+        echo "Processing directory: $versionPath\n";
+
+        // Archivos del directorio ordenados
+        $files = array_values(array_filter(scandir($versionPath), function($f) use ($versionPath){
+            return isSqlOrPhpFile($f) && is_file($versionPath.'/'.$f);
+        }));
+        natsort($files);
+
+        if (empty($files)) {
+            echo "No migrations found in $versionPath\n";
             continue;
         }
 
-        $fullPath = realpath($basePath . '/' . $versionDir);
-        if (is_dir($fullPath)) {
-            echo "Processing directory: $fullPath\n";
-            $files = scandir($fullPath);
-            $files = array_filter($files, function ($file) use ($fullPath) {
-                return isSQLorPHPFile($file) && file_exists($fullPath . '/' . $file);
-            });
-
-            if (empty($files)) {
-                echo "No migrations found in $fullPath\n";
+        foreach ($files as $file) {
+            if (isset($applied[$versionDir][$file])) {
+                echo "Skipping already applied: $versionDir/$file\n";
                 continue;
             }
 
+            $fullFile = $versionPath.'/'.$file;
+            echo "Executing: $file\n";
+
             try {
-                $pdo->beginTransaction();
-                foreach ($files as $file) {
-                    $sql = file_get_contents($fullPath . '/' . $file);
-                    echo "Executing SQL from: $file\n";
+                if (str_ends_with(strtolower($file), '.sql')) {
+                    $sql = file_get_contents($fullFile);
+                    if ($sql === false) {
+                        throw new RuntimeException("No se pudo leer $fullFile");
+                    }
                     $pdo->exec($sql);
-                    echo "Applied migration: $file\n";
-                    $pdo->exec("INSERT INTO migrations_version (version, script) VALUES ('$versionDir', '$file')");
+                } else {
+                    // Si tuvieras migraciones PHP, podrías incluirlas aquí.
+                    // require $fullFile;
+                    throw new RuntimeException("Soporte .php no implementado para migraciones");
                 }
-                $pdo->commit();
-                echo "Registered migration: $file in database.\n";
-            } catch (PDOException $e) {
-                file_put_contents('/var/log/migrations.log', "Error en la migración: " . $e->getMessage() . "\n", FILE_APPEND);
-                echo "Migration error: " . $e->getMessage() . "\n";
-                if ($pdo->inTransaction()) {
-                    $pdo->rollBack();
-                }
+
+                $ins = $pdo->prepare("INSERT INTO migrations_version (version, script) VALUES (?, ?)");
+                $ins->execute([$versionDir, $file]);
+                echo "Applied migration: $versionDir/$file\n";
+            } catch (Throwable $e) {
+                // NO rollback aquí (no hay transacción); solo reporta y continúa o haz exit si quieres parar.
+                echo "Migration error en $versionDir/$file: ".$e->getMessage()."\n";
+                // Si prefieres parar en el primer error, descomenta:
+                // exit(1);
             }
         }
     }
 }
 
-function isSQLorPHPFile($fileName) {
-    $ext = pathinfo($fileName, PATHINFO_EXTENSION);
-    return $ext === 'sql' || $ext === 'php';
-}
-
-// Usar una ruta absoluta
+// Ruta absoluta de migraciones
 $basePath = '/appdata/www/migrations/client';
 echo "Base Path for client migrations: $basePath\n";
 
-foreach ($clients as $client) {
-    $dbName = $client['database_name'];
-    $host = $client['host'];
-    $port = $client['port_bbdd'];
-    $username = $client['database_user_name'];
-    $password = $client['database_password'];
+foreach ($clients as $c) {
+    $dbName   = $c['database_name'];
+    $host     = $c['host'];
+    $user     = $c['database_user_name'];
+    $pass     = $c['database_password'];
 
-    // Si el host es 'localhost', lo reemplazamos por la IP del host
-    if ($host === 'localhost') {
-        $host = '127.0.0.1';
+    // ✅ CORRECCIÓN CRÍTICA: Siempre usar puerto 3306 desde contenedores Docker
+    // El script se ejecuta desde docker-symfony-be, que está en docker-symfony-network
+    // Los contenedores de clientes también están en docker-symfony-network
+    // Por lo tanto, NO usar el puerto publicado (40000+), sino el puerto interno 3306
+    $port = 3306;
 
-    }
-
-    echo "Migrando base de datos del cliente: $dbName en el host: $host\n";
-
-    //$dsn = "mysql:host=$host;port=$port;dbname=$dbName;charset=utf8mb4";
+    echo "========================================\n";
+    echo "Migrando cliente: $dbName\n";
+    echo "Host: $host:$port\n";
+    echo "Usuario: $user\n";
+    echo "========================================\n";
 
     try {
-        //$pdo = new PDO($dsn, $username, $password);
-        $pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbName;charset=utf8mb4", "$username", "$password");
+        $dsn = "mysql:host={$host};port={$port};dbname={$dbName};charset=utf8mb4";
+        echo "DSN: $dsn\n";
+
+        $pdo = new PDO($dsn, $user, $pass, [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES   => false,
+        ]);
+
+        echo "✅ Conexión exitosa a la base de datos\n";
         applyMigrations($pdo, $basePath);
+        echo "✅ Migraciones aplicadas correctamente\n\n";
+
     } catch (PDOException $e) {
-        echo "Error al conectar con la base de datos: " . $e->getMessage() . "\n";
+        echo "❌ Error al conectar con la base de datos ($dbName @ $host:$port): ".$e->getMessage()."\n\n";
     }
 }

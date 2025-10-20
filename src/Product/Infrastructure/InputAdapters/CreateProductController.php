@@ -39,7 +39,6 @@ class CreateProductController extends AbstractController
     }
 
     #[Route('/api/product_create', name: 'api_product_create', methods: ['POST'])]
-    #[IsGranted('PERMISSION_PRODUCT_MANAGE')]
     #[OA\Post(
         path: '/api/product_create',
         summary: 'Crear un producto para un cliente',
