@@ -3,6 +3,7 @@
 namespace App\Ttn\Application\UseCases;
 
 use App\Entity\Client\BusinessHour;
+use App\Entity\Client\ClientConfig;
 use App\Entity\Client\Holiday;
 use App\Entity\Client\WeightsLog;
 use App\Entity\Main\Client as MainClient;
@@ -79,6 +80,13 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         // 2) Conectarte a la BBDD del cliente
         $entityManager = $this->connectionManager->getEntityManager($uuidClient);
 
+        $notificationSettings = $this->getNotificationSettings($entityManager);
+        $this->logger->debug('[TTN Uplink] Configuración de alarmas cargada.', [
+            'outOfHours' => $notificationSettings['out_of_hours'],
+            'holidays' => $notificationSettings['holidays'],
+            'batteryShelve' => $notificationSettings['battery_shelve'],
+        ]);
+
         $scaleRepository = $entityManager->getRepository(\App\Entity\Client\Scales::class);
         $scale = $scaleRepository->findOneBy(['end_device_id' => $deviceId]);
         if (!$scale) {
@@ -145,10 +153,15 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         $isWithinBusinessHours = $this->isWithinBusinessHours($entityManager, $now);
         $mainClient = null;
 
-        if ($isHoliday || !$isWithinBusinessHours) {
+        $shouldNotifyForHoliday = $isHoliday && $notificationSettings['holidays'];
+        $shouldNotifyOutOfHours = !$isWithinBusinessHours && $notificationSettings['out_of_hours'];
+
+        if ($shouldNotifyForHoliday || $shouldNotifyOutOfHours) {
             $this->logger->info('[TTN Uplink] Variación detectada fuera de horario o en día festivo.', [
                 'isHoliday' => $isHoliday,
                 'isWithinBusinessHours' => $isWithinBusinessHours,
+                'holidayNotificationsEnabled' => $notificationSettings['holidays'],
+                'outOfHoursNotificationsEnabled' => $notificationSettings['out_of_hours'],
             ]);
 
             $mainClient = $this->findMainClient($uuidClient);
@@ -178,6 +191,13 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
 
                 $this->weightVariationNotifier->notify($notification);
             }
+        } elseif ($isHoliday || !$isWithinBusinessHours) {
+            $this->logger->info('[TTN Uplink] Alerta de variación omitida por configuración del cliente.', [
+                'isHoliday' => $isHoliday,
+                'isWithinBusinessHours' => $isWithinBusinessHours,
+                'holidayNotificationsEnabled' => $notificationSettings['holidays'],
+                'outOfHoursNotificationsEnabled' => $notificationSettings['out_of_hours'],
+            ]);
         }
 
         // 3) Insertar en la tabla la “medición”
@@ -273,6 +293,28 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
     private function findMainClient(string $uuidClient): ?MainClient
     {
         return $this->mainEntityManager->getRepository(MainClient::class)->find($uuidClient);
+    }
+
+    /**
+     * @return array{out_of_hours: bool, holidays: bool, battery_shelve: bool}
+     */
+    private function getNotificationSettings(EntityManagerInterface $entityManager): array
+    {
+        $clientConfig = $entityManager->getRepository(ClientConfig::class)->findOneBy([]);
+
+        if (!$clientConfig instanceof ClientConfig) {
+            return [
+                'out_of_hours' => true,
+                'holidays' => true,
+                'battery_shelve' => true,
+            ];
+        }
+
+        return [
+            'out_of_hours' => $clientConfig->isCheckOutOfHours(),
+            'holidays' => $clientConfig->isCheckHolidays(),
+            'battery_shelve' => $clientConfig->isCheckBatteryShelve(),
+        ];
     }
 
     private function normalizeErrorCode(int|string|null $errorCode): ?int

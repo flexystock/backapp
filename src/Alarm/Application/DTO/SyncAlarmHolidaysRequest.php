@@ -11,5 +11,11 @@ final class SyncAlarmHolidaysRequest
         public readonly string $uuidClient,
         public readonly array $holidays,
         public readonly string $uuidUser,
+        private readonly int $checkHolidays,
     ) {}
+
+    public function isCheckHolidaysEnabled(): bool
+    {
+        return 1 === $this->checkHolidays;
+    }
 }

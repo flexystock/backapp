@@ -2,8 +2,8 @@
 
 namespace App\Alarm\Infrastructure\InputAdapters;
 
-use App\Alarm\Application\DTO\CreateAlarmHolidayRequest;
-use App\Alarm\Application\InputPorts\CreateAlarmHolidayUseCaseInterface;
+use App\Alarm\Application\DTO\CreateAlarmBatteryShelveRequest;
+use App\Alarm\Application\InputPorts\CreateAlarmBatteryShelveUseCaseInterface;
 use App\Security\PermissionControllerTrait;
 use App\Security\PermissionService;
 use OpenApi\Attributes as OA;
@@ -17,12 +17,12 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-class CreateAlarmHolidayController extends AbstractController
+class CreateAlarmBatteryShelveController extends AbstractController
 {
     use PermissionControllerTrait;
 
     public function __construct(
-        private readonly CreateAlarmHolidayUseCaseInterface $createAlarmHolidayUseCase,
+        private readonly CreateAlarmBatteryShelveUseCaseInterface $createAlarmBatteryShelveUseCase,
         private readonly SerializerInterface $serializer,
         private readonly ValidatorInterface $validator,
         private readonly LoggerInterface $logger,
@@ -31,35 +31,30 @@ class CreateAlarmHolidayController extends AbstractController
         $this->permissionService = $permissionService;
     }
 
-    #[Route('/api/alarm/holiday', name: 'api_alarm_create_holiday', methods: ['POST'])]
+    #[Route('/api/alarm/battery-shelve', name: 'api_alarm_create_battery_shelve', methods: ['POST'])]
     #[OA\Post(
-        path: '/api/alarm/holiday',
-        summary: 'Registra un día festivo para un cliente',
+        path: '/api/alarm/battery-shelve',
+        summary: 'Configura la alarma de batería en estantería para un cliente',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['uuidClient', 'holidayDate', 'checkHolidays'],
+                required: ['uuidClient', 'checkBatteryShelve'],
                 properties: [
                     new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
-                    new OA\Property(property: 'holidayDate', type: 'string', format: 'date', example: '2024-12-25'),
-                    new OA\Property(property: 'checkHolidays', type: 'integer', enum: [0, 1], example: 1),
-                    new OA\Property(property: 'name', type: 'string', nullable: true, example: 'Navidad'),
+                    new OA\Property(property: 'checkBatteryShelve', type: 'integer', enum: [0, 1], example: 1),
                 ]
             )
         ),
         tags: ['Alarm'],
         responses: [
             new OA\Response(
-                response: 201,
-                description: 'Festivo registrado correctamente',
+                response: 200,
+                description: 'Configuración de alarma de batería actualizada correctamente',
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'status', type: 'string', example: 'success'),
-                        new OA\Property(property: 'holiday', type: 'object', properties: [
-                            new OA\Property(property: 'id', type: 'integer', example: 1),
-                            new OA\Property(property: 'holiday_date', type: 'string', example: '2024-12-25'),
-                            new OA\Property(property: 'name', type: 'string', nullable: true, example: 'Navidad'),
-                        ]),
+                        new OA\Property(property: 'message', type: 'string', example: 'BATTERY_SHELVE_ALARM_UPDATED'),
+                        new OA\Property(property: 'checkBatteryShelve', type: 'boolean', example: true),
                     ]
                 )
             ),
@@ -77,10 +72,10 @@ class CreateAlarmHolidayController extends AbstractController
                 return $permissionCheck;
             }
 
-            /** @var CreateAlarmHolidayRequest $createRequest */
+            /** @var CreateAlarmBatteryShelveRequest $createRequest */
             $createRequest = $this->serializer->deserialize(
                 $request->getContent(),
-                CreateAlarmHolidayRequest::class,
+                CreateAlarmBatteryShelveRequest::class,
                 'json'
             );
 
@@ -99,19 +94,18 @@ class CreateAlarmHolidayController extends AbstractController
 
             $createRequest->setUuidUser($user->getUuid());
             $createRequest->setTimestamp(new \DateTimeImmutable());
-            //var_dump($createRequest);
-            //die("llegamos");
-            $response = $this->createAlarmHolidayUseCase->execute($createRequest);
+
+            $response = $this->createAlarmBatteryShelveUseCase->execute($createRequest);
 
             return new JsonResponse([
                 'status' => 'success',
-                'message' => 'HOLIDAY_REGISTERED',
-                'holiday' => $response->getHoliday(),
-            ], Response::HTTP_CREATED);
+                'message' => 'BATTERY_SHELVE_ALARM_UPDATED',
+                'checkBatteryShelve' => $response->isCheckBatteryShelveEnabled(),
+            ], Response::HTTP_OK);
         } catch (\RuntimeException $exception) {
             return $this->handleRuntimeException($exception);
         } catch (\Throwable $throwable) {
-            $this->logger->error('Unexpected error registering holiday', [
+            $this->logger->error('Unexpected error configuring battery shelve alarm', [
                 'exception' => $throwable->getMessage(),
             ]);
 
@@ -143,8 +137,6 @@ class CreateAlarmHolidayController extends AbstractController
 
         if ('CLIENT_NOT_FOUND' === $message) {
             $statusCode = Response::HTTP_NOT_FOUND;
-        } elseif ('INVALID_HOLIDAY_DATE' === $message) {
-            $statusCode = Response::HTTP_BAD_REQUEST;
         }
 
         return new JsonResponse([
