@@ -16,14 +16,20 @@ class CreateAlarmHolidayRequest
 
     private ?string $name;
 
+    #[Assert\NotNull(message: 'REQUIRED_CHECK_HOLIDAYS')]
+    #[Assert\Type(type: 'integer', message: 'INVALID_CHECK_HOLIDAYS')]
+    #[Assert\Choice(choices: [0, 1], message: 'INVALID_CHECK_HOLIDAYS')]
+    private int $checkHolidays;
+
     private ?string $uuidUser = null;
 
     private ?\DateTimeInterface $timestamp = null;
 
-    public function __construct(string $uuidClient, string $holidayDate, ?string $name = null)
+    public function __construct(string $uuidClient, string $holidayDate, int $checkHolidays, ?string $name = null)
     {
         $this->uuidClient = $uuidClient;
         $this->holidayDate = $holidayDate;
+        $this->checkHolidays = $checkHolidays;
         $this->name = $name;
     }
 
@@ -45,6 +51,16 @@ class CreateAlarmHolidayRequest
     public function setName(?string $name): void
     {
         $this->name = $name;
+    }
+
+    public function getCheckHolidays(): int
+    {
+        return $this->checkHolidays;
+    }
+
+    public function isCheckHolidaysEnabled(): bool
+    {
+        return 1 === $this->checkHolidays;
     }
 
     public function getUuidUser(): ?string
