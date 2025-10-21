@@ -6,9 +6,11 @@ use App\Alarm\Application\DTO\CreateAlarmOutOfHoursRequest;
 use App\Alarm\Application\DTO\CreateAlarmOutOfHoursResponse;
 use App\Alarm\Application\InputPorts\CreateAlarmOutOfHoursUseCaseInterface;
 use App\Alarm\Infrastructure\OutputAdapters\Repositories\BusinessHourRepository;
+use App\Alarm\Infrastructure\OutputAdapters\Repositories\ClientConfigRepository;
 use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Entity\Client\BusinessHour;
 use App\Entity\Client\BusinessHourLog;
+use App\Entity\Client\ClientConfig;
 use App\Infrastructure\Services\ClientConnectionManager;
 use Psr\Log\LoggerInterface;
 
@@ -31,6 +33,7 @@ class CreateAlarmOutOfHoursUseCase implements CreateAlarmOutOfHoursUseCaseInterf
         $uuidClient = $client->getUuidClient();
         $entityManager = $this->connectionManager->getEntityManager($uuidClient);
         $businessHourRepository = new BusinessHourRepository($entityManager);
+        $clientConfigRepository = new ClientConfigRepository($entityManager);
 
         $previousBusinessHours = $this->formatBusinessHours($businessHourRepository->findAll());
 
@@ -58,7 +61,7 @@ class CreateAlarmOutOfHoursUseCase implements CreateAlarmOutOfHoursUseCaseInterf
                 $existingBusinessHour->setUuidUserCreation($uuidUser);
                 $existingBusinessHour->setDatehourCreation($timestamp);
             } else {
-                $existingBusinessHour->setUuidUserModification($request->getUuidUser());
+                $existingBusinessHour->setUuidUserModification($uuidUser);
                 $existingBusinessHour->setDatehourModification($timestamp);
             }
 
@@ -89,6 +92,13 @@ class CreateAlarmOutOfHoursUseCase implements CreateAlarmOutOfHoursUseCaseInterf
             }
         }
 
+        $this->updateClientConfig(
+            $clientConfigRepository,
+            $request->isCheckOutOfHoursEnabled(),
+            $uuidUser,
+            $timestamp
+        );
+
         $businessHours = array_map(
             static function (BusinessHour $businessHour): array {
                 return [
@@ -103,6 +113,29 @@ class CreateAlarmOutOfHoursUseCase implements CreateAlarmOutOfHoursUseCaseInterf
         );
 
         return new CreateAlarmOutOfHoursResponse($uuidClient, $businessHours);
+    }
+
+    private function updateClientConfig(
+        ClientConfigRepository $clientConfigRepository,
+        bool $isEnabled,
+        string $uuidUser,
+        \DateTimeInterface $timestamp
+    ): void {
+        $clientConfig = $clientConfigRepository->findConfig();
+
+        if (!$clientConfig) {
+            $clientConfig = (new ClientConfig())
+                ->setUuidUserCreation($uuidUser)
+                ->setDatehourCreation($timestamp);
+        } else {
+            $clientConfig->setUuidUserModification($uuidUser);
+            $clientConfig->setDatehourModification($timestamp);
+        }
+
+        $clientConfig->setCheckOutOfHours($isEnabled);
+
+        $clientConfigRepository->save($clientConfig);
+        $clientConfigRepository->flush();
     }
 
     /**
