@@ -14,14 +14,20 @@ class CreateAlarmOutOfHoursRequest
     #[Assert\Type(type: 'array', message: 'INVALID_BUSINESS_HOURS')]
     private array $businessHours;
 
+    #[Assert\NotNull(message: 'REQUIRED_CHECK_OUT_OF_HOURS')]
+    #[Assert\Type(type: 'integer', message: 'INVALID_CHECK_OUT_OF_HOURS')]
+    #[Assert\Choice(choices: [0, 1], message: 'INVALID_CHECK_OUT_OF_HOURS')]
+    private int $checkOutOfHours;
+
     private ?string $uuidUser = null;
 
     private ?\DateTimeInterface $timestamp = null;
 
-    public function __construct(string $uuidClient, array $businessHours)
+    public function __construct(string $uuidClient, array $businessHours, int $checkOutOfHours)
     {
         $this->uuidClient = $uuidClient;
         $this->businessHours = $businessHours;
+        $this->checkOutOfHours = $checkOutOfHours;
     }
 
     public function getUuidClient(): string
@@ -37,6 +43,16 @@ class CreateAlarmOutOfHoursRequest
     public function setBusinessHours(array $businessHours): void
     {
         $this->businessHours = $businessHours;
+    }
+
+    public function getCheckOutOfHours(): int
+    {
+        return $this->checkOutOfHours;
+    }
+
+    public function isCheckOutOfHoursEnabled(): bool
+    {
+        return 1 === $this->checkOutOfHours;
     }
 
     public function getUuidUser(): ?string

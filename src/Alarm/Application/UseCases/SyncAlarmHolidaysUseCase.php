@@ -5,9 +5,11 @@ use App\Alarm\Application\DTO\SyncAlarmHolidaysRequest;
 use App\Alarm\Application\DTO\SyncAlarmHolidaysResponse;
 use App\Alarm\Application\InputPorts\SyncAlarmHolidaysUseCaseInterface;
 use App\Alarm\Infrastructure\OutputAdapters\Repositories\HolidayRepository;
+use App\Alarm\Infrastructure\OutputAdapters\Repositories\ClientConfigRepository;
 use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Entity\Client\Holiday;
 use App\Entity\Client\HolidayLog;
+use App\Entity\Client\ClientConfig;
 use App\Infrastructure\Services\ClientConnectionManager;
 use Psr\Log\LoggerInterface;
 
@@ -28,6 +30,7 @@ final class SyncAlarmHolidaysUseCase implements SyncAlarmHolidaysUseCaseInterfac
 
         $em = $this->connectionManager->getEntityManager($client->getUuidClient());
         $repo = new HolidayRepository($em);
+        $clientConfigRepository = new ClientConfigRepository($em);
 
         $previousHolidays = $this->formatHolidays($repo->findAll());
 
@@ -116,6 +119,13 @@ final class SyncAlarmHolidaysUseCase implements SyncAlarmHolidaysUseCaseInterfac
             $em->flush();
         }
 
+        $this->updateClientConfig(
+            $clientConfigRepository,
+            $request->isCheckHolidaysEnabled(),
+            $request->uuidUser,
+            $now
+        );
+
         // devolvemos el listado final + diffs (útil para depurar)
         return new SyncAlarmHolidaysResponse(
             holidays: $final,
@@ -178,5 +188,29 @@ final class SyncAlarmHolidaysUseCase implements SyncAlarmHolidaysUseCaseInterfac
         }
 
         return $encoded;
+    }
+
+    private function updateClientConfig(
+        ClientConfigRepository $clientConfigRepository,
+        bool $isEnabled,
+        string $uuidUser,
+        \DateTimeInterface $timestamp
+    ): void {
+        $clientConfig = $clientConfigRepository->findConfig();
+
+        if (!$clientConfig) {
+            $clientConfig = (new ClientConfig())
+                ->setUuidUserCreation($uuidUser)
+                ->setDatehourCreation($timestamp);
+        } else {
+            $clientConfig
+                ->setUuidUserModification($uuidUser)
+                ->setDatehourModification($timestamp);
+        }
+
+        $clientConfig->setCheckHolidays($isEnabled);
+
+        $clientConfigRepository->save($clientConfig);
+        $clientConfigRepository->flush();
     }
 }
