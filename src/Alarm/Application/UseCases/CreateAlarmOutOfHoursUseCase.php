@@ -35,13 +35,26 @@ class CreateAlarmOutOfHoursUseCase implements CreateAlarmOutOfHoursUseCaseInterf
         $businessHourRepository = new BusinessHourRepository($entityManager);
         $clientConfigRepository = new ClientConfigRepository($entityManager);
 
-        $previousBusinessHours = $this->formatBusinessHours($businessHourRepository->findAll());
 
-        $normalizedBusinessHours = $this->normalizeBusinessHours($request->getBusinessHours());
 
         $timestamp = $request->getTimestamp() ?? new \DateTimeImmutable();
         $uuidUser = $request->getUuidUser() ?? 'system';
 
+        // Si checkOutOfHours está desactivado y businessHours está vacío,
+        // solo actualizar la configuración sin procesar horarios
+        if (!$request->isCheckOutOfHoursEnabled() && [] === $request->getBusinessHours()) {
+            $this->updateClientConfig(
+                $clientConfigRepository,
+                false,
+                $uuidUser,
+                $timestamp
+            );
+
+            return new CreateAlarmOutOfHoursResponse($uuidClient, [], false);;
+        }
+
+        $previousBusinessHours = $this->formatBusinessHours($businessHourRepository->findAll());
+        $normalizedBusinessHours = $this->normalizeBusinessHours($request->getBusinessHours());
         $hasChanges = false;
         foreach ($normalizedBusinessHours as $dayData) {
             $existingBusinessHour = $businessHourRepository->findByDayOfWeek($dayData['day_of_week']);
@@ -112,7 +125,31 @@ class CreateAlarmOutOfHoursUseCase implements CreateAlarmOutOfHoursUseCaseInterf
             $businessHourRepository->findAll()
         );
 
-        return new CreateAlarmOutOfHoursResponse($uuidClient, $businessHours);
+        $checkHoliday = $clientConfigRepository->findConfig()->isCheckHolidays();
+        return new CreateAlarmOutOfHoursResponse($uuidClient, $businessHours, $checkHoliday);
+    }
+
+    private function updateClientConfig(
+        ClientConfigRepository $clientConfigRepository,
+        bool $isEnabled,
+        string $uuidUser,
+        \DateTimeInterface $timestamp
+    ): void {
+        $clientConfig = $clientConfigRepository->findConfig();
+
+        if (!$clientConfig) {
+            $clientConfig = (new ClientConfig())
+                ->setUuidUserCreation($uuidUser)
+                ->setDatehourCreation($timestamp);
+        } else {
+            $clientConfig->setUuidUserModification($uuidUser);
+            $clientConfig->setDatehourModification($timestamp);
+        }
+
+        $clientConfig->setCheckOutOfHours($isEnabled);
+
+        $clientConfigRepository->save($clientConfig);
+        $clientConfigRepository->flush();
     }
 
     private function updateClientConfig(

@@ -126,6 +126,7 @@ class GetAlarmsBusinessHoursController extends AbstractController
                 'status' => 'success',
                 'message' => 'BUSINESS_HOURS_RETRIEVED',
                 'business_hours' => $response->getBusinessHours(),
+                'checkHolidays' => $response->getCheckoutOfHours()
             ], Response::HTTP_OK);
         } catch (\RuntimeException $exception) {
             return $this->handleRuntimeException($exception);
