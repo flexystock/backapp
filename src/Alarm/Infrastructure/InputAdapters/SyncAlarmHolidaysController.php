@@ -74,7 +74,7 @@ class SyncAlarmHolidaysController extends AbstractController
             $payload = json_decode($request->getContent(), true) ?? [];
             $uuidClient = $payload['uuidClient'] ?? null;
             $holidays   = $payload['holidays'] ?? null;
-            $checkHolidays = $this->normalizeCheckValue($payload['checkHoliday'] ?? null);
+            $checkHolidays = $this->normalizeCheckValue($payload['checkHolidays'] ?? null);
 
             $errors = [];
             if (!is_string($uuidClient)) {
@@ -86,7 +86,7 @@ class SyncAlarmHolidaysController extends AbstractController
             }
 
             if (null === $checkHolidays) {
-                $errors['checkHoliday'] = 'INVALID_CHECK_HOLIDAYS';
+                $errors['checkHolidays'] = 'INVALID_CHECK_HOLIDAYS';
             }
 
             if ($errors !== []) {
@@ -122,7 +122,7 @@ class SyncAlarmHolidaysController extends AbstractController
                 'status' => 'success',
                 'message' => 'HOLIDAYS_SYNCED',
                 'holidays' => $response->getHolidays(), // lista final después de sync
-                'checkHoliday' => $checkHolidays,
+                'checkHolidays' => $checkHolidays,
             ], Response::HTTP_OK);
         } catch (\RuntimeException $e) {
             $status = match ($e->getMessage()) {

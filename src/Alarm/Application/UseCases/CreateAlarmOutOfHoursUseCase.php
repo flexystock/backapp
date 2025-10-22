@@ -152,6 +152,29 @@ class CreateAlarmOutOfHoursUseCase implements CreateAlarmOutOfHoursUseCaseInterf
         $clientConfigRepository->flush();
     }
 
+    private function updateClientConfig(
+        ClientConfigRepository $clientConfigRepository,
+        bool $isEnabled,
+        string $uuidUser,
+        \DateTimeInterface $timestamp
+    ): void {
+        $clientConfig = $clientConfigRepository->findConfig();
+
+        if (!$clientConfig) {
+            $clientConfig = (new ClientConfig())
+                ->setUuidUserCreation($uuidUser)
+                ->setDatehourCreation($timestamp);
+        } else {
+            $clientConfig->setUuidUserModification($uuidUser);
+            $clientConfig->setDatehourModification($timestamp);
+        }
+
+        $clientConfig->setCheckOutOfHours($isEnabled);
+
+        $clientConfigRepository->save($clientConfig);
+        $clientConfigRepository->flush();
+    }
+
     /**
      * @param array<int, array<string, mixed>> $businessHours
      * @return array<int, array{
