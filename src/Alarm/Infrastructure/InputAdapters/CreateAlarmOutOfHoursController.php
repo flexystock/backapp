@@ -38,7 +38,7 @@ class CreateAlarmOutOfHoursController extends AbstractController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['uuidClient', 'businessHours'],
+                required: ['uuidClient', 'businessHours', 'checkOutOfHours'],
                 properties: [
                     new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
                     new OA\Property(
@@ -56,6 +56,7 @@ class CreateAlarmOutOfHoursController extends AbstractController
                             ]
                         )
                     ),
+                    new OA\Property(property: 'checkOutOfHours', type: 'integer', enum: [0, 1], example: 1),
                 ]
             )
         ),
