@@ -50,7 +50,7 @@ class CreateAlarmOutOfHoursUseCase implements CreateAlarmOutOfHoursUseCaseInterf
                 $timestamp
             );
 
-            return new CreateAlarmOutOfHoursResponse($uuidClient, []);
+            return new CreateAlarmOutOfHoursResponse($uuidClient, [], false);;
         }
 
         $previousBusinessHours = $this->formatBusinessHours($businessHourRepository->findAll());
@@ -125,7 +125,8 @@ class CreateAlarmOutOfHoursUseCase implements CreateAlarmOutOfHoursUseCaseInterf
             $businessHourRepository->findAll()
         );
 
-        return new CreateAlarmOutOfHoursResponse($uuidClient, $businessHours);
+        $checkHoliday = $clientConfigRepository->findConfig()->isCheckHolidays();
+        return new CreateAlarmOutOfHoursResponse($uuidClient, $businessHours, $checkHoliday);
     }
 
     private function updateClientConfig(

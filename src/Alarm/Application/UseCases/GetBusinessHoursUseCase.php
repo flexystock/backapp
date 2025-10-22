@@ -6,6 +6,7 @@ use App\Alarm\Application\DTO\GetBusinessHoursRequest;
 use App\Alarm\Application\DTO\GetBusinessHoursResponse;
 use App\Alarm\Application\InputPorts\GetBusinessHoursUseCaseInterface;
 use App\Alarm\Infrastructure\OutputAdapters\Repositories\BusinessHourRepository;
+use App\Alarm\Infrastructure\OutputAdapters\Repositories\ClientConfigRepository;
 use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Entity\Client\BusinessHour;
 use App\Infrastructure\Services\ClientConnectionManager;
@@ -29,8 +30,10 @@ class GetBusinessHoursUseCase implements GetBusinessHoursUseCaseInterface
 
         $entityManager = $this->connectionManager->getEntityManager($client->getUuidClient());
         $businessHourRepository = new BusinessHourRepository($entityManager);
-
+        $clientConfigRepository = new ClientConfigRepository($entityManager);
         $businessHours = $businessHourRepository->findAll();
+
+        $checkoutOfHours = $clientConfigRepository->findConfig()->isCheckHolidays();
 
         $businessHoursData = array_map(
             fn (BusinessHour $businessHour): array => [
@@ -49,6 +52,6 @@ class GetBusinessHoursUseCase implements GetBusinessHoursUseCaseInterface
             'count' => count($businessHoursData),
         ]);
 
-        return new GetBusinessHoursResponse($businessHoursData);
+        return new GetBusinessHoursResponse($businessHoursData, $checkoutOfHours);
     }
 }

@@ -7,8 +7,10 @@ class GetBusinessHoursResponse
     /**
      * @param array<int, array<string, mixed>> $businessHours
      */
-    public function __construct(private readonly array $businessHours)
+    private int $checkoutOfHours;
+    public function __construct(private readonly array $businessHours, int $checkoutOfHours)
     {
+        $this->checkoutOfHours = $checkoutOfHours;
     }
 
     /**
@@ -17,5 +19,10 @@ class GetBusinessHoursResponse
     public function getBusinessHours(): array
     {
         return $this->businessHours;
+    }
+
+    public function getCheckoutOfHours(): int
+    {
+        return $this->checkoutOfHours;
     }
 }

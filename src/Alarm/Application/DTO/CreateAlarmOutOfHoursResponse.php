@@ -11,10 +11,13 @@ class CreateAlarmOutOfHoursResponse
      */
     private array $businessHours;
 
-    public function __construct(string $uuidClient, array $businessHours)
+    private int $checkoutOfHours;
+
+    public function __construct(string $uuidClient, array $businessHours, int $checkoutOfHours)
     {
         $this->uuidClient = $uuidClient;
         $this->businessHours = $businessHours;
+        $this->checkoutOfHours = $checkoutOfHours;
     }
 
     public function getUuidClient(): string
@@ -28,5 +31,10 @@ class CreateAlarmOutOfHoursResponse
     public function getBusinessHours(): array
     {
         return $this->businessHours;
+    }
+
+    public function getCheckoutOfHours(): int
+    {
+        return $this->checkoutOfHours;
     }
 }
