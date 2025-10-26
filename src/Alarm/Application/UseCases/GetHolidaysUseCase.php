@@ -5,6 +5,7 @@ namespace App\Alarm\Application\UseCases;
 use App\Alarm\Application\DTO\GetHolidaysRequest;
 use App\Alarm\Application\DTO\GetHolidaysResponse;
 use App\Alarm\Application\InputPorts\GetHolidaysUseCaseInterface;
+use App\Alarm\Infrastructure\OutputAdapters\Repositories\ClientConfigRepository;
 use App\Alarm\Infrastructure\OutputAdapters\Repositories\HolidayRepository;
 use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Entity\Client\Holiday;
@@ -28,6 +29,8 @@ class GetHolidaysUseCase implements GetHolidaysUseCaseInterface
         }
 
         $entityManager = $this->connectionManager->getEntityManager($client->getUuidClient());
+        $clientConfigRepository = new ClientConfigRepository($entityManager);
+        $checkoutOfHolidays = $clientConfigRepository->findConfig()->isCheckHolidays();
         $holidayRepository = new HolidayRepository($entityManager);
 
         $holidays = $holidayRepository->findAll();
@@ -46,6 +49,6 @@ class GetHolidaysUseCase implements GetHolidaysUseCaseInterface
             'count' => count($holidaysData),
         ]);
 
-        return new GetHolidaysResponse($holidaysData);
+        return new GetHolidaysResponse($holidaysData, $checkoutOfHolidays);
     }
 }

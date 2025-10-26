@@ -129,6 +129,7 @@ class CreateAlarmOutOfHoursController extends AbstractController
                 'message' => 'BUSINESS_HOURS_CONFIGURED',
                 'uuidClient' => $response->getUuidClient(),
                 'businessHours' => $response->getBusinessHours(),
+                'checkOutOfHours' => $response->getCheckoutOfHours()
             ], Response::HTTP_OK);
         } catch (\RuntimeException $exception) {
             return $this->handleRuntimeException($exception);
