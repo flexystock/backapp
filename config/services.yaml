@@ -514,6 +514,24 @@ services:
   App\Alarm\Application\InputPorts\CreateAlarmHolidayUseCaseInterface:
     alias: App\Alarm\Application\UseCases\CreateAlarmHolidayUseCase
 
+  App\Alarm\Application\UseCases\CreateAlarmBatteryShelveUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Alarm\Application\InputPorts\CreateAlarmBatteryShelveUseCaseInterface:
+    alias: App\Alarm\Application\UseCases\CreateAlarmBatteryShelveUseCase
+
+  App\Alarm\Application\UseCases\GetAlarmBatteryShelveUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Alarm\Application\InputPorts\GetAlarmBatteryShelveUseCaseInterface:
+    alias: App\Alarm\Application\UseCases\GetAlarmBatteryShelveUseCase
+
   App\Alarm\Application\UseCases\GetBusinessHoursUseCase:
     arguments:
       $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'

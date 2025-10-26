@@ -2,8 +2,8 @@
 
 namespace App\Alarm\Infrastructure\InputAdapters;
 
-use App\Alarm\Application\DTO\GetBusinessHoursRequest;
-use App\Alarm\Application\InputPorts\GetBusinessHoursUseCaseInterface;
+use App\Alarm\Application\DTO\CreateAlarmBatteryShelveRequest;
+use App\Alarm\Application\InputPorts\CreateAlarmBatteryShelveUseCaseInterface;
 use App\Security\PermissionControllerTrait;
 use App\Security\PermissionService;
 use OpenApi\Attributes as OA;
@@ -17,12 +17,12 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-class GetAlarmsBusinessHoursController extends AbstractController
+class CreateAlarmBatteryShelveController extends AbstractController
 {
     use PermissionControllerTrait;
 
     public function __construct(
-        private readonly GetBusinessHoursUseCaseInterface $getBusinessHoursUseCase,
+        private readonly CreateAlarmBatteryShelveUseCaseInterface $createAlarmBatteryShelveUseCase,
         private readonly SerializerInterface $serializer,
         private readonly ValidatorInterface $validator,
         private readonly LoggerInterface $logger,
@@ -31,42 +31,30 @@ class GetAlarmsBusinessHoursController extends AbstractController
         $this->permissionService = $permissionService;
     }
 
-    #[Route('/api/alarm/business-hours', name: 'api_alarm_get_business_hours', methods: ['GET'])]
-    #[OA\Get(
-        path: '/api/alarm/business-hours',
-        summary: 'Obtiene los horarios comerciales configurados',
-        parameters: [
-            new OA\Parameter(
-                name: 'uuidClient',
-                in: 'query',
-                required: true,
-                schema: new OA\Schema(type: 'string', format: 'uuid'),
-                description: 'UUID del cliente para recuperar su configuración de horarios'
-            ),
-        ],
+    #[Route('/api/alarm/battery-shelve', name: 'api_alarm_create_battery_shelve', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/alarm/battery-shelve',
+        summary: 'Configura la alarma de batería en estantería para un cliente',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['uuidClient', 'checkBatteryShelve'],
+                properties: [
+                    new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
+                    new OA\Property(property: 'checkBatteryShelve', type: 'integer', enum: [0, 1], example: 1),
+                ]
+            )
+        ),
         tags: ['Alarm'],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Horarios comerciales recuperados correctamente',
+                description: 'Configuración de alarma de batería actualizada correctamente',
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'status', type: 'string', example: 'success'),
-                        new OA\Property(property: 'message', type: 'string', example: 'BUSINESS_HOURS_RETRIEVED'),
-                        new OA\Property(
-                            property: 'business_hours',
-                            type: 'array',
-                            items: new OA\Items(
-                                type: 'object',
-                                properties: [
-                                    new OA\Property(property: 'day_of_week', type: 'integer', example: 1),
-                                    new OA\Property(property: 'start_time', type: 'string', nullable: true, example: '08:00:00'),
-                                    new OA\Property(property: 'end_time', type: 'string', nullable: true, example: '16:00:00'),
-                                    new OA\Property(property: 'start_time2', type: 'string', nullable: true, example: '20:00:00'),
-                                    new OA\Property(property: 'end_time2', type: 'string', nullable: true, example: '23:00:00'),
-                                ]
-                            )
-                        ),
+                        new OA\Property(property: 'message', type: 'string', example: 'BATTERY_SHELVE_ALARM_UPDATED'),
+                        new OA\Property(property: 'checkBatteryShelve', type: 'boolean', example: true),
                     ]
                 )
             ),
@@ -79,35 +67,19 @@ class GetAlarmsBusinessHoursController extends AbstractController
     public function __invoke(Request $request): JsonResponse
     {
         try {
-            $permissionCheck = $this->checkPermissionJson('alarm.view', 'No tienes permisos para consultar las alarmas');
+            $permissionCheck = $this->checkPermissionJson('alarm.update', 'No tienes permisos para actualizar las alarmas');
             if ($permissionCheck) {
                 return $permissionCheck;
             }
 
-            // Unificamos entrada: primero query, si no hay miramos body
-            $payload = $request->query->all();
-            if (empty($payload) && '' !== $request->getContent()) {
-                $decoded = json_decode($request->getContent(), true);
-                if (is_array($decoded)) {
-                    $payload = $decoded;
-                }
-            }
-
-            if (empty($payload['uuidClient']) || !is_string($payload['uuidClient'])) {
-                return new JsonResponse([
-                    'status' => 'error',
-                    'message' => 'REQUIRED_CLIENT_ID',
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
-            /** @var GetBusinessHoursRequest $dto */
-            $dto = $this->serializer->deserialize(
-                json_encode(['uuidClient' => $payload['uuidClient']], JSON_THROW_ON_ERROR),
-                GetBusinessHoursRequest::class,
+            /** @var CreateAlarmBatteryShelveRequest $createRequest */
+            $createRequest = $this->serializer->deserialize(
+                $request->getContent(),
+                CreateAlarmBatteryShelveRequest::class,
                 'json'
             );
 
-            $errors = $this->validator->validate($dto);
+            $errors = $this->validator->validate($createRequest);
             if (count($errors) > 0) {
                 return $this->validationErrorResponse($errors);
             }
@@ -120,18 +92,20 @@ class GetAlarmsBusinessHoursController extends AbstractController
                 ], Response::HTTP_UNAUTHORIZED);
             }
 
-            $response = $this->getBusinessHoursUseCase->execute($dto);
+            $createRequest->setUuidUser($user->getUuid());
+            $createRequest->setTimestamp(new \DateTimeImmutable());
+
+            $response = $this->createAlarmBatteryShelveUseCase->execute($createRequest);
 
             return new JsonResponse([
                 'status' => 'success',
-                'message' => 'BUSINESS_HOURS_RETRIEVED',
-                'business_hours' => $response->getBusinessHours(),
-                'checkBusinessHours' => $response->getCheckoutOfHours()
+                'message' => 'BATTERY_SHELVE_ALARM_UPDATED',
+                'checkBatteryShelve' => $response->isCheckBatteryShelveEnabled(),
             ], Response::HTTP_OK);
         } catch (\RuntimeException $exception) {
             return $this->handleRuntimeException($exception);
         } catch (\Throwable $throwable) {
-            $this->logger->error('Unexpected error fetching business hours', [
+            $this->logger->error('Unexpected error configuring battery shelve alarm', [
                 'exception' => $throwable->getMessage(),
             ]);
 

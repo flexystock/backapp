@@ -35,7 +35,7 @@ class SyncAlarmHolidaysController extends AbstractController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['uuidClient', 'holidays'],
+                required: ['uuidClient', 'holidays', 'checkHolidays'],
                 properties: [
                     new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid'),
                     new OA\Property(
@@ -49,7 +49,8 @@ class SyncAlarmHolidaysController extends AbstractController
                                 new OA\Property(property: 'name', type: 'string', nullable: true, example: 'Año Nuevo')
                             ]
                         )
-                    )
+                    ),
+                    new OA\Property(property: 'checkHolidays', type: 'integer', enum: [0, 1])
                 ]
             )
         ),
@@ -73,12 +74,26 @@ class SyncAlarmHolidaysController extends AbstractController
             $payload = json_decode($request->getContent(), true) ?? [];
             $uuidClient = $payload['uuidClient'] ?? null;
             $holidays   = $payload['holidays'] ?? null;
+            $checkHolidays = $this->normalizeCheckValue($payload['checkHoliday'] ?? null);
 
-            if (!is_string($uuidClient) || !is_array($holidays)) {
+            $errors = [];
+            if (!is_string($uuidClient)) {
+                $errors['uuidClient'] = 'REQUIRED_CLIENT_ID';
+            }
+
+            if (!is_array($holidays)) {
+                $errors['holidays'] = 'REQUIRED_HOLIDAYS_ARRAY';
+            }
+
+            if (null === $checkHolidays) {
+                $errors['checkHoliday'] = 'INVALID_CHECK_HOLIDAYS';
+            }
+
+            if ($errors !== []) {
                 return new JsonResponse([
                     'status' => 'error',
                     'message' => 'INVALID_DATA',
-                    'errors' => ['uuidClient' => 'REQUIRED_CLIENT_ID', 'holidays' => 'REQUIRED_HOLIDAYS_ARRAY'],
+                    'errors' => $errors,
                 ], Response::HTTP_BAD_REQUEST);
             }
 
@@ -93,7 +108,8 @@ class SyncAlarmHolidaysController extends AbstractController
             $dto = new SyncAlarmHolidaysRequest(
                 uuidClient: $uuidClient,
                 holidays: $holidays,
-                uuidUser: $user->getUuid()
+                uuidUser: $user->getUuid(),
+                checkHolidays: $checkHolidays
             );
 
             // (Opcional) si añades constraints al DTO, valida aquí:
@@ -106,6 +122,7 @@ class SyncAlarmHolidaysController extends AbstractController
                 'status' => 'success',
                 'message' => 'HOLIDAYS_SYNCED',
                 'holidays' => $response->getHolidays(), // lista final después de sync
+                'checkHoliday' => $checkHolidays,
             ], Response::HTTP_OK);
         } catch (\RuntimeException $e) {
             $status = match ($e->getMessage()) {
@@ -125,5 +142,25 @@ class SyncAlarmHolidaysController extends AbstractController
                 'message' => 'UNEXPECTED_ERROR',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+    private function normalizeCheckValue(mixed $value): ?int
+    {
+        if (null === $value) {
+            return null;
+        }
+
+        if (is_int($value) && ($value === 0 || $value === 1)) {
+            return $value;
+        }
+
+        if (is_string($value) && ($value === '0' || $value === '1')) {
+            return (int) $value;
+        }
+
+        if (is_bool($value)) {
+            return $value ? 1 : 0;
+        }
+
+        return null;
     }
 }

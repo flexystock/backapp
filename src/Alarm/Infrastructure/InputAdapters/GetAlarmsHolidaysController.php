@@ -124,6 +124,7 @@ class GetAlarmsHolidaysController extends AbstractController
                 'status' => 'success',
                 'message' => 'HOLIDAYS_RETRIEVED',
                 'holidays' => $response->getHolidays(),
+                'checkHoliday' => $response->getCheckoutOfHolidays()
             ], Response::HTTP_OK);
         } catch (\RuntimeException $exception) {
             return $this->handleRuntimeException($exception);

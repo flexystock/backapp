@@ -38,10 +38,11 @@ class CreateAlarmHolidayController extends AbstractController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['uuidClient', 'holidayDate'],
+                required: ['uuidClient', 'holidayDate', 'checkHolidays'],
                 properties: [
                     new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
                     new OA\Property(property: 'holidayDate', type: 'string', format: 'date', example: '2024-12-25'),
+                    new OA\Property(property: 'checkHolidays', type: 'integer', enum: [0, 1], example: 1),
                     new OA\Property(property: 'name', type: 'string', nullable: true, example: 'Navidad'),
                 ]
             )
