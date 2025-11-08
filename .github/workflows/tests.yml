@@ -1,0 +1,102 @@
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - integration
+  push:
+    branches:
+      - integration
+
+jobs:
+  tests:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: docker_symfony_databaseMain
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, dom, filter, gd, json
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Create test environment file
+        run: |
+          cp .env .env.test
+          # Ajustar variables de entorno para testing
+          echo "DATABASE_URL=mysql://root:root@127.0.0.1:3306/docker_symfony_databaseMain" >> .env.test
+          echo "APP_ENV=test" >> .env.test
+
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in {1..30}; do
+            if mysqladmin ping -h"127.0.0.1" -P3306 -uroot -proot --silent; then
+              echo "MySQL is ready"
+              break
+            fi
+            echo "Waiting for MySQL... ($i/30)"
+            sleep 2
+          done
+
+      - name: Create test databases
+        run: |
+          mysql -h127.0.0.1 -P3306 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS docker_symfony_databaseMain;"
+          mysql -h127.0.0.1 -P3306 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS test_client_db;"
+          mysql -h127.0.0.1 -P3306 -uroot -proot -e "SHOW DATABASES;"
+
+      - name: Run Main DB migrations
+        run: |
+          php migrations/main/migrate.php
+
+      - name: Insert test client in main DB
+        run: |
+          mysql -h127.0.0.1 -P3306 -uroot -proot docker_symfony_databaseMain << 'EOF'
+          INSERT INTO client (
+            uuid_client, 
+            database_name, 
+            host, 
+            port_bbdd, 
+            database_user_name, 
+            database_password,
+            created_at
+          ) VALUES (
+            'test-client-uuid',
+            'test_client_db',
+            '127.0.0.1',
+            '3306',
+            'root',
+            'root',
+            NOW()
+          ) ON DUPLICATE KEY UPDATE uuid_client=uuid_client;
+          EOF
+
+      - name: Run Client DB migrations
+        run: |
+          php migrations/client/migrate.php test-client-uuid
+
+      - name: Run PHPUnit tests
+        env:
+          DATABASE_URL: mysql://root:root@127.0.0.1:3306/docker_symfony_databaseMain
+        run: |
+          vendor/bin/phpunit --testdox
+
+      - name: Run Symfony Security Check
+        run: composer audit
+        continue-on-error: true
