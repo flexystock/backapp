@@ -17,7 +17,6 @@ jobs:
       APP_ENV: test
       APP_DEBUG: 0
       DATABASE_URL: mysql://root:root@127.0.0.1:3306/docker_symfony_databaseMain
-      DEFAULT_ROUTE_URI: http://localhost  # ← AÑADIR ESTA Y OTRAS VARIABLES QUE FALTEN
 
     services:
       mysql:
@@ -40,42 +39,56 @@ jobs:
           extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, dom, filter, gd, json
           coverage: none
 
-      - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction --no-scripts  # ← AÑADIR --no-scripts
-
-      - name: Create .env.test file
+      - name: Create .env file
         run: |
-          cat > .env.test << 'EOF'
+          cat > .env << 'EOF'
           APP_ENV=test
           APP_DEBUG=0
           DATABASE_URL=mysql://root:root@127.0.0.1:3306/docker_symfony_databaseMain
           DEFAULT_ROUTE_URI=http://localhost
-          # Añade aquí cualquier otra variable que tu app necesite
+          JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
+          JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
+          JWT_PASSPHRASE=test
+          MESSENGER_TRANSPORT_DSN=doctrine://default
+          CORS_ALLOW_ORIGIN=^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$
           EOF
+          cp .env .env.test
 
-      - name: Wait for MySQL to be ready
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction --no-scripts
+
+      - name: Create var directories
+        run: |
+          mkdir -p var/cache var/log
+          chmod -R 777 var/
+
+      - name: Wait for MySQL
         run: |
           for i in {1..30}; do
-            if mysqladmin ping -h"127.0.0.1" -P3306 -uroot -proot --silent; then
-              echo "MySQL is ready"
+            if mysqladmin ping -h"127.0.0.1" -P3306 -uroot -proot --silent 2>/dev/null; then
+              echo "✅ MySQL is ready"
               break
             fi
-            echo "Waiting for MySQL... ($i/30)"
+            echo "⏳ Waiting for MySQL... ($i/30)"
             sleep 2
           done
 
       - name: Create test databases
         run: |
-          mysql -h127.0.0.1 -P3306 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS docker_symfony_databaseMain;"
-          mysql -h127.0.0.1 -P3306 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS test_client_db;"
-          mysql -h127.0.0.1 -P3306 -uroot -proot -e "SHOW DATABASES;"
+          mysql -h127.0.0.1 -P3306 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS docker_symfony_databaseMain;" 2>/dev/null
+          mysql -h127.0.0.1 -P3306 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS test_client_db;" 2>/dev/null
+          echo "✅ Databases created"
 
       - name: Run Main DB migrations
-        run: php migrations/main/migrate.php
+        env:
+          CI: true
+          DB_USER: root
+          DB_PASSWORD: root
+        run: php migrations/main/migrate_main.php
 
       - name: Insert test client in main DB
         run: |
-          mysql -h127.0.0.1 -P3306 -uroot -proot docker_symfony_databaseMain << 'EOF'
+          mysql -h127.0.0.1 -P3306 -uroot -proot docker_symfony_databaseMain << 'EOF' 2>/dev/null
           INSERT INTO `client` (
             uuid_client, 
             database_name, 
@@ -94,14 +107,16 @@ jobs:
             NOW()
           ) ON DUPLICATE KEY UPDATE uuid_client=uuid_client;
           EOF
+          echo "✅ Test client inserted"
 
       - name: Run Client DB migrations
-        run: php migrations/client/migrate.php test-client-uuid
-
-      - name: Clear Symfony cache
-        run: php bin/console cache:clear --env=test
+        env:
+          CI: true
+        run: php migrations/client/migrate_client.php test-client-uuid
 
       - name: Run PHPUnit tests
+        env:
+          CI: true
         run: vendor/bin/phpunit --testdox
 
       - name: Run Symfony Security Check
