@@ -75,8 +75,8 @@ jobs:
 
       - name: Create test databases
         run: |
-          mysql -h127.0.0.1 -P3306 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS docker_symfony_databaseMain;" 2>/dev/null
-          mysql -h127.0.0.1 -P3306 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS test_client_db;" 2>/dev/null
+          mysql -h127.0.0.1 -P3306 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS docker_symfony_databaseMain;"
+          mysql -h127.0.0.1 -P3306 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS test_client_db;"
           echo "✅ Databases created"
 
       - name: Run Main DB migrations
@@ -88,24 +88,42 @@ jobs:
 
       - name: Insert test client in main DB
         run: |
-          mysql -h127.0.0.1 -P3306 -uroot -proot docker_symfony_databaseMain << 'EOF' 2>/dev/null
+          mysql -h127.0.0.1 -P3306 -uroot -proot docker_symfony_databaseMain << 'EOF'
           INSERT INTO `client` (
-            uuid_client, 
-            database_name, 
-            host, 
-            port_bbdd, 
-            database_user_name, 
+            uuid_client,
+            name,
+            client_name,
+            database_name,
+            host,
+            port_bbdd,
+            database_user_name,
             database_password,
+            active,
+            business_type,
+            fiscal_address,
+            city,
+            country,
+            company_phone,
+            is_verified,
             created_at
           ) VALUES (
             'test-client-uuid',
+            'Test Client',
+            'Test Client',
             'test_client_db',
             '127.0.0.1',
-            '3306',
+            3306,
             'root',
             'root',
+            1,
+            'HOSTELERIA',
+            'Test Address 123',
+            'Madrid',
+            'España',
+            '600000000',
+            1,
             NOW()
-          ) ON DUPLICATE KEY UPDATE uuid_client=uuid_client;
+          ) ON DUPLICATE KEY UPDATE database_name=VALUES(database_name);
           EOF
           echo "✅ Test client inserted"
 
