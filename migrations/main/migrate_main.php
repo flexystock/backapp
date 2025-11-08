@@ -1,5 +1,32 @@
 <?php
-$pdo = new PDO('mysql:host=docker-symfony-dbMain;dbname=docker_symfony_databaseMain', 'user', 'password');
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Detectar si estamos en CI (GitHub Actions) o en Docker
+$host = getenv('CI') ? '127.0.0.1' : 'docker-symfony-dbMain';
+$user = getenv('DB_USER') ?: 'user';
+$pass = getenv('DB_PASSWORD') ?: 'password';
+$dbName = 'docker_symfony_databaseMain';
+
+echo "Connecting to: $host\n";
+echo "Database: $dbName\n";
+
+try {
+    $pdo = new PDO(
+        "mysql:host={$host};dbname={$dbName};charset=utf8mb4",
+        $user,
+        $pass,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]
+    );
+    echo "✅ Connected successfully\n";
+} catch (PDOException $e) {
+    echo "❌ Connection failed: " . $e->getMessage() . "\n";
+    exit(1);
+}
 
 // Crear la tabla migrations_version si no existe
 function createMigrationsTable($pdo)
@@ -9,89 +36,94 @@ function createMigrationsTable($pdo)
             id INT AUTO_INCREMENT PRIMARY KEY,
             version VARCHAR(255) NOT NULL,
             script VARCHAR(255) NOT NULL,
-            executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
+            executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_version_script(version, script)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ");
-    echo "Table 'migrations_version' checked/created.\n";
+    echo "✅ Table 'migrations_version' checked/created.\n";
 }
 
 function applyMigrations($pdo, $basePath)
 {
-    if ($basePath === false || !is_dir($basePath)) {
-        echo "Invalid migrations path: $basePath\n";
+    if (!is_dir($basePath)) {
+        echo "❌ Invalid migrations path: $basePath\n";
         return;
     }
 
-    // Verificar que la ruta base exista
-    echo "Base Path for migrations: $basePath\n";
-
-    // Crear la tabla de versiones de migración si no existe
+    echo "📁 Base Path for migrations: $basePath\n";
     createMigrationsTable($pdo);
 
-    // Obtener la última versión ejecutada
-    $lastVersion = $pdo->query("SELECT MAX(version) FROM migrations_version")->fetchColumn();
-    if ($lastVersion === false) {
-        $lastVersion = '000';
+    // Obtener versiones ya aplicadas
+    $applied = [];
+    $q = $pdo->query("SELECT version, script FROM migrations_version");
+    foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $applied[$row['version']][$row['script']] = true;
     }
 
-    echo "Last applied migration version: $lastVersion\n";
+    // Ordenar directorios naturalmente
+    $dirs = array_filter(scandir($basePath), function($d) use ($basePath) {
+        return $d !== '.' && $d !== '..' && is_dir($basePath . '/' . $d);
+    });
+    natsort($dirs);
 
-    foreach (scandir($basePath) as $versionDir) {
-        if ($versionDir === '.' || $versionDir === '..') continue;
+    foreach ($dirs as $versionDir) {
+        $versionPath = $basePath . '/' . $versionDir;
+        echo "\n📂 Processing directory: $versionDir\n";
 
-        $fullPath = realpath($basePath . '/' . $versionDir);
+        // Obtener archivos SQL
+        $files = array_filter(scandir($versionPath), function($f) use ($versionPath) {
+            return pathinfo($f, PATHINFO_EXTENSION) === 'sql' && is_file($versionPath . '/' . $f);
+        });
+        natsort($files);
 
-        // Verificar si es un directorio
-        if (is_dir($fullPath)) {
-            echo "Checking directory: $versionDir\n";
+        if (empty($files)) {
+            echo "⚠️  No SQL files found in $versionPath\n";
+            continue;
+        }
 
-            // Comparar con la última versión ejecutada
-            if ($versionDir <= $lastVersion) {
-                echo "Skipping already applied migration version: $versionDir\n";
+        foreach ($files as $file) {
+            if (isset($applied[$versionDir][$file])) {
+                echo "⏭️  Skipping already applied: $file\n";
                 continue;
             }
 
-            echo "Processing directory: $fullPath\n";
-            $files = scandir($fullPath);
-            $files = array_filter($files, function ($file) use ($fullPath) {
-                echo "Found file: $file\n"; // Depuración
-                return isSQLorPHPFile($file) && file_exists($fullPath . '/' . $file);
-            });
-
-            if (empty($files)) {
-                echo "No valid SQL or PHP files found in $fullPath\n";
-                continue;
-            }
+            $fullFile = $versionPath . '/' . $file;
+            echo "⚙️  Executing: $file\n";
 
             try {
-                $pdo->beginTransaction();
-                foreach ($files as $file) {
-                    $sql = file_get_contents($fullPath . '/' . $file);
-                    echo "Executing SQL from: $file\n";
-                    $pdo->exec($sql);
-                    echo "Applied migration: $file\n";
-                    $pdo->exec("INSERT INTO migrations_version (version, script) VALUES ('$versionDir', '$file')");
+                $sql = file_get_contents($fullFile);
+                if ($sql === false) {
+                    throw new RuntimeException("Could not read $fullFile");
                 }
-                $pdo->commit();
-                echo "Registered migration: $file in database.\n";
-            } catch (PDOException $e) {
-                echo "Migration error: " . $e->getMessage() . "\n";
-                if ($pdo->inTransaction()) {
-                    $pdo->rollBack();
-                }
+
+                $pdo->exec($sql);
+
+                $ins = $pdo->prepare("INSERT INTO migrations_version (version, script) VALUES (?, ?)");
+                $ins->execute([$versionDir, $file]);
+
+                echo "✅ Applied migration: $file\n";
+            } catch (Throwable $e) {
+                echo "❌ Migration error in $file: " . $e->getMessage() . "\n";
+                exit(1); // Fallar si hay error
             }
-        } else {
-            echo "Ignoring non-directory: $fullPath\n";
         }
     }
+
+    echo "\n✅ All main migrations applied successfully\n";
 }
 
-function isSQLorPHPFile($fileName)
+function isSQLFile($fileName)
 {
-    $ext = pathinfo($fileName, PATHINFO_EXTENSION);
-    return $ext === 'sql' || $ext === 'php';
+    return pathinfo($fileName, PATHINFO_EXTENSION) === 'sql';
 }
 
-// Usar una ruta absoluta
-$basePath = '/appdata/www/migrations/main';
+// Ruta base de migraciones (compatible con CI y Docker)
+$basePath = __DIR__;
+if (!is_dir($basePath)) {
+    $basePath = '/appdata/www/migrations/main';
+}
+
+echo "🚀 Starting Main DB migrations\n";
+echo "=" . str_repeat("=", 50) . "\n";
 applyMigrations($pdo, $basePath);
+echo str_repeat("=", 50) . "\n";

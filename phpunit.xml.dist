@@ -8,9 +8,20 @@
         <testsuite name="Application Test Suite">
             <directory>tests</directory>
         </testsuite>
+
+        <!-- Suite específica para tests de base de datos -->
+        <testsuite name="Database Tests">
+            <file>tests/DatabaseTest.php</file>
+        </testsuite>
     </testsuites>
 
     <php>
         <ini name="error_reporting" value="-1"/>
+
+        <!-- Variables de entorno para tests -->
+        <env name="KERNEL_CLASS" value="App\Kernel"/>
+        <env name="APP_ENV" value="test"/>
+        <env name="APP_DEBUG" value="0"/>
+        <env name="DATABASE_URL" value="mysql://root:root@127.0.0.1:3306/docker_symfony_databaseMain"/>
     </php>
 </phpunit>
