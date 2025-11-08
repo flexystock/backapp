@@ -13,6 +13,12 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
 
+    env:
+      APP_ENV: test
+      APP_DEBUG: 0
+      DATABASE_URL: mysql://root:root@127.0.0.1:3306/docker_symfony_databaseMain
+      DEFAULT_ROUTE_URI: http://localhost  # ← AÑADIR ESTA Y OTRAS VARIABLES QUE FALTEN
+
     services:
       mysql:
         image: mysql:8.0
@@ -35,14 +41,17 @@ jobs:
           coverage: none
 
       - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction
+        run: composer install --prefer-dist --no-progress --no-interaction --no-scripts  # ← AÑADIR --no-scripts
 
-      - name: Create test environment file
+      - name: Create .env.test file
         run: |
-          cp .env .env.test
-          # Ajustar variables de entorno para testing
-          echo "DATABASE_URL=mysql://root:root@127.0.0.1:3306/docker_symfony_databaseMain" >> .env.test
-          echo "APP_ENV=test" >> .env.test
+          cat > .env.test << 'EOF'
+          APP_ENV=test
+          APP_DEBUG=0
+          DATABASE_URL=mysql://root:root@127.0.0.1:3306/docker_symfony_databaseMain
+          DEFAULT_ROUTE_URI=http://localhost
+          # Añade aquí cualquier otra variable que tu app necesite
+          EOF
 
       - name: Wait for MySQL to be ready
         run: |
@@ -62,13 +71,12 @@ jobs:
           mysql -h127.0.0.1 -P3306 -uroot -proot -e "SHOW DATABASES;"
 
       - name: Run Main DB migrations
-        run: |
-          php migrations/main/migrate.php
+        run: php migrations/main/migrate.php
 
       - name: Insert test client in main DB
         run: |
           mysql -h127.0.0.1 -P3306 -uroot -proot docker_symfony_databaseMain << 'EOF'
-          INSERT INTO client (
+          INSERT INTO `client` (
             uuid_client, 
             database_name, 
             host, 
@@ -88,14 +96,13 @@ jobs:
           EOF
 
       - name: Run Client DB migrations
-        run: |
-          php migrations/client/migrate.php test-client-uuid
+        run: php migrations/client/migrate.php test-client-uuid
+
+      - name: Clear Symfony cache
+        run: php bin/console cache:clear --env=test
 
       - name: Run PHPUnit tests
-        env:
-          DATABASE_URL: mysql://root:root@127.0.0.1:3306/docker_symfony_databaseMain
-        run: |
-          vendor/bin/phpunit --testdox
+        run: vendor/bin/phpunit --testdox
 
       - name: Run Symfony Security Check
         run: composer audit
