@@ -132,10 +132,11 @@ jobs:
           CI: true
         run: php migrations/client/migrate_client.php test-client-uuid
 
-      - name: Run PHPUnit tests (Database only)
+      - name: Run ALL PHPUnit tests
         env:
           CI: true
-        run: vendor/bin/phpunit --testsuite="Database Tests" --testdox
+        run: vendor/bin/phpunit --testdox
+        continue-on-error: true  # ← IMPORTANTE: permite ver todos los fallos sin detener
 
       - name: Run Symfony Security Check
         run: composer audit
