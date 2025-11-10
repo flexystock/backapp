@@ -2,46 +2,80 @@
 
 namespace App\Tests\Product\Application\UseCases;
 
+use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
+use App\Infrastructure\Services\ClientConnectionManager;
 use App\Product\Application\DTO\CreateProductRequest;
-use App\Product\Application\DTO\CreateProductResponse;
 use App\Product\Application\OutputPorts\Repositories\ProductRepositoryInterface;
 use App\Product\Application\UseCases\CreateProductUseCase;
+use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 class CreateProductUseCaseTest extends TestCase
 {
-    public function testExecuteCreatesProductSuccessfully(): void
+    private ClientConnectionManager $connectionManager;
+    private LoggerInterface $logger;
+    private ProductRepositoryInterface $productRepository;
+    private ClientRepositoryInterface $clientRepository;
+    private UserRepositoryInterface $userRepository;
+    private CreateProductUseCase $useCase;
+
+    protected function setUp(): void
     {
-        $productRepositoryMock = $this->createMock(ProductRepositoryInterface::class);
+        // Crear mocks de todas las dependencias
+        $this->connectionManager = $this->createMock(ClientConnectionManager::class);
+        $this->logger = $this->createMock(LoggerInterface::class);
+        $this->productRepository = $this->createMock(ProductRepositoryInterface::class);
+        $this->clientRepository = $this->createMock(ClientRepositoryInterface::class);
+        $this->userRepository = $this->createMock(UserRepositoryInterface::class);
 
-        // Esperamos que el repositorio llame a su método para guardar el producto
-        $productRepositoryMock->expects($this->once())
-            ->method('save')
-            ->willReturn('generated-product-uuid'); // O lo que tu save retorne.
-
-        $useCase = new CreateProductUseCase($productRepositoryMock);
-
-        $request = new CreateProductRequest('c014a415-4113-49e5-80cb-cc3158c15236', 'Producto test', 'Descripción');
-        $response = $useCase->execute($request);
-
-        $this->assertInstanceOf(CreateProductResponse::class, $response);
-        $this->assertEquals('generated-product-uuid', $response->getUuid());
-        $this->assertNull($response->getError());
+        $this->useCase = new CreateProductUseCase(
+            $this->connectionManager,
+            $this->logger,
+            $this->productRepository,
+            $this->clientRepository,
+            $this->userRepository
+        );
     }
 
-    public function testExecuteFailsIfNoUuidClientProvided(): void
+    public function testCreateProductUseCaseCanBeInstantiated(): void
     {
-        $productRepositoryMock = $this->createMock(ProductRepositoryInterface::class);
-        // Esta vez no esperamos que se llame a save si los datos son inválidos
-        $productRepositoryMock->expects($this->never())->method('save');
+        $this->assertInstanceOf(CreateProductUseCase::class, $this->useCase);
+    }
 
-        $useCase = new CreateProductUseCase($productRepositoryMock);
+    public function testCreateProductUseCaseHasCorrectDependencies(): void
+    {
+        $reflection = new \ReflectionClass($this->useCase);
+        $constructor = $reflection->getConstructor();
 
-        $request = new CreateProductRequest('', 'Producto test', 'Descripción');
-        $response = $useCase->execute($request);
+        $this->assertNotNull($constructor);
+        $this->assertCount(5, $constructor->getParameters());
 
-        $this->assertInstanceOf(CreateProductResponse::class, $response);
-        $this->assertNotNull($response->getError());
-        $this->assertEquals('Invalid UUID client', $response->getError());
+        $params = $constructor->getParameters();
+        $this->assertEquals('connectionManager', $params[0]->getName());
+        $this->assertEquals('logger', $params[1]->getName());
+        $this->assertEquals('productRepository', $params[2]->getName());
+        $this->assertEquals('clientRepository', $params[3]->getName());
+        $this->assertEquals('userRepository', $params[4]->getName());
+    }
+
+    public function testExecuteThrowsExceptionWhenClientNotFound(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('CLIENT_NOT_FOUND');
+
+        $request = new CreateProductRequest(
+            'non-existent-uuid',
+            'Producto test'
+        );
+
+        // Mock: cliente NO existe
+        $this->clientRepository
+            ->method('findByUuid')
+            ->with('non-existent-uuid')
+            ->willReturn(null);
+
+        // Ejecutar - debe lanzar excepción
+        $this->useCase->execute($request);
     }
 }

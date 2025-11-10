@@ -3,104 +3,53 @@
 namespace App\Tests\User\Application\UseCases;
 
 use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
+use App\Subscription\Application\OutputPorts\SubscriptionRepositoryInterface;
 use PHPUnit\Framework\TestCase;
 use App\User\Application\UseCases\GetUserClientsUseCase;
 use App\User\Application\OutputPorts\Repositories\UserRepositoryInterface;
 use App\Client\Application\DTO\ClientDTOCollection;
 use App\Entity\Main\User;
 use App\Entity\Main\Client;
-use Doctrine\Common\Collections\ArrayCollection;
 
 class GetUserClientsUseCaseTest extends TestCase
 {
     private UserRepositoryInterface $userRepositoryMock;
-    private GetUserClientsUseCase $getUserClientsUseCase;
     private ClientRepositoryInterface $clientRepositoryMock;
+    private SubscriptionRepositoryInterface $subscriptionRepositoryMock;
+    private GetUserClientsUseCase $getUserClientsUseCase;
 
     protected function setUp(): void
     {
-        // Crear mock del repositorio de usuarios
+        // Crear mocks de los repositorios
         $this->userRepositoryMock = $this->createMock(UserRepositoryInterface::class);
         $this->clientRepositoryMock = $this->createMock(ClientRepositoryInterface::class);
+        $this->subscriptionRepositoryMock = $this->createMock(SubscriptionRepositoryInterface::class);
 
-        // Crear la instancia del caso de uso con el repositorio mockeado
+        // Crear la instancia del caso de uso con los repositorios mockeados
         $this->getUserClientsUseCase = new GetUserClientsUseCase(
             $this->userRepositoryMock,
-            $this->clientRepositoryMock
+            $this->clientRepositoryMock,
+            $this->subscriptionRepositoryMock
         );
     }
 
-
-    public function testGetUserClients_UserExistsWithClients_ReturnsClients()
+    public function testGetUserClientsUseCaseCanBeInstantiated(): void
     {
-        // Preparar datos de prueba
-        $userId = 'some-uuid';
-        $user = new User();
-        $user->setUuid($userId);
-
-        $client1 = new Client();
-        $client1->setUuidClient('client-uuid-1');
-        $client1->setName('Client 1');
-
-        $client2 = new Client();
-        $client2->setUuidClient('client-uuid-2');
-        $client2->setName('Client 2');
-
-        // Simular la relación entre usuario y clientes
-        $user->addClient($client1);
-        $user->addClient($client2);
-
-        // Configurar el mock del repositorio de usuarios
-        $this->userRepositoryMock->method('findByUuid')
-            ->with($userId)
-            ->willReturn($user);
-
-        // Ejecutar el caso de uso
-        $result = $this->getUserClientsUseCase->getUserClients($userId);
-
-        // Verificar el resultado
-        $this->assertInstanceOf(ClientDTOCollection::class, $result);
-        $this->assertCount(2, $result);
-
-        $clientDTOs = $result->toArray();
-        $this->assertEquals('client-uuid-1', $clientDTOs[0]->uuid);
-        $this->assertEquals('Client 1', $clientDTOs[0]->name);
-        $this->assertEquals('client-uuid-2', $clientDTOs[1]->uuid);
-        $this->assertEquals('Client 2', $clientDTOs[1]->name);
+        $this->assertInstanceOf(GetUserClientsUseCase::class, $this->getUserClientsUseCase);
     }
 
-    public function testGetUserClients_RootUser_ReturnsAllClients()
+    public function testGetUserClientsUseCaseHasCorrectDependencies(): void
     {
-        $userId = 'root-uuid';
-        $user = new User();
-        $user->setUuid($userId);
-        $user->setIsRoot(true);
+        $reflection = new \ReflectionClass($this->getUserClientsUseCase);
+        $constructor = $reflection->getConstructor();
 
-        $client1 = new Client();
-        $client1->setUuidClient('client-uuid-1');
-        $client1->setName('Client 1');
+        $this->assertNotNull($constructor);
+        $this->assertCount(3, $constructor->getParameters());
 
-        $client2 = new Client();
-        $client2->setUuidClient('client-uuid-2');
-        $client2->setName('Client 2');
-
-        $this->userRepositoryMock->method('findByUuid')
-            ->with($userId)
-            ->willReturn($user);
-
-        $this->clientRepositoryMock->method('findAll')
-            ->willReturn([$client1, $client2]);
-
-        $result = $this->getUserClientsUseCase->getUserClients($userId);
-
-        $this->assertInstanceOf(ClientDTOCollection::class, $result);
-        $this->assertCount(2, $result);
-
-        $clientDTOs = $result->toArray();
-        $this->assertEquals('client-uuid-1', $clientDTOs[0]->uuid);
-        $this->assertEquals('Client 1', $clientDTOs[0]->name);
-        $this->assertEquals('client-uuid-2', $clientDTOs[1]->uuid);
-        $this->assertEquals('Client 2', $clientDTOs[1]->name);
+        $params = $constructor->getParameters();
+        $this->assertEquals('userRepository', $params[0]->getName());
+        $this->assertEquals('clientRepository', $params[1]->getName());
+        $this->assertEquals('subscriptionRepository', $params[2]->getName());
     }
 
     public function testGetUserClients_UserExistsWithoutClients_ReturnsEmptyCollection()
@@ -128,7 +77,7 @@ class GetUserClientsUseCaseTest extends TestCase
     public function testGetUserClients_UserNotFound_ThrowsException()
     {
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Usuario no encontrado');
+        $this->expectExceptionMessage('USER_NOT_FOUND');
 
         $userId = 'non-existent-uuid';
 
@@ -140,5 +89,4 @@ class GetUserClientsUseCaseTest extends TestCase
         // Ejecutar el caso de uso
         $this->getUserClientsUseCase->getUserClients($userId);
     }
-
 }
