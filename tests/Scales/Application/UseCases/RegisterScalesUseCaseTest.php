@@ -42,4 +42,39 @@ class RegisterScalesUseCaseTest extends TestCase
         $this->assertEquals('scalesRepository', $params[0]->getName());
         $this->assertEquals('connectionManager', $params[1]->getName());
     }
+
+    public function testExecuteMethodExists(): void
+    {
+        $this->assertTrue(method_exists($this->useCase, 'execute'));
+    }
+
+    public function testRequestDTOCanBeCreated(): void
+    {
+        $request = new RegisterScalesRequest(
+            'client-uuid',
+            'device-id-001',
+            3.2,
+            'user-uuid'
+        );
+        
+        $this->assertInstanceOf(RegisterScalesRequest::class, $request);
+        $this->assertEquals('client-uuid', $request->getUuidClient());
+        $this->assertEquals('device-id-001', $request->getEndDeviceId());
+        $this->assertEquals(3.2, $request->getVoltageMin());
+        $this->assertEquals('user-uuid', $request->getUuidUserCreation());
+    }
+
+    public function testRequestDTOCanBeCreatedWithNullValues(): void
+    {
+        $request = new RegisterScalesRequest(
+            'client-uuid',
+            'device-id-001'
+        );
+        
+        $this->assertInstanceOf(RegisterScalesRequest::class, $request);
+        $this->assertEquals('client-uuid', $request->getUuidClient());
+        $this->assertEquals('device-id-001', $request->getEndDeviceId());
+        $this->assertNull($request->getVoltageMin());
+        $this->assertNull($request->getUuidUserCreation());
+    }
 }

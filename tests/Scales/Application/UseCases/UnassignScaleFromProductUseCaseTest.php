@@ -3,6 +3,7 @@
 namespace App\Tests\Scales\Application\UseCases;
 
 use App\Infrastructure\Services\ClientConnectionManager;
+use App\Scales\Application\DTO\UnassignScaleFromProductRequest;
 use App\Scales\Application\OutputPorts\PoolScalesRepositoryInterface;
 use App\Scales\Application\OutputPorts\ScalesRepositoryInterface;
 use App\Scales\Application\UseCases\UnassignScaleFromProductUseCase;
@@ -50,5 +51,25 @@ class UnassignScaleFromProductUseCaseTest extends TestCase
         $this->assertEquals('poolScalesRepository', $params[1]->getName());
         $this->assertEquals('scalesRepository', $params[2]->getName());
         $this->assertEquals('logger', $params[3]->getName());
+    }
+
+    public function testExecuteReturnsErrorWhenUuidClientIsMissing(): void
+    {
+        $request = new UnassignScaleFromProductRequest('', 'device-id', 'user-uuid');
+
+        $response = $this->useCase->execute($request);
+
+        $this->assertEquals(400, $response->getStatusCode());
+        $this->assertStringContainsString('required', $response->getError());
+    }
+
+    public function testExecuteReturnsErrorWhenEndDeviceIdIsMissing(): void
+    {
+        $request = new UnassignScaleFromProductRequest('client-uuid', '', 'user-uuid');
+
+        $response = $this->useCase->execute($request);
+
+        $this->assertEquals(400, $response->getStatusCode());
+        $this->assertStringContainsString('required', $response->getError());
     }
 }

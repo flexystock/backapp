@@ -42,4 +42,17 @@ class GetAllScalesUseCaseTest extends TestCase
         $this->assertEquals('connectionManager', $params[0]->getName());
         $this->assertEquals('logger', $params[1]->getName());
     }
+
+    public function testExecuteMethodExists(): void
+    {
+        $this->assertTrue(method_exists($this->useCase, 'execute'));
+    }
+
+    public function testRequestDTOCanBeCreated(): void
+    {
+        $request = new GetAllScalesRequest('client-uuid');
+        
+        $this->assertInstanceOf(GetAllScalesRequest::class, $request);
+        $this->assertEquals('client-uuid', $request->getUuidClient());
+    }
 }

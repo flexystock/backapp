@@ -42,4 +42,25 @@ class AssignScaleToProductUseCaseTest extends TestCase
         $this->assertEquals('connectionManager', $params[0]->getName());
         $this->assertEquals('logger', $params[1]->getName());
     }
+
+    public function testExecuteMethodExists(): void
+    {
+        $this->assertTrue(method_exists($this->useCase, 'execute'));
+    }
+
+    public function testRequestDTOCanBeCreated(): void
+    {
+        $request = new AssignScaleToProductRequest(
+            'client-uuid',
+            'device-id-001',
+            123,
+            'user-uuid'
+        );
+        
+        $this->assertInstanceOf(AssignScaleToProductRequest::class, $request);
+        $this->assertEquals('client-uuid', $request->getUuidClient());
+        $this->assertEquals('device-id-001', $request->getEndDeviceId());
+        $this->assertEquals(123, $request->getProductId());
+        $this->assertEquals('user-uuid', $request->getUuidUserCreation());
+    }
 }
