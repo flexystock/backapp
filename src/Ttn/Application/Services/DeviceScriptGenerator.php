@@ -99,6 +99,10 @@ void loop() {
   float peso_en_kilogramos = bascula.get_units(20); // Ya en kg
   digitalWrite(HX_VCC, LOW);
 
+  // VALIDACIÓN: si es negativo, enviar 0
+  if (peso_en_kilogramos < 0) {
+    peso_en_kilogramos = 0;
+  }
   //float peso_en_kilogramos = peso_en_gramos / 1000.0; // Convertir a kg
 
   // Preparar payload: kilogramos con dos decimales
