@@ -744,3 +744,56 @@ services:
 
   App\Stripe\Application\OutputPorts\SetupIntentRepositoryInterface:
     alias: 'App\Stripe\Infrastructure\OutputAdapters\Repositories\SetupIntentRepository'
+
+  # --------------------------
+  # REPORT
+  # --------------------------
+  App\Report\Application\UseCases\CreateReportUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Report\Application\InputPorts\CreateReportUseCaseInterface:
+    alias: App\Report\Application\UseCases\CreateReportUseCase
+
+  App\Report\Application\UseCases\GetAllReportsUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Report\Application\InputPorts\GetAllReportsUseCaseInterface:
+    alias: App\Report\Application\UseCases\GetAllReportsUseCase
+
+  App\Report\Application\UseCases\GetReportUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Report\Application\InputPorts\GetReportUseCaseInterface:
+    alias: App\Report\Application\UseCases\GetReportUseCase
+
+  App\Report\Application\UseCases\UpdateReportUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Report\Application\InputPorts\UpdateReportUseCaseInterface:
+    alias: App\Report\Application\UseCases\UpdateReportUseCase
+
+  App\Report\Application\UseCases\GetInfoToDashBoardUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Report\Application\InputPorts\GetInfoToDashBoardUseCaseInterface:
+    alias: App\Report\Application\UseCases\GetInfoToDashBoardUseCase
+
+  App\Report\Infrastructure\InputAdapters\:
+    resource: '../src/Report/Infrastructure/InputAdapters'
+    tags: ['controller.service_arguments']
+    public: true
