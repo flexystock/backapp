@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ report_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            font-size: 12px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #333;
+        }
+        .header p {
+            margin: 5px 0;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+        .positive {
+            color: #28a745;
+        }
+        .negative {
+            color: #dc3545;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ report_name }}</h1>
+        <p>Generado el: {{ generated_at|date('d/m/Y H:i:s') }}</p>
+        <p>Total de productos: {{ stock_data|length }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre Producto</th>
+                <th>EAN</th>
+                <th>Stock Actual</th>
+                <th>Stock Ayer (23:59:59)</th>
+                <th>Diferencia</th>
+                <th>% Mínimo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in stock_data %}
+            <tr>
+                <td>{{ item.product_id }}</td>
+                <td>{{ item.product_name }}</td>
+                <td>{{ item.ean|default('-') }}</td>
+                <td>{{ item.current_stock|number_format(2, ',', '.') }}</td>
+                <td>{{ item.yesterday_stock|number_format(2, ',', '.') }}</td>
+                <td class="{{ item.stock_difference >= 0 ? 'positive' : 'negative' }}">
+                    {{ item.stock_difference >= 0 ? '+' : '' }}{{ item.stock_difference|number_format(2, ',', '.') }}
+                </td>
+                <td>{{ item.min_percentage }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>FlexyStock - Informe de Estado Actual de Stock</p>
+    </div>
+</body>
+</html>
