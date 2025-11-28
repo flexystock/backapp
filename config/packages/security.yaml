@@ -88,6 +88,7 @@ security:
         - { path: ^/api/dashboard, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/verify, roles: PUBLIC_ACCESS }
         - { path: ^/verify_client, roles: PUBLIC_ACCESS }
+        - { path: ^/api/reports, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:
