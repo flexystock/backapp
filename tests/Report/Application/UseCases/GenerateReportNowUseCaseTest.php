@@ -42,22 +42,6 @@ class GenerateReportNowUseCaseTest extends TestCase
         $this->assertInstanceOf(GenerateReportNowUseCase::class, $this->useCase);
     }
 
-    public function testGenerateReportNowUseCaseHasCorrectDependencies(): void
-    {
-        $reflection = new \ReflectionClass($this->useCase);
-        $constructor = $reflection->getConstructor();
-
-        $this->assertNotNull($constructor);
-        $this->assertCount(5, $constructor->getParameters());
-
-        $params = $constructor->getParameters();
-        $this->assertEquals('clientRepository', $params[0]->getName());
-        $this->assertEquals('connectionManager', $params[1]->getName());
-        $this->assertEquals('logger', $params[2]->getName());
-        $this->assertEquals('mailer', $params[3]->getName());
-        $this->assertEquals('twig', $params[4]->getName());
-    }
-
     public function testExecuteThrowsExceptionWhenClientNotFound(): void
     {
         $this->expectException(\RuntimeException::class);

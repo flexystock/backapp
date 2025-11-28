@@ -83,9 +83,18 @@
                 <td>{{ item.product_name }}</td>
                 <td>{{ item.ean|default('-') }}</td>
                 <td>{{ item.current_stock|number_format(2, ',', '.') }}</td>
-                <td>{{ item.yesterday_stock|number_format(2, ',', '.') }}</td>
-                <td class="{{ item.stock_difference >= 0 ? 'positive' : 'negative' }}">
-                    {{ item.stock_difference >= 0 ? '+' : '' }}{{ item.stock_difference|number_format(2, ',', '.') }}
+                <td>
+                    {{ item.yesterday_stock|number_format(2, ',', '.') }}
+                    {% if not item.has_historical_data %}
+                        <span style="color: #999; font-size: 10px;">(sin histórico)</span>
+                    {% endif %}
+                </td>
+                <td class="{{ item.stock_difference is not null and item.stock_difference >= 0 ? 'positive' : 'negative' }}">
+                    {% if item.stock_difference is not null %}
+                        {{ item.stock_difference >= 0 ? '+' : '' }}{{ item.stock_difference|number_format(2, ',', '.') }}
+                    {% else %}
+                        N/A
+                    {% endif %}
                 </td>
                 <td>{{ item.min_percentage }}%</td>
             </tr>

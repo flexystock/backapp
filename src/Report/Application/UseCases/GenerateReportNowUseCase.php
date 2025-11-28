@@ -101,9 +101,14 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
             $stock = $product->getStock();
             $minPercentage = $product->getMinPercentage();
 
-            // If stock is null or minPercentage is 0, include in the report
-            if (null === $stock || 0 === $minPercentage) {
+            // If minPercentage is 0, skip the product (no minimum threshold defined)
+            if (0 === $minPercentage) {
                 return false;
+            }
+
+            // Include products with null stock (no data) or stock below the minimum threshold
+            if (null === $stock) {
+                return true;
             }
 
             // Product is below stock if current stock percentage is less than minPercentage
@@ -125,9 +130,9 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
             $currentStock = $product->getStock() ?? 0;
 
             // Get yesterday's stock from weights_log
-            $yesterdayStock = $this->getStockAtDateTime($entityManager, $product, $yesterday);
+            [$yesterdayStock, $hasHistoricalData] = $this->getStockAtDateTime($entityManager, $product, $yesterday);
 
-            $stockDifference = $currentStock - $yesterdayStock;
+            $stockDifference = $hasHistoricalData ? $currentStock - $yesterdayStock : null;
 
             $stockData[] = [
                 'product_id' => $product->getId(),
@@ -137,6 +142,7 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
                 'current_stock' => $currentStock,
                 'yesterday_stock' => $yesterdayStock,
                 'stock_difference' => $stockDifference,
+                'has_historical_data' => $hasHistoricalData,
                 'min_percentage' => $product->getMinPercentage(),
             ];
         }
@@ -144,7 +150,10 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
         return $stockData;
     }
 
-    private function getStockAtDateTime(object $entityManager, Product $product, \DateTimeInterface $dateTime): float
+    /**
+     * @return array{float, bool} Returns [stock value, has historical data flag]
+     */
+    private function getStockAtDateTime(object $entityManager, Product $product, \DateTimeInterface $dateTime): array
     {
         $qb = $entityManager->createQueryBuilder();
 
@@ -160,11 +169,11 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
         $result = $qb->getQuery()->getOneOrNullResult();
 
         if ($result instanceof WeightsLog) {
-            return $result->getChargePercentage();
+            return [$result->getChargePercentage(), true];
         }
 
-        // If no historical data, return current stock
-        return $product->getStock() ?? 0;
+        // If no historical data, return current stock with flag indicating no historical data
+        return [$product->getStock() ?? 0, false];
     }
 
     /**
@@ -195,11 +204,16 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
             'Stock Actual',
             'Stock Ayer (23:59:59)',
             'Diferencia Stock',
+            'Datos Históricos',
             'Porcentaje Mínimo',
         ]);
 
         // CSV Data
         foreach ($stockData as $row) {
+            $stockDifference = null !== $row['stock_difference']
+                ? number_format($row['stock_difference'], 2)
+                : 'N/A';
+
             fputcsv($output, [
                 $row['product_id'],
                 $row['product_uuid'],
@@ -207,7 +221,8 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
                 $row['ean'] ?? '',
                 number_format($row['current_stock'], 2),
                 number_format($row['yesterday_stock'], 2),
-                number_format($row['stock_difference'], 2),
+                $stockDifference,
+                $row['has_historical_data'] ? 'Sí' : 'No',
                 $row['min_percentage'],
             ]);
         }
