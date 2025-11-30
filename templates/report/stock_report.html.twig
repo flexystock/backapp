@@ -8,6 +8,19 @@
             font-family: Arial, sans-serif;
             margin: 20px;
             font-size: 12px;
+            position: relative;
+        }
+        body::before {
+            content: "FLEXYSTOCK";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120px;
+            font-weight: bold;
+            color: rgba(76, 175, 80, 0.1);
+            z-index: -1;
+            pointer-events: none;
         }
         .header {
             text-align: center;
@@ -34,7 +47,7 @@
             text-align: left;
         }
         th {
-            background-color: #4CAF50;
+            background-color: #b88b56;
             color: white;
         }
         tr:nth-child(even) {
@@ -67,19 +80,17 @@
     <table>
         <thead>
             <tr>
-                <th>ID</th>
                 <th>Nombre Producto</th>
                 <th>EAN</th>
                 <th>Stock Actual</th>
                 <th>Stock Ayer (23:59:59)</th>
                 <th>Diferencia</th>
-                <th>% Mínimo</th>
+                <th>Stock Mínimo</th>
             </tr>
         </thead>
         <tbody>
             {% for item in stock_data %}
             <tr>
-                <td>{{ item.product_id }}</td>
                 <td>{{ item.product_name }}</td>
                 <td>{{ item.ean|default('-') }}</td>
                 <td>{{ item.current_stock|number_format(2, ',', '.') }}</td>
@@ -96,7 +107,7 @@
                         N/A
                     {% endif %}
                 </td>
-                <td>{{ item.min_percentage }}%</td>
+                <td>{{ item.min_stock }}</td>
             </tr>
             {% endfor %}
         </tbody>

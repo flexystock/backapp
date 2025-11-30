@@ -31,9 +31,9 @@ class UpdateReportController extends AbstractController
         $this->permissionService = $permissionService;
     }
 
-    #[Route('/api/report/{id}', name: 'api_report_update', methods: ['PUT'])]
+    #[Route('/api/report/update/{id}', name: 'api_report_update', methods: ['PUT'])]
     #[OA\Put(
-        path: '/api/report/{id}',
+        path: '/api/report/update/{id}',
         summary: 'Actualiza un informe existente',
         parameters: [
             new OA\Parameter(

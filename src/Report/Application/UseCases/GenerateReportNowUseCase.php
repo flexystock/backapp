@@ -6,6 +6,7 @@ use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\Entity\Client\Product;
 use App\Entity\Client\WeightsLog;
 use App\Infrastructure\Services\ClientConnectionManager;
+use App\Product\Infrastructure\OutputAdapters\Repositories\WeightsLogRepository;
 use App\Report\Application\DTO\GenerateReportNowRequest;
 use App\Report\Application\DTO\GenerateReportNowResponse;
 use App\Report\Application\InputPorts\GenerateReportNowUseCaseInterface;
@@ -13,6 +14,8 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Twig\Environment;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
 {
@@ -34,9 +37,9 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
 
         $uuidClient = $client->getUuidClient();
         $entityManager = $this->connectionManager->getEntityManager($uuidClient);
-
+        $weightsLogRepository = new WeightsLogRepository($entityManager);
         // Get products based on filter
-        $products = $this->getProducts($entityManager, $request->getProductFilter());
+        $products = $this->getProducts($entityManager, $request->getProductFilter(), $weightsLogRepository);
 
         if (empty($products)) {
             return new GenerateReportNowResponse(
@@ -47,7 +50,7 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
         }
 
         // Calculate stock data with yesterday comparison
-        $stockData = $this->calculateStockData($entityManager, $products);
+        $stockData = $this->calculateStockData($entityManager, $products, $weightsLogRepository);
 
         // Generate report content
         $reportContent = $this->generateReportContent(
@@ -87,32 +90,35 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
     /**
      * @return array<Product>
      */
-    private function getProducts(object $entityManager, string $productFilter): array
+    private function getProducts(object $entityManager, string $productFilter, WeightsLogRepository $weightsLogRepository): array
     {
         $productRepository = $entityManager->getRepository(Product::class);
         $allProducts = $productRepository->findAll();
+        //var_dump($allProducts);
 
         if ('all' === $productFilter) {
             return $allProducts;
         }
 
-        // Filter products below minimum stock (using minPercentage)
-        return array_filter($allProducts, function (Product $product) {
-            $stock = $product->getStock();
-            $minPercentage = $product->getMinPercentage();
+        // Filter products below minimum stock
+        // El stock mínimo está en $product->getMinPercentage()
+        // El stock actual (real) viene de weights_log
+        return array_filter($allProducts, function (Product $product) use ($weightsLogRepository) {
+            $minStock = $product->getStock();
 
-            // If minPercentage is 0, skip the product (no minimum threshold defined)
-            if (0 === $minPercentage) {
+            // Si no hay mínimo definido, no incluir el producto
+            if (0 === $minStock || null === $minStock) {
                 return false;
             }
 
-            // Include products with null stock (no data) or stock below the minimum threshold
-            if (null === $stock) {
-                return true;
-            }
+            // Calcular el stock actual real desde weights_log (igual que en calculateStockData)
+            $conversionInfo = $this->getConversionInfo($product);
+            $realWeightSum = $weightsLogRepository->getLatestTotalRealWeightByProduct($product->getId()) ?? 0;
+            $conversionFactor = $conversionInfo['conversion_factor'];
+            $currentStock = $conversionFactor > 0 ? round($realWeightSum / $conversionFactor, 1) : 0;
 
-            // Product is below stock if current stock percentage is less than minPercentage
-            return $stock < $minPercentage;
+            // Incluir si el stock actual es menor que el mínimo
+            return $currentStock < $minStock;
         });
     }
 
@@ -121,32 +127,33 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
      *
      * @return array<array<string, mixed>>
      */
-    private function calculateStockData(object $entityManager, array $products): array
+    private function calculateStockData(object $entityManager, array $products, WeightsLogRepository $weightsLogRepository): array
     {
         $stockData = [];
         $yesterday = (new \DateTimeImmutable())->modify('-1 day')->setTime(23, 59, 59);
 
         foreach ($products as $product) {
-            $currentStock = $product->getStock() ?? 0;
+            $conversionInfo = $this->getConversionInfo($product);
+            $realWeightSum = $weightsLogRepository->getLatestTotalRealWeightByProduct($product->getId()) ?? 0;
+            $conversionFactor = $conversionInfo['conversion_factor'];
+            [$yesterdayRealWeigh, $hasHistoricalData] = $this->getStockAtDateTime($entityManager, $product, $yesterday);
+            $yesterdayStock = $conversionFactor > 0 ? round($yesterdayRealWeigh / $conversionFactor, 1) : 0;
+            $currentStock = $conversionFactor > 0 ? round($realWeightSum / $conversionFactor, 1) : 0;
 
             // Get yesterday's stock from weights_log
-            [$yesterdayStock, $hasHistoricalData] = $this->getStockAtDateTime($entityManager, $product, $yesterday);
 
             $stockDifference = $hasHistoricalData ? $currentStock - $yesterdayStock : null;
 
             $stockData[] = [
-                'product_id' => $product->getId(),
-                'product_uuid' => $product->getUuid(),
                 'product_name' => $product->getName(),
                 'ean' => $product->getEan(),
                 'current_stock' => $currentStock,
                 'yesterday_stock' => $yesterdayStock,
                 'stock_difference' => $stockDifference,
                 'has_historical_data' => $hasHistoricalData,
-                'min_percentage' => $product->getMinPercentage(),
+                'min_stock' => $product->getStock(),
             ];
         }
-
         return $stockData;
     }
 
@@ -169,7 +176,7 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
         $result = $qb->getQuery()->getOneOrNullResult();
 
         if ($result instanceof WeightsLog) {
-            return [$result->getChargePercentage(), true];
+            return [$result->getRealWeight(), true];
         }
 
         // If no historical data, return current stock with flag indicating no historical data
@@ -197,15 +204,13 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
 
         // CSV Header
         fputcsv($output, [
-            'ID Producto',
-            'UUID Producto',
             'Nombre Producto',
             'EAN',
             'Stock Actual',
             'Stock Ayer (23:59:59)',
             'Diferencia Stock',
             'Datos Históricos',
-            'Porcentaje Mínimo',
+            'Stock Mínimo',
         ]);
 
         // CSV Data
@@ -215,15 +220,13 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
                 : 'N/A';
 
             fputcsv($output, [
-                $row['product_id'],
-                $row['product_uuid'],
                 $row['product_name'],
                 $row['ean'] ?? '',
                 number_format($row['current_stock'], 2),
                 number_format($row['yesterday_stock'], 2),
                 $stockDifference,
                 $row['has_historical_data'] ? 'Sí' : 'No',
-                $row['min_percentage'],
+                $row['min_stock'],
             ]);
         }
 
@@ -239,11 +242,23 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
      */
     private function generatePdfContent(string $reportName, array $stockData): string
     {
-        return $this->twig->render('report/stock_report.html.twig', [
+        $html = $this->twig->render('report/stock_report.html.twig', [
             'report_name' => $reportName,
             'generated_at' => new \DateTimeImmutable(),
             'stock_data' => $stockData,
         ]);
+
+        $options = new Options();
+        $options->set('defaultFont', 'Arial');
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        return $dompdf->output();
     }
 
     private function sendReportEmail(string $emailTo, string $reportName, string $reportType, string $content): void
@@ -257,9 +272,46 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
             $email->text('Adjunto encontrará el informe de stock solicitado.')
                 ->attach($content, $reportName.'.csv', 'text/csv');
         } else {
-            $email->html($content);
+            $email->text('Adjunto encontrará el informe de stock en formato PDF.')
+                ->attach($content, $reportName.'.pdf', 'application/pdf');
         }
 
         $this->mailer->send($email);
+    }
+
+    /**
+     * Obtiene la información de conversión para un producto.
+     *
+     * Se utiliza el campo main_unit para determinar la unidad:
+     * - 0: Se consideran Kg (por defecto).
+     * - 1: Se utiliza name_unit1 y weight_unit1.
+     * - 2: Se utiliza name_unit2 y weight_unit2.
+     */
+    private function getConversionInfo(Product $product): array
+    {
+        // Convertir a entero para evitar confusiones (en caso de que se guarde como string)
+        $mainUnit = (int) $product->getMainUnit();
+
+        switch ($mainUnit) {
+            case 1:
+                return [
+                    'main_unit' => $mainUnit,
+                    'unit_name' => $product->getNameUnit1(),
+                    'conversion_factor' => $product->getWeightUnit1(),
+                ];
+            case 2:
+                return [
+                    'main_unit' => $mainUnit,
+                    'unit_name' => $product->getNameUnit2(),
+                    'conversion_factor' => $product->getWeightUnit2(),
+                ];
+            case 0:
+            default:
+                return [
+                    'main_unit' => 0,
+                    'unit_name' => 'Kg',
+                    'conversion_factor' => 1,
+                ];
+        }
     }
 }

@@ -64,9 +64,9 @@ class GetReportController extends AbstractController
                             new OA\Property(property: 'id', type: 'integer', example: 1),
                             new OA\Property(property: 'name', type: 'string', example: 'Informe Semanal Stock'),
                             new OA\Property(property: 'period', type: 'string', example: 'weekly'),
-                            new OA\Property(property: 'send_time', type: 'string', example: '08:00:00'),
-                            new OA\Property(property: 'report_type', type: 'string', example: 'stock_summary'),
-                            new OA\Property(property: 'product_filter', type: 'string', nullable: true, example: 'category:electronics'),
+                            new OA\Property(property: 'sendTime', type: 'string', example: '08:00:00'),
+                            new OA\Property(property: 'reportType', type: 'string', example: 'stock_summary'),
+                            new OA\Property(property: 'productFilter', type: 'string', nullable: true, example: 'category:electronics'),
                             new OA\Property(property: 'email', type: 'string', example: 'user@example.com'),
                         ]),
                     ]
