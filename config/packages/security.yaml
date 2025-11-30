@@ -92,6 +92,7 @@ security:
         - { path: ^/api/report/generate-now, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/report/update, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/report, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/report/delete, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:
