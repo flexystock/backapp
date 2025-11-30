@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ report_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            font-size: 12px;
+            position: relative;
+        }
+        body::before {
+            content: "FLEXYSTOCK";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120px;
+            font-weight: bold;
+            color: rgba(76, 175, 80, 0.1);
+            z-index: -1;
+            pointer-events: none;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #333;
+        }
+        .header p {
+            margin: 5px 0;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #b88b56;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+        .positive {
+            color: #28a745;
+        }
+        .negative {
+            color: #dc3545;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ report_name }}</h1>
+        <p>Generado el: {{ generated_at|date('d/m/Y H:i:s') }}</p>
+        <p>Total de productos: {{ stock_data|length }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre Producto</th>
+                <th>EAN</th>
+                <th>Stock Actual</th>
+                <th>Stock Ayer (23:59:59)</th>
+                <th>Diferencia</th>
+                <th>Stock Mínimo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in stock_data %}
+            <tr>
+                <td>{{ item.product_name }}</td>
+                <td>{{ item.ean|default('-') }}</td>
+                <td>{{ item.current_stock|number_format(2, ',', '.') }}</td>
+                <td>
+                    {{ item.yesterday_stock|number_format(2, ',', '.') }}
+                    {% if not item.has_historical_data %}
+                        <span style="color: #999; font-size: 10px;">(sin histórico)</span>
+                    {% endif %}
+                </td>
+                <td class="{{ item.stock_difference is not null and item.stock_difference >= 0 ? 'positive' : 'negative' }}">
+                    {% if item.stock_difference is not null %}
+                        {{ item.stock_difference >= 0 ? '+' : '' }}{{ item.stock_difference|number_format(2, ',', '.') }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>{{ item.min_stock }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>FlexyStock - Informe de Estado Actual de Stock</p>
+    </div>
+</body>
+</html>
