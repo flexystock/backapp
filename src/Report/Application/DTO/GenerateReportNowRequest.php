@@ -31,18 +31,23 @@ class GenerateReportNowRequest
 
     private ?\DateTimeInterface $timestamp = null;
 
+    #[Assert\Choice(choices: ['daily', 'weekly', 'monthly'], message: 'INVALID_PERIOD')]
+    private string $period;
+
     public function __construct(
         string $uuidClient,
         string $name,
         string $reportType,
         string $productFilter,
         string $email,
+        string $period = 'daily'  // Valor por defecto
     ) {
         $this->uuidClient = $uuidClient;
         $this->name = $name;
         $this->reportType = $reportType;
         $this->productFilter = $productFilter;
         $this->email = $email;
+        $this->period = $period;
     }
 
     public function getUuidClient(): string
@@ -88,5 +93,15 @@ class GenerateReportNowRequest
     public function setTimestamp(?\DateTimeInterface $timestamp): void
     {
         $this->timestamp = $timestamp;
+    }
+
+    public function getPeriod(): string
+    {
+        return $this->period;
+    }
+
+    public function setPeriod(string $period): void
+    {
+        $this->period = $period;
     }
 }
