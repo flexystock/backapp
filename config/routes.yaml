@@ -68,3 +68,8 @@ controllers_dashboard:
     path: ../src/Dashboard/Infrastructure/InputAdapters/
     namespace: App\Dashboard\Infrastructure\InputAdapters
   type: attribute
+controllers_reports:
+  resource:
+    path: ../src/Report/Infrastructure/InputAdapters/
+    namespace: App\Report\Infrastructure\InputAdapters
+  type: attribute

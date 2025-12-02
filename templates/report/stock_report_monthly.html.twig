@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ report_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 10px;
+            font-size: 8px;
+            position: relative;
+        }
+        body::before {
+            content: "FLEXYSTOCK";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120px;
+            font-weight: bold;
+            color: rgba(76, 175, 80, 0.1);
+            z-index: -1;
+            pointer-events: none;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 8px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 14px;
+        }
+        .header p {
+            margin: 3px 0;
+            color: #666;
+            font-size: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 4px 2px;
+            text-align: center;
+        }
+        th {
+            background-color: #b88b56;
+            color: white;
+            font-size: 7px;
+        }
+        td:first-child {
+            text-align: left;
+            font-weight: bold;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+        .no-data {
+            color: #999;
+            font-style: italic;
+        }
+        .footer {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 8px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>{{ report_name }} - Informe Mensual</h1>
+    <p>Generado el: {{ generated_at|date('d/m/Y H:i:s') }}</p>
+    <p>Total de productos: {{ stock_data|length }} | Período: Últimos 30 días</p>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>Producto</th>
+        <th>EAN</th>
+        {% for date_label in date_labels %}
+            <th>{{ date_label }}</th>
+        {% endfor %}
+        <th>Stock Mín.</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for item in stock_data %}
+        <tr>
+            <td>{{ item.product_name }}</td>
+            <td>{{ item.ean|default('-') }}</td>
+            {% for date_label in date_labels %}
+                <td>
+                    {% set day_data = item.daily_stocks[date_label] %}
+                    {% if day_data.has_data %}
+                        {{ day_data.stock|number_format(1, ',', '.') }}
+                    {% else %}
+                        <span class="no-data">-</span>
+                    {% endif %}
+                </td>
+            {% endfor %}
+            <td>{{ item.min_stock }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<div class="footer">
+    <p>FlexyStock - Informe Mensual de Stock</p>
+</div>
+</body>
+</html>

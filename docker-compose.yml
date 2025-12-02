@@ -60,6 +60,35 @@ services:
       options:
         max-size: "10m"
         max-file: "2"
+  docker-symfony-cron:
+    container_name: docker-symfony-cron
+    build:
+      context: ./docker/php
+      args: { UID: 1000 }
+    environment:
+      PHP_IDE_CONFIG: "serverName=Docker"
+      APP_ENV: dev
+      TZ: "Europe/Madrid"
+    volumes:
+      - ./:/appdata/www
+      - ~/.ssh/id_rsa:/home/appuser/.ssh/id_rsa
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: >
+      bash -c "
+      apt-get update && apt-get install -y cron && apt-get clean &&
+      touch /var/log/cron.log &&
+      echo '0 * * * * cd /appdata/www && /usr/local/bin/php bin/console app:check-scheduled-reports >> /var/log/cron.log 2>&1' | crontab - &&
+      cron &&
+      tail -f /var/log/cron.log
+      "
+    networks: [ docker-symfony-network ]
+    depends_on: [ docker-symfony-be, docker-symfony-dbMain ]
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
 
   docker-symfony-dbMain:
     container_name: docker-symfony-dbMain
