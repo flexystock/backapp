@@ -413,6 +413,424 @@ php bin/console messenger:consume async -vv
 ```bash
 docker stop docker-symfony-messenger
 ```
+## 📅 Sistema de Informes Programados
+
+El proyecto incluye un sistema completo de generación y envío automático de informes de inventario mediante tareas programadas (cron).
+
+### Características del Sistema
+
+- **Generación automática** de informes de stock en horarios programados
+- **Tres períodos disponibles**: Diario, Semanal, Mensual
+- **Dos formatos**: CSV y PDF
+- **Filtros configurables**: Todos los productos o solo productos bajo stock mínimo
+- **Envío por email** automático con el informe adjunto
+- **Multi-tenant**: Funciona para todos los clientes de forma independiente
+- **Registro de ejecuciones** para auditoría y seguimiento
+- **Prevención de duplicados** mediante control de ejecuciones por período
+
+### Arquitectura del Sistema
+
+#### Contenedor Cron
+
+El sistema utiliza un contenedor Docker dedicado (`docker-symfony-cron`) que ejecuta tareas programadas:
+```yaml
+docker-symfony-cron:
+  build: ./docker/php
+  container_name: docker-symfony-cron
+  command: >
+    bash -c "
+    apt-get update && apt-get install -y cron && apt-get clean &&
+    touch /var/log/cron.log &&
+    echo '0 * * * * cd /appdata/www && /usr/local/bin/php bin/console app:check-scheduled-reports >> /var/log/cron.log 2>&1' | crontab - &&
+    cron &&
+    tail -f /var/log/cron.log
+    "
+  networks:
+    - docker-symfony-network
+  restart: always
+  volumes:
+    - ./:/appdata/www
+```
+
+**Frecuencia de ejecución**: Cada hora (a los minutos 0)
+
+#### Base de Datos
+
+El sistema utiliza dos tablas en cada base de datos de cliente:
+
+**Tabla `report`** (configuración de informes):
+```sql
+CREATE TABLE report (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    period ENUM('daily', 'weekly', 'monthly') NOT NULL,
+    send_time TIME NOT NULL,
+    report_type ENUM('csv', 'pdf') NOT NULL,
+    product_filter ENUM('all', 'below_stock') NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    uuid_user_creation VARCHAR(36) NOT NULL,
+    datehour_creation DATETIME NOT NULL,
+    INDEX idx_send_time (send_time),
+    INDEX idx_period (period)
+);
+```
+
+**Tabla `report_executions`** (registro de ejecuciones):
+```sql
+CREATE TABLE report_executions (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    report_id INT UNSIGNED NOT NULL,
+    executed_at DATETIME NOT NULL,
+    status ENUM('processing', 'success', 'failed') NOT NULL,
+    sended BOOLEAN DEFAULT FALSE,
+    error_message TEXT,
+    FOREIGN KEY (report_id) REFERENCES report(id) ON DELETE CASCADE,
+    INDEX idx_report_executed (report_id, executed_at)
+);
+```
+
+#### Entidades Doctrine
+
+**`src/Entity/Client/Report.php`**
+- Representa la configuración de un informe programado
+- Campos: name, period, send_time, report_type, product_filter, email
+
+**`src/Entity/Client/ReportExecution.php`**
+- Registra cada ejecución de un informe
+- Relación ManyToOne con Report
+- Campos: executed_at, status, sended, error_message
+
+### Flujo de Trabajo
+
+1. **Verificación Horaria** (cron cada hora)
+   - El contenedor `docker-symfony-cron` ejecuta el comando `app:check-scheduled-reports`
+   - El comando itera sobre todos los clientes/tenants del sistema
+
+2. **Detección de Informes Pendientes**
+   - Para cada cliente, cambia al schema correspondiente
+   - Busca informes cuyo `send_time` coincida con la hora actual
+   - Verifica que no se haya ejecutado ya en el período actual:
+     - **Daily**: No ejecutado hoy (00:00 - 23:59)
+     - **Weekly**: No ejecutado esta semana (lunes a domingo)
+     - **Monthly**: No ejecutado este mes (día 1 al último día)
+
+3. **Encolado de Mensaje**
+   - Si el informe debe ejecutarse, se encola un mensaje `GenerateScheduledReportMessage`
+   - El mensaje contiene el `tenantId` y el `reportId`
+
+4. **Procesamiento Asíncrono**
+   - El contenedor `docker-symfony-messenger` consume el mensaje
+   - El `GenerateScheduledReportMessageHandler` procesa la tarea:
+     - Crea un registro en `report_executions` con status='processing'
+     - Genera el informe según la configuración (período, formato, filtros)
+     - Envía el email con el informe adjunto
+     - Actualiza el registro: status='success', sended=true
+
+5. **Generación del Informe**
+   - El `GenerateReportNowUseCase` calcula los datos según el período:
+     - **Daily**: Stock actual vs stock de ayer
+     - **Weekly**: Stock de los últimos 7 días (columnas por día)
+     - **Monthly**: Stock de los últimos 30 días (columnas por día)
+   - Genera el archivo CSV o PDF según configuración
+   - Usa plantillas Twig específicas por período
+
+### Comandos Principales
+
+#### Comando de Verificación
+```bash
+# Ejecutar manualmente el verificador de informes programados
+docker exec docker-symfony-be php bin/console app:check-scheduled-reports
+
+# Ver el output en tiempo real
+docker exec docker-symfony-cron tail -f /var/log/cron.log
+```
+
+**Ubicación**: `src/Command/CheckScheduledReportsCommand.php`
+
+#### Ver Logs del Cron
+```bash
+# Logs del contenedor cron
+docker logs docker-symfony-cron --tail 50
+
+# Logs en tiempo real
+docker logs -f docker-symfony-cron
+```
+
+#### Gestión del Contenedor
+```bash
+# Iniciar el contenedor cron
+docker compose up -d docker-symfony-cron
+
+# Detener el contenedor
+docker stop docker-symfony-cron
+
+# Reiniciar el contenedor
+docker restart docker-symfony-cron
+
+# Ver estado
+docker ps | grep cron
+```
+
+### Endpoints API
+
+El sistema expone los siguientes endpoints para gestión de informes:
+```bash
+# Crear un informe programado
+POST /api/report_create
+{
+  "name": "Informe Diario de Stock",
+  "period": "daily",
+  "send_time": "08:00:00",
+  "report_type": "pdf",
+  "product_filter": "all",
+  "email": "admin@example.com"
+}
+
+# Listar todos los informes
+GET /api/reports
+
+# Obtener un informe específico
+GET /api/report/{id}
+
+# Actualizar un informe
+PUT /api/report_update
+{
+  "id": 1,
+  "name": "Nuevo Nombre",
+  "send_time": "09:00:00"
+}
+
+# Eliminar un informe
+DELETE /api/report_delete/{id}
+
+# Generar un informe inmediatamente (sin esperar al cron)
+POST /api/report/generate-now
+{
+  "report_type": "pdf",
+  "product_filter": "below_stock",
+  "period": "daily"
+}
+```
+
+### Tipos de Informes
+
+#### Informe Diario
+- Muestra el stock actual de cada producto
+- Compara con el stock del día anterior
+- Calcula la diferencia (stock_today - stock_yesterday)
+- Formato vertical con 3 columnas
+
+#### Informe Semanal
+- Muestra el stock de los últimos 7 días
+- Una columna por cada día de la semana
+- Formato horizontal (landscape)
+- Útil para ver tendencias semanales
+
+#### Informe Mensual
+- Muestra el stock de los últimos 30 días
+- Una columna por cada día del mes
+- Formato horizontal con letra reducida
+- Perfecto para análisis mensual
+
+### Formatos Disponibles
+
+#### CSV
+- Fácil de importar en Excel o Google Sheets
+- Separador: coma (,)
+- Encoding: UTF-8
+- Primera fila: cabeceras
+
+#### PDF
+- Formato profesional para impresión
+- Plantillas Twig personalizadas por período
+- Generado con Dompdf
+- Tamaño de página automático según contenido
+
+### Filtros de Productos
+
+- **all**: Incluye todos los productos del inventario
+- **below_stock**: Solo productos con stock actual menor al stock mínimo configurado
+
+### Plantillas Twig
+
+Las plantillas para generación de PDF están ubicadas en:
+```
+templates/report/
+├── stock_report_daily.html.twig    # Formato vertical para informes diarios
+├── stock_report_weekly.html.twig   # Formato horizontal, 7 columnas
+└── stock_report_monthly.html.twig  # Formato horizontal, 30 columnas, letra reducida
+```
+
+### Configuración Multi-Tenant
+
+El sistema funciona en arquitectura multi-tenant:
+
+- Cada cliente tiene su propia base de datos
+- El `ClientConnectionManager` gestiona las conexiones dinámicas
+- Las migraciones se aplican automáticamente a todos los clientes
+- Cada informe se ejecuta en el contexto de su cliente correspondiente
+
+**Script de migraciones**: `/opt/flexystock/migrations/client/migrate_client.php`
+
+### Mensajes y Handlers
+
+**Mensaje**: `src/Message/GenerateScheduledReportMessage.php`
+```php
+class GenerateScheduledReportMessage
+{
+    public function __construct(
+        private int $tenantId,
+        private int $reportId
+    ) {}
+}
+```
+
+**Handler**: `src/MessageHandler/GenerateScheduledReportMessageHandler.php`
+- Procesa los mensajes de la cola
+- Genera y envía los informes
+- Registra el resultado en `report_executions`
+
+### Prevención de Duplicados
+
+El sistema evita que un mismo informe se ejecute múltiples veces en el mismo período:
+```php
+// El repositorio verifica si ya existe una ejecución exitosa
+public function wasExecutedInPeriod(
+    int $reportId,
+    string $period,
+    \DateTimeInterface $now
+): bool
+```
+
+Esto garantiza que:
+- Un informe diario solo se envía una vez al día
+- Un informe semanal solo se envía una vez a la semana
+- Un informe mensual solo se envía una vez al mes
+
+### Zona Horaria
+
+⚠️ **Importante**: Los contenedores Docker funcionan en UTC. Si tu zona horaria es diferente, ajusta el campo `send_time` en consecuencia.
+
+Ejemplo para España (UTC+1 en invierno, UTC+2 en verano):
+- Para enviar a las 08:00 hora local en invierno: `send_time = '07:00:00'`
+- Para enviar a las 08:00 hora local en verano: `send_time = '06:00:00'`
+
+### Troubleshooting
+
+#### Los informes no se generan
+```bash
+# 1. Verificar que el contenedor cron está corriendo
+docker ps | grep cron
+
+# 2. Ver logs del cron
+docker logs docker-symfony-cron --tail 100
+
+# 3. Ejecutar el comando manualmente
+docker exec docker-symfony-be php bin/console app:check-scheduled-reports
+
+# 4. Verificar la cola de Messenger
+docker exec docker-symfony-be php bin/console messenger:stats
+```
+
+#### Los emails no se envían
+```bash
+# 1. Verificar configuración MAILER_DSN en .env
+cat .env | grep MAILER_DSN
+
+# 2. Ver logs de Symfony
+docker exec docker-symfony-be cat /appdata/www/var/log/dev-$(date +%Y-%m-%d).log | grep -i mail
+
+# 3. Verificar estado del Messenger
+docker logs docker-symfony-messenger --tail 50
+```
+
+#### Error "Report already executed in this period"
+
+Esto es normal y significa que el sistema está funcionando correctamente. El informe ya se ejecutó en el período actual y no se volverá a ejecutar hasta el siguiente período.
+
+#### Consultar ejecuciones de un informe
+```sql
+-- Desde MySQL
+SELECT * FROM report_executions 
+WHERE report_id = 1 
+ORDER BY executed_at DESC 
+LIMIT 10;
+```
+
+### Migraciones del Sistema
+
+Las migraciones del sistema de informes están ubicadas en:
+```
+migrations/client/
+├── 022/
+│   └── 001-create-table-report.sql
+└── 023/
+    └── 001-create-table-report-executions.sql
+```
+
+Para aplicar las migraciones manualmente:
+```bash
+docker exec docker-symfony-be php /opt/flexystock/migrations/client/migrate_client.php
+```
+
+### Monitoreo y Métricas
+
+Recomendaciones para monitoreo en producción:
+
+1. **Alertas de disco**: Si el uso supera el 75%
+2. **Alertas de Messenger**: Si la cola tiene más de 50 mensajes pendientes
+3. **Logs de fallos**: Revisar `report_executions` con status='failed'
+4. **Alertas de contenedor**: Si `docker-symfony-cron` o `docker-symfony-messenger` están detenidos
+```bash
+# Ver informes fallidos
+docker exec docker-symfony-be php bin/console dbal:run-sql "
+SELECT r.name, re.executed_at, re.error_message 
+FROM report_executions re 
+JOIN report r ON r.id = re.report_id 
+WHERE re.status = 'failed' 
+ORDER BY re.executed_at DESC 
+LIMIT 10"
+```
+
+### Ejemplo de Uso
+
+1. **Crear un informe diario en PDF**:
+```bash
+curl -X POST http://localhost:300/api/report_create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "name": "Stock Diario - Almacén Principal",
+    "period": "daily",
+    "send_time": "08:00:00",
+    "report_type": "pdf",
+    "product_filter": "all",
+    "email": "almacen@empresa.com"
+  }'
+```
+
+2. **El sistema automáticamente**:
+   - Verificará cada hora si es momento de ejecutar el informe
+   - A las 08:00 detectará que debe ejecutarse
+   - Encolará el mensaje en Messenger
+   - Generará el PDF con los datos del último día
+   - Enviará el email con el PDF adjunto
+   - Registrará la ejecución exitosa
+
+3. **Al día siguiente**:
+   - El sistema verificará que no se ejecutó hoy
+   - Volverá a ejecutarlo a las 08:00
+   - Y así sucesivamente cada día
+
+### Ventajas del Sistema
+
+✅ **Totalmente automatizado**: Sin intervención manual necesaria  
+✅ **Escalable**: Soporta múltiples clientes y múltiples informes por cliente  
+✅ **Robusto**: Control de duplicados, manejo de errores, registro de ejecuciones  
+✅ **Flexible**: Tres períodos, dos formatos, filtros configurables  
+✅ **Asíncrono**: No bloquea el sistema principal  
+✅ **Auditable**: Cada ejecución queda registrada con su resultado  
+✅ **Multi-tenant**: Funciona independientemente para cada cliente
 
 ## 🌐 Integración con The Things Network (TTN)
 
