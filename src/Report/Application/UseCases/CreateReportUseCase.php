@@ -3,6 +3,7 @@
 namespace App\Report\Application\UseCases;
 
 use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
+use App\Entity\Client\Product;
 use App\Entity\Client\Report;
 use App\Infrastructure\Services\ClientConnectionManager;
 use App\Report\Application\DTO\CreateReportRequest;
@@ -46,6 +47,11 @@ class CreateReportUseCase implements CreateReportUseCaseInterface
         $report->setUuidUserCreation($uuidUser);
         $report->setDatehourCreation($timestamp);
 
+        // NUEVO: Si el filtro es 'specific', guardar los productos asociados
+        if ($request->getProductFilter() === 'specific' && !empty($request->getProductIds())) {
+            $this->addProductsToReport($entityManager, $report, $request->getProductIds());
+        }
+
         $reportRepository->save($report);
         $reportRepository->flush();
 
@@ -59,12 +65,49 @@ class CreateReportUseCase implements CreateReportUseCaseInterface
             'email' => $report->getEmail(),
         ];
 
+        // NUEVO: Si tiene productos específicos, incluirlos en la respuesta
+        if ($report->hasSpecificProducts()) {
+            $reportData['product_ids'] = $report->getProductIds();
+            $reportData['products'] = array_map(function (Product $product) {
+                return [
+                    'id' => $product->getId(),
+                    'name' => $product->getName(),
+                    'ean' => $product->getEan(),
+                ];
+            }, $report->getProducts());
+        }
+
         $this->logger->info('Report created', [
             'uuid_client' => $uuidClient,
             'report_id' => $report->getId(),
+            'has_specific_products' => $report->hasSpecificProducts(),
+            'products_count' => count($report->getProducts()),
         ]);
 
         return new CreateReportResponse($reportData);
+    }
+
+    /**
+     * NUEVO: Añade productos específicos al informe
+     *
+     * @param array<int> $productIds
+     * @throws \RuntimeException
+     */
+    private function addProductsToReport(object $entityManager, Report $report, array $productIds): void
+    {
+        if (empty($productIds)) {
+            throw new \RuntimeException('PRODUCTS_REQUIRED_FOR_SPECIFIC_FILTER');
+        }
+
+        $productRepository = $entityManager->getRepository(Product::class);
+
+        foreach ($productIds as $productId) {
+            $product = $productRepository->find($productId);
+            if (!$product) {
+                throw new \RuntimeException("PRODUCT_NOT_FOUND: {$productId}");
+            }
+            $report->addProduct($product);
+        }
     }
 
     private function parseSendTime(string $sendTime): \DateTimeInterface

@@ -45,8 +45,9 @@ class CreateReportController extends AbstractController
                     new OA\Property(property: 'period', type: 'string', example: 'weekly'),
                     new OA\Property(property: 'sendTime', type: 'string', format: 'time', example: '08:00:00'),
                     new OA\Property(property: 'reportType', type: 'string', example: 'stock_summary'),
-                    new OA\Property(property: 'productFilter', type: 'string', nullable: true, example: 'category:electronics'),
+                    new OA\Property(property: 'productFilter', type: 'string', enum: ['all', 'below_stock', 'specific'], example: 'all'),
                     new OA\Property(property: 'email', type: 'string', format: 'email', example: 'user@example.com'),
+                    new OA\Property(property: 'productIds', type: 'array', items: new OA\Items(type: 'integer'), example: [1, 2, 3], description: 'IDs de productos (requerido si productFilter=specific)'),
                 ]
             )
         ),
@@ -65,8 +66,10 @@ class CreateReportController extends AbstractController
                             new OA\Property(property: 'period', type: 'string', example: 'weekly'),
                             new OA\Property(property: 'sendTime', type: 'string', example: '08:00:00'),
                             new OA\Property(property: 'reportType', type: 'string', example: 'stock_summary'),
-                            new OA\Property(property: 'productFilter', type: 'string', nullable: true, example: 'category:electronics'),
+                            new OA\Property(property: 'productFilter', type: 'string', example: 'specific'),
                             new OA\Property(property: 'email', type: 'string', example: 'user@example.com'),
+                            new OA\Property(property: 'productIds', type: 'array', items: new OA\Items(type: 'integer'), example: [1, 2, 3]),
+                            new OA\Property(property: 'products', type: 'array', items: new OA\Items(type: 'object')),
                         ]),
                     ]
                 )
@@ -97,6 +100,17 @@ class CreateReportController extends AbstractController
                 return $this->validationErrorResponse($errors);
             }
 
+            // Validación manual: si productFilter es 'specific', productIds no puede estar vacío
+            if ($createRequest->getProductFilter() === 'specific' && empty($createRequest->getProductIds())) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'PRODUCTS_REQUIRED_FOR_SPECIFIC_FILTER',
+                    'errors' => [
+                        'productIds' => 'Debe seleccionar al menos un producto cuando el filtro es "specific"',
+                    ],
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
             $user = $this->getUser();
             if (!is_object($user) || !method_exists($user, 'getUuid')) {
                 return new JsonResponse([
@@ -120,6 +134,7 @@ class CreateReportController extends AbstractController
         } catch (\Throwable $throwable) {
             $this->logger->error('Unexpected error creating report', [
                 'exception' => $throwable->getMessage(),
+                'trace' => $throwable->getTraceAsString(),
             ]);
 
             return new JsonResponse([
@@ -151,6 +166,10 @@ class CreateReportController extends AbstractController
         if ('CLIENT_NOT_FOUND' === $message) {
             $statusCode = Response::HTTP_NOT_FOUND;
         } elseif ('INVALID_SEND_TIME' === $message) {
+            $statusCode = Response::HTTP_BAD_REQUEST;
+        } elseif (str_starts_with($message, 'PRODUCT_NOT_FOUND')) {
+            $statusCode = Response::HTTP_NOT_FOUND;
+        } elseif ('PRODUCTS_REQUIRED_FOR_SPECIFIC_FILTER' === $message) {
             $statusCode = Response::HTTP_BAD_REQUEST;
         }
 
