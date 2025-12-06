@@ -64,28 +64,41 @@ class GenerateScheduledReportMessageHandler
 
             $this->logger->info('Execution record created', ['execution_id' => $execution->getId()]);
 
-            // 5. Crear request con el constructor correcto
+            // 5. NUEVO: Extraer productIds si el filtro es 'specific'
+            $productIds = [];
+            if ($report->hasSpecificProducts()) {
+                $productIds = $report->getProductIds();
+                $this->logger->info('Report has specific products', [
+                    'product_count' => count($productIds),
+                    'product_ids' => $productIds,
+                ]);
+            }
+
+            // 6. Crear request con el constructor correcto
             $generateRequest = new GenerateReportNowRequest(
                 uuidClient: $uuidClient,
                 name: $report->getName(),
                 reportType: $report->getReportType(),
                 productFilter: $report->getProductFilter() ?? 'all',
                 email: $report->getEmail(),
-                period: $report->getPeriod()
+                period: $report->getPeriod(),
+                productIds: $productIds // NUEVO: Pasar los productIds
             );
 
             // Establecer los campos opcionales
             $generateRequest->setUuidUser($report->getUuidUserCreation());
             $generateRequest->setTimestamp(new \DateTimeImmutable());
 
-            // 6. Generar y enviar el informe
+            // 7. Generar y enviar el informe
             $response = $this->generateReportUseCase->execute($generateRequest);
 
-            // 7. Actualizar el estado de la ejecución
+            // 8. Actualizar el estado de la ejecución
             if ($response->isSuccess()) {
                 $execution->setStatus('success');
                 $execution->setSended(true);
-                $this->logger->info('✅ Scheduled report generated and sent successfully');
+                $this->logger->info('✅ Scheduled report generated and sent successfully', [
+                    'products_count' => $response->getData()['products_count'] ?? 0,
+                ]);
             } else {
                 $execution->setStatus('failed');
                 $execution->setErrorMessage($response->getMessage());

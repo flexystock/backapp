@@ -6,41 +6,52 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class GenerateReportNowRequest
 {
-    #[Assert\NotBlank(message: 'REQUIRED_CLIENT_ID')]
-    #[Assert\Uuid(message: 'INVALID_CLIENT_ID')]
+    #[Assert\NotBlank(message: 'UUID del cliente es requerido')]
+    #[Assert\Uuid]
     private string $uuidClient;
 
-    #[Assert\NotBlank(message: 'REQUIRED_NAME')]
-    #[Assert\Length(max: 150, maxMessage: 'NAME_TOO_LONG')]
+    #[Assert\NotBlank(message: 'El nombre es requerido')]
+    #[Assert\Length(max: 150)]
     private string $name;
 
-    #[Assert\NotBlank(message: 'REQUIRED_REPORT_TYPE')]
-    #[Assert\Choice(choices: ['csv', 'pdf'], message: 'INVALID_REPORT_TYPE')]
+    #[Assert\NotBlank(message: 'El tipo de informe es requerido')]
+    #[Assert\Choice(choices: ['csv', 'pdf'], message: 'Tipo de informe inválido')]
     private string $reportType;
 
-    #[Assert\NotBlank(message: 'REQUIRED_PRODUCT_FILTER')]
-    #[Assert\Choice(choices: ['all', 'below_stock'], message: 'INVALID_PRODUCT_FILTER')]
+    #[Assert\NotBlank(message: 'El filtro de producto es requerido')]
+    #[Assert\Choice(choices: ['all', 'below_stock', 'specific'], message: 'Filtro de producto inválido')]
     private string $productFilter;
 
-    #[Assert\NotBlank(message: 'REQUIRED_EMAIL')]
-    #[Assert\Email(message: 'INVALID_EMAIL')]
-    #[Assert\Length(max: 255, maxMessage: 'EMAIL_TOO_LONG')]
+    #[Assert\NotBlank(message: 'El email es requerido')]
+    #[Assert\Email(message: 'Email inválido')]
     private string $email;
 
+    #[Assert\NotBlank(message: 'El período es requerido')]
+    #[Assert\Choice(choices: ['daily', 'weekly', 'monthly'], message: 'Período inválido')]
+    private string $period = 'daily';
+
     private ?string $uuidUser = null;
+    private ?\DateTimeImmutable $timestamp = null;
 
-    private ?\DateTimeInterface $timestamp = null;
+    /**
+     * Array de IDs de productos (requerido solo si productFilter = 'specific')
+     * La validación se hace en el UseCase
+     *
+     * @var array<int>
+     */
+    private array $productIds = [];
 
-    #[Assert\Choice(choices: ['daily', 'weekly', 'monthly'], message: 'INVALID_PERIOD')]
-    private string $period;
-
+    /**
+     * Constructor con named parameters (mantener compatibilidad con código existente)
+     */
     public function __construct(
         string $uuidClient,
         string $name,
         string $reportType,
         string $productFilter,
         string $email,
-        string $period = 'daily'  // Valor por defecto
+        string $period = 'daily',
+        array $productIds = []
     ) {
         $this->uuidClient = $uuidClient;
         $this->name = $name;
@@ -48,6 +59,7 @@ class GenerateReportNowRequest
         $this->productFilter = $productFilter;
         $this->email = $email;
         $this->period = $period;
+        $this->productIds = $productIds;
     }
 
     public function getUuidClient(): string
@@ -75,33 +87,47 @@ class GenerateReportNowRequest
         return $this->email;
     }
 
-    public function getUuidUser(): ?string
-    {
-        return $this->uuidUser;
-    }
-
-    public function setUuidUser(?string $uuidUser): void
-    {
-        $this->uuidUser = $uuidUser;
-    }
-
-    public function getTimestamp(): ?\DateTimeInterface
-    {
-        return $this->timestamp;
-    }
-
-    public function setTimestamp(?\DateTimeInterface $timestamp): void
-    {
-        $this->timestamp = $timestamp;
-    }
-
     public function getPeriod(): string
     {
         return $this->period;
     }
 
-    public function setPeriod(string $period): void
+    public function getUuidUser(): ?string
     {
-        $this->period = $period;
+        return $this->uuidUser;
+    }
+
+    public function setUuidUser(?string $uuidUser): self
+    {
+        $this->uuidUser = $uuidUser;
+        return $this;
+    }
+
+    public function getTimestamp(): ?\DateTimeImmutable
+    {
+        return $this->timestamp;
+    }
+
+    public function setTimestamp(?\DateTimeImmutable $timestamp): self
+    {
+        $this->timestamp = $timestamp;
+        return $this;
+    }
+
+    /**
+     * @return array<int>
+     */
+    public function getProductIds(): array
+    {
+        return $this->productIds;
+    }
+
+    /**
+     * @param array<int> $productIds
+     */
+    public function setProductIds(array $productIds): self
+    {
+        $this->productIds = $productIds;
+        return $this;
     }
 }

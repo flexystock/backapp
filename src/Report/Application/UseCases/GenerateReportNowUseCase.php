@@ -39,8 +39,13 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
         $entityManager = $this->connectionManager->getEntityManager($uuidClient);
         $weightsLogRepository = new WeightsLogRepository($entityManager);
 
-        // Get products based on filter
-        $products = $this->getProducts($entityManager, $request->getProductFilter(), $weightsLogRepository);
+        // Get products based on filter (ahora soporta 'specific' con productIds)
+        $products = $this->getProducts(
+            $entityManager,
+            $request->getProductFilter(),
+            $weightsLogRepository,
+            $request->getProductIds() ?? [] // NUEVO: Pasar productIds
+        );
 
         if (empty($products)) {
             return new GenerateReportNowResponse(
@@ -97,11 +102,22 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
     }
 
     /**
+     * @param array<int> $productIds IDs de productos específicos (solo si productFilter = 'specific')
      * @return array<Product>
      */
-    private function getProducts(object $entityManager, string $productFilter, WeightsLogRepository $weightsLogRepository): array
-    {
+    private function getProducts(
+        object $entityManager,
+        string $productFilter,
+        WeightsLogRepository $weightsLogRepository,
+        array $productIds = [] // NUEVO parámetro
+    ): array {
         $productRepository = $entityManager->getRepository(Product::class);
+
+        // NUEVO: Soporte para productos específicos
+        if ('specific' === $productFilter) {
+            return $this->getSpecificProducts($productRepository, $productIds);
+        }
+
         $allProducts = $productRepository->findAll();
 
         if ('all' === $productFilter) {
@@ -123,6 +139,29 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
 
             return $currentStock < $minStock;
         });
+    }
+
+    /**
+     * NUEVO: Obtiene productos específicos por sus IDs
+     *
+     * @param array<int> $productIds
+     * @return array<Product>
+     */
+    private function getSpecificProducts(object $productRepository, array $productIds): array
+    {
+        if (empty($productIds)) {
+            return [];
+        }
+
+        $products = [];
+        foreach ($productIds as $productId) {
+            $product = $productRepository->find($productId);
+            if ($product instanceof Product) {
+                $products[] = $product;
+            }
+        }
+
+        return $products;
     }
 
     /**
@@ -235,7 +274,7 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
         for ($i = 29; $i >= 0; $i--) {
             $date = $today->modify("-{$i} days")->setTime(23, 59, 59);
             $dates[] = $date;
-            $dateLabels[] = $date->format('d/m'); // Ej: "01/11"
+            $dateLabels[] = $date->format('d/m'); // Ej: "25/11"
         }
 
         foreach ($products as $product) {
@@ -311,7 +350,7 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
         $output = fopen('php://temp', 'r+');
 
         if ('daily' === $period) {
-            // CSV Header paraDaily
+            // CSV Header para Daily
             fputcsv($output, [
                 'Nombre Producto',
                 'EAN',

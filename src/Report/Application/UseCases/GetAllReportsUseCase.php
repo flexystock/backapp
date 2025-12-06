@@ -3,6 +3,7 @@
 namespace App\Report\Application\UseCases;
 
 use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
+use App\Entity\Client\Product;
 use App\Entity\Client\Report;
 use App\Infrastructure\Services\ClientConnectionManager;
 use App\Report\Application\DTO\GetAllReportsRequest;
@@ -33,15 +34,7 @@ class GetAllReportsUseCase implements GetAllReportsUseCaseInterface
         $reports = $reportRepository->findAll();
 
         $reportsData = array_map(
-            fn (Report $report): array => [
-                'id' => $report->getId(),
-                'name' => $report->getName(),
-                'period' => $report->getPeriod(),
-                'send_time' => $report->getSendTime()->format('H:i:s'),
-                'report_type' => $report->getReportType(),
-                'product_filter' => $report->getProductFilter(),
-                'email' => $report->getEmail(),
-            ],
+            fn (Report $report): array => $this->mapReportToArray($report),
             $reports
         );
 
@@ -51,5 +44,41 @@ class GetAllReportsUseCase implements GetAllReportsUseCaseInterface
         ]);
 
         return new GetAllReportsResponse($reportsData);
+    }
+
+    /**
+     * NUEVO: Mapea un report a array incluyendo productos específicos si existen
+     */
+    private function mapReportToArray(Report $report): array
+    {
+        $data = [
+            'id' => $report->getId(),
+            'name' => $report->getName(),
+            'period' => $report->getPeriod(),
+            'send_time' => $report->getSendTime()->format('H:i:s'),
+            'report_type' => $report->getReportType(),
+            'product_filter' => $report->getProductFilter(),
+            'email' => $report->getEmail(),
+        ];
+
+        // NUEVO: Si tiene productos específicos, incluirlos
+        if ($report->hasSpecificProducts()) {
+            $products = $report->getProducts();
+            $data['product_ids'] = $report->getProductIds();
+            $data['products'] = array_map(function (Product $product) {
+                return [
+                    'id' => $product->getId(),
+                    'name' => $product->getName(),
+                    'ean' => $product->getEan(),
+                ];
+            }, $products);
+            $data['product_count'] = count($products);
+        } else {
+            $data['product_ids'] = [];
+            $data['products'] = [];
+            $data['product_count'] = 0;
+        }
+
+        return $data;
     }
 }
