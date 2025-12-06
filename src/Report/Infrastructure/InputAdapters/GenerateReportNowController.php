@@ -13,8 +13,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class GenerateReportNowController extends AbstractController
@@ -23,7 +21,6 @@ class GenerateReportNowController extends AbstractController
 
     public function __construct(
         private readonly GenerateReportNowUseCaseInterface $generateReportNowUseCase,
-        private readonly SerializerInterface $serializer,
         private readonly ValidatorInterface $validator,
         private readonly LoggerInterface $logger,
         PermissionService $permissionService,
@@ -43,8 +40,10 @@ class GenerateReportNowController extends AbstractController
                     new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid', example: 'c014a415-4113-49e5-80cb-cc3158c15236'),
                     new OA\Property(property: 'name', type: 'string', example: 'Informe Estado Actual Stock'),
                     new OA\Property(property: 'reportType', type: 'string', enum: ['csv', 'pdf'], example: 'csv'),
-                    new OA\Property(property: 'productFilter', type: 'string', enum: ['all', 'below_stock'], example: 'all'),
+                    new OA\Property(property: 'productFilter', type: 'string', enum: ['all', 'below_stock', 'specific'], example: 'all'),
                     new OA\Property(property: 'email', type: 'string', format: 'email', example: 'user@example.com'),
+                    new OA\Property(property: 'period', type: 'string', enum: ['daily', 'weekly', 'monthly'], example: 'daily'),
+                    new OA\Property(property: 'productIds', type: 'array', items: new OA\Items(type: 'integer'), example: [1, 2, 3], description: 'IDs de productos (requerido si productFilter=specific)'),
                 ]
             )
         ),
@@ -80,16 +79,42 @@ class GenerateReportNowController extends AbstractController
                 return $permissionCheck;
             }
 
-            /** @var GenerateReportNowRequest $generateRequest */
-            $generateRequest = $this->serializer->deserialize(
-                $request->getContent(),
-                GenerateReportNowRequest::class,
-                'json'
+            // Leer JSON manualmente para tener control total sobre la construcción del DTO
+            $data = json_decode($request->getContent(), true);
+
+            if (!is_array($data)) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'INVALID_JSON',
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            // Construir el DTO manualmente con named parameters
+            $generateRequest = new GenerateReportNowRequest(
+                uuidClient: $data['uuidClient'] ?? '',
+                name: $data['name'] ?? '',
+                reportType: $data['reportType'] ?? '',
+                productFilter: $data['productFilter'] ?? '',
+                email: $data['email'] ?? '',
+                period: $data['period'] ?? 'daily',
+                productIds: $data['productIds'] ?? []
             );
 
+            // Validar el DTO
             $errors = $this->validator->validate($generateRequest);
             if (count($errors) > 0) {
                 return $this->validationErrorResponse($errors);
+            }
+
+            // Validación manual: si productFilter es 'specific', productIds no puede estar vacío
+            if ($generateRequest->getProductFilter() === 'specific' && empty($generateRequest->getProductIds())) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'PRODUCTS_REQUIRED_FOR_SPECIFIC_FILTER',
+                    'errors' => [
+                        'productIds' => 'Debe seleccionar al menos un producto cuando el filtro es "specific"',
+                    ],
+                ], Response::HTTP_BAD_REQUEST);
             }
 
             $user = $this->getUser();
@@ -115,6 +140,7 @@ class GenerateReportNowController extends AbstractController
         } catch (\Throwable $throwable) {
             $this->logger->error('Unexpected error generating report', [
                 'exception' => $throwable->getMessage(),
+                'trace' => $throwable->getTraceAsString(),
             ]);
 
             return new JsonResponse([
@@ -124,7 +150,7 @@ class GenerateReportNowController extends AbstractController
         }
     }
 
-    private function validationErrorResponse(ConstraintViolationListInterface $errors): JsonResponse
+    private function validationErrorResponse($errors): JsonResponse
     {
         $errorMessages = [];
         foreach ($errors as $error) {
@@ -145,6 +171,10 @@ class GenerateReportNowController extends AbstractController
 
         if ('CLIENT_NOT_FOUND' === $message) {
             $statusCode = Response::HTTP_NOT_FOUND;
+        } elseif (str_starts_with($message, 'PRODUCT_NOT_FOUND')) {
+            $statusCode = Response::HTTP_NOT_FOUND;
+        } elseif ('PRODUCTS_REQUIRED_FOR_SPECIFIC_FILTER' === $message) {
+            $statusCode = Response::HTTP_BAD_REQUEST;
         }
 
         return new JsonResponse([

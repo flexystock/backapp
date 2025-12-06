@@ -2,6 +2,8 @@
 
 namespace App\Entity\Client;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -43,6 +45,18 @@ class Report
 
     #[ORM\Column(name: 'datehour_modification', type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $datehourModification = null;
+
+    /**
+     * Relación con productos específicos
+     * @var Collection<int, ReportProduct>
+     */
+    #[ORM\OneToMany(mappedBy: 'report', targetEntity: ReportProduct::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $reportProducts;
+
+    public function __construct()
+    {
+        $this->reportProducts = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -167,5 +181,88 @@ class Report
         $this->datehourModification = $datehourModification;
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, ReportProduct>
+     */
+    public function getReportProducts(): Collection
+    {
+        return $this->reportProducts;
+    }
+
+    public function addReportProduct(ReportProduct $reportProduct): self
+    {
+        if (!$this->reportProducts->contains($reportProduct)) {
+            $this->reportProducts->add($reportProduct);
+            $reportProduct->setReport($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReportProduct(ReportProduct $reportProduct): self
+    {
+        if ($this->reportProducts->removeElement($reportProduct)) {
+            if ($reportProduct->getReport() === $this) {
+                $reportProduct->setReport(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Obtiene los IDs de productos asociados a este informe
+     *
+     * @return array<int>
+     */
+    public function getProductIds(): array
+    {
+        return $this->reportProducts
+            ->map(fn (ReportProduct $rp) => $rp->getProduct()->getId())
+            ->toArray();
+    }
+
+    /**
+     * Obtiene los productos asociados a este informe
+     *
+     * @return array<Product>
+     */
+    public function getProducts(): array
+    {
+        return $this->reportProducts
+            ->map(fn (ReportProduct $rp) => $rp->getProduct())
+            ->toArray();
+    }
+
+    /**
+     * Limpia todos los productos asociados
+     */
+    public function clearProducts(): self
+    {
+        $this->reportProducts->clear();
+
+        return $this;
+    }
+
+    /**
+     * Añade un producto al informe
+     */
+    public function addProduct(Product $product): self
+    {
+        $reportProduct = new ReportProduct($this, $product);
+        $this->addReportProduct($reportProduct);
+
+        return $this;
+    }
+
+    /**
+     * Verifica si el filtro es de productos específicos
+     * Compatibilidad: chequea tanto productFilter como la presencia de reportProducts
+     */
+    public function hasSpecificProducts(): bool
+    {
+        return $this->productFilter === 'specific' || !$this->reportProducts->isEmpty();
     }
 }
