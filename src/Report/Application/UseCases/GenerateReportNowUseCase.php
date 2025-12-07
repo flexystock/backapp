@@ -135,7 +135,7 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
             $conversionInfo = $this->getConversionInfo($product);
             $realWeightSum = $weightsLogRepository->getLatestTotalRealWeightByProduct($product->getId()) ?? 0;
             $conversionFactor = $conversionInfo['conversion_factor'];
-            $currentStock = $conversionFactor > 0 ? round($realWeightSum / $conversionFactor, 1) : 0;
+            $currentStock = $conversionFactor > 0 ? round($realWeightSum / $conversionFactor) : 0;
 
             return $currentStock < $minStock;
         });
@@ -196,8 +196,8 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
             $realWeightSum = $weightsLogRepository->getLatestTotalRealWeightByProduct($product->getId()) ?? 0;
             $conversionFactor = $conversionInfo['conversion_factor'];
             [$yesterdayRealWeigh, $hasHistoricalData] = $this->getStockAtDateTime($entityManager, $product, $yesterday);
-            $yesterdayStock = $conversionFactor > 0 ? round($yesterdayRealWeigh / $conversionFactor, 1) : 0;
-            $currentStock = $conversionFactor > 0 ? round($realWeightSum / $conversionFactor, 1) : 0;
+            $yesterdayStock = $conversionFactor > 0 ? round($yesterdayRealWeigh / $conversionFactor) : 0;
+            $currentStock = $conversionFactor > 0 ? round($realWeightSum / $conversionFactor) : 0;
             $stockDifference = $hasHistoricalData ? $currentStock - $yesterdayStock : null;
 
             $stockData[] = [
@@ -245,7 +245,7 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
             // Obtener stock de cada día
             foreach ($dates as $index => $date) {
                 [$realWeight, $hasData] = $this->getStockAtDateTime($entityManager, $product, $date);
-                $stock = $conversionFactor > 0 ? round($realWeight / $conversionFactor, 1) : 0;
+                $stock = $conversionFactor > 0 ? round($realWeight / $conversionFactor) : 0;
 
                 $productData['daily_stocks'][$dateLabels[$index]] = [
                     'stock' => $stock,
@@ -291,7 +291,7 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
             // Obtener stock de cada día
             foreach ($dates as $index => $date) {
                 [$realWeight, $hasData] = $this->getStockAtDateTime($entityManager, $product, $date);
-                $stock = $conversionFactor > 0 ? round($realWeight / $conversionFactor, 1) : 0;
+                $stock = $conversionFactor > 0 ? round($realWeight / $conversionFactor) : 0;
 
                 $productData['daily_stocks'][$dateLabels[$index]] = [
                     'stock' => $stock,
@@ -364,14 +364,14 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
             // CSV Data para Daily
             foreach ($stockData as $row) {
                 $stockDifference = null !== $row['stock_difference']
-                    ? number_format($row['stock_difference'], 2)
+                    ? number_format($row['stock_difference'], 1)
                     : 'N/A';
 
                 fputcsv($output, [
                     $row['product_name'],
                     $row['ean'] ?? '',
-                    number_format($row['current_stock'], 2),
-                    number_format($row['yesterday_stock'], 2),
+                    number_format($row['current_stock'], 1),
+                    number_format($row['yesterday_stock'], 1),
                     $stockDifference,
                     $row['has_historical_data'] ? 'Sí' : 'No',
                     $row['min_stock'],
@@ -398,7 +398,7 @@ class GenerateReportNowUseCase implements GenerateReportNowUseCaseInterface
                     ];
 
                     foreach ($row['daily_stocks'] as $dayData) {
-                        $csvRow[] = number_format($dayData['stock'], 2);
+                        $csvRow[] = number_format($dayData['stock'], 1);
                     }
 
                     $csvRow[] = $row['min_stock'];
