@@ -73,3 +73,9 @@ controllers_reports:
     path: ../src/Report/Infrastructure/InputAdapters/
     namespace: App\Report\Infrastructure\InputAdapters
   type: attribute
+controllers_ia:
+  resource:
+    path: ../src/IA/Infrastructure/InputAdapters/
+    namespace: App\IA\Infrastructure\InputAdapters
+  type: attribute
+
