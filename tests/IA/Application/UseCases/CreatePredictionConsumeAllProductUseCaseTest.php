@@ -4,6 +4,7 @@ namespace App\Tests\IA\Application\UseCases;
 
 use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
 use App\IA\Application\DTO\CreatePredictionConsumeAllProductRequest;
+use App\IA\Application\Services\PredictionService;
 use App\IA\Application\UseCases\CreatePredictionConsumeAllProductUseCase;
 use App\Infrastructure\Services\ClientConnectionManager;
 use PHPUnit\Framework\TestCase;
@@ -14,6 +15,7 @@ class CreatePredictionConsumeAllProductUseCaseTest extends TestCase
     private ClientConnectionManager $connectionManager;
     private LoggerInterface $logger;
     private ClientRepositoryInterface $clientRepository;
+    private PredictionService $predictionService;
     private CreatePredictionConsumeAllProductUseCase $useCase;
 
     protected function setUp(): void
@@ -21,11 +23,13 @@ class CreatePredictionConsumeAllProductUseCaseTest extends TestCase
         $this->connectionManager = $this->createMock(ClientConnectionManager::class);
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->clientRepository = $this->createMock(ClientRepositoryInterface::class);
+        $this->predictionService = $this->createMock(PredictionService::class);
 
         $this->useCase = new CreatePredictionConsumeAllProductUseCase(
             $this->connectionManager,
             $this->logger,
-            $this->clientRepository
+            $this->clientRepository,
+            $this->predictionService
         );
     }
 
@@ -40,12 +44,13 @@ class CreatePredictionConsumeAllProductUseCaseTest extends TestCase
         $constructor = $reflection->getConstructor();
 
         $this->assertNotNull($constructor);
-        $this->assertCount(3, $constructor->getParameters());
+        $this->assertCount(4, $constructor->getParameters());
 
         $params = $constructor->getParameters();
         $this->assertEquals('connectionManager', $params[0]->getName());
         $this->assertEquals('logger', $params[1]->getName());
         $this->assertEquals('clientRepository', $params[2]->getName());
+        $this->assertEquals('predictionService', $params[3]->getName());
     }
 
     public function testExecuteReturnsErrorWhenClientNotFound(): void

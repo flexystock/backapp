@@ -801,11 +801,14 @@ services:
   # --------------------------
   # IA - Predictions
   # --------------------------
+  App\IA\Application\Services\PredictionService: ~
+
   App\IA\Application\UseCases\CreatePredictionConsumeProductUseCase:
     arguments:
       $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
       $logger: '@logger'
       $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $predictionService: '@App\IA\Application\Services\PredictionService'
 
   App\IA\Application\InputPorts\CreatePredictionConsumeProductUseCaseInterface:
     alias: App\IA\Application\UseCases\CreatePredictionConsumeProductUseCase
@@ -815,6 +818,7 @@ services:
       $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
       $logger: '@logger'
       $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $predictionService: '@App\IA\Application\Services\PredictionService'
 
   App\IA\Application\InputPorts\CreatePredictionConsumeAllProductUseCaseInterface:
     alias: App\IA\Application\UseCases\CreatePredictionConsumeAllProductUseCase
