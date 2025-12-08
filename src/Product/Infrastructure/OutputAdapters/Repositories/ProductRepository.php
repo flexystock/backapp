@@ -58,4 +58,14 @@ class ProductRepository implements ProductRepositoryInterface
         $this->em->remove($product);
         $this->em->flush();
     }
+
+    public function findById(int $id): ?Product
+    {
+        return $this->em->getRepository(Product::class)->find($id);
+    }
+
+    public function findAll(): array
+    {
+        return $this->em->getRepository(Product::class)->findAll();
+    }
 }
