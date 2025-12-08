@@ -7,7 +7,7 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Servicio de predicciones de consumo
- * Versión CORREGIDA
+ * Versión CORREGIDA para trabajar con entidades WeightsLog de Doctrine
  */
 class PredictionService
 {
@@ -21,7 +21,7 @@ class PredictionService
     /**
      * Calcula la predicción de consumo para un producto
      *
-     * @param array $weightsLog Array de registros de peso ordenados por fecha ASC
+     * @param array $weightsLog Array de entidades WeightsLog ordenados por fecha ASC
      * @param Product $product Producto
      * @return array Predicción con todos los datos
      */
@@ -34,8 +34,13 @@ class PredictionService
 
         // Ordenar por fecha ASC (por si acaso)
         usort($weightsLog, function ($a, $b) {
-            $dateA = $a['date'] instanceof \DateTime ? $a['date'] : new \DateTime($a['date']);
-            $dateB = $b['date'] instanceof \DateTime ? $b['date'] : new \DateTime($b['date']);
+            // Manejar tanto objetos como arrays
+            $dateA = is_array($a) ?
+                ($a['date'] instanceof \DateTime ? $a['date'] : new \DateTime($a['date'])) :
+                $a->getDate();
+            $dateB = is_array($b) ?
+                ($b['date'] instanceof \DateTime ? $b['date'] : new \DateTime($b['date'])) :
+                $b->getDate();
             return $dateA <=> $dateB;
         });
 
@@ -43,14 +48,12 @@ class PredictionService
         $firstRecord = $weightsLog[0];
         $lastRecord = $weightsLog[count($weightsLog) - 1];
 
-        $firstDate = $firstRecord['date'] instanceof \DateTime
-            ? $firstRecord['date']
-            : new \DateTime($firstRecord['date']);
-        $lastDate = $lastRecord['date'] instanceof \DateTime
-            ? $lastRecord['date']
-            : new \DateTime($lastRecord['date']);
+        // Extraer fecha (manejar tanto objetos como arrays)
+        $firstDate = $this->extractDate($firstRecord);
+        $lastDate = $this->extractDate($lastRecord);
 
-        $currentWeight = (float) $lastRecord['real_weight'];
+        // Extraer peso actual
+        $currentWeight = $this->extractRealWeight($lastRecord);
         $minStock = (float) $product->getStock();
 
         // Calcular días transcurridos
@@ -67,8 +70,8 @@ class PredictionService
             $currentRecord = $weightsLog[$i];
             $previousRecord = $weightsLog[$i - 1];
 
-            $currentRealWeight = (float) $currentRecord['real_weight'];
-            $previousRealWeight = (float) $previousRecord['real_weight'];
+            $currentRealWeight = $this->extractRealWeight($currentRecord);
+            $previousRealWeight = $this->extractRealWeight($previousRecord);
 
             $weightDiff = $currentRealWeight - $previousRealWeight;
 
@@ -76,14 +79,14 @@ class PredictionService
             if ($weightDiff > 1.0) {
                 $restocks[] = [
                     'amount' => $weightDiff,
-                    'date' => $currentRecord['date']
+                    'date' => $this->extractDate($currentRecord)
                 ];
             }
             // Consumo: disminución >0.1kg
             elseif ($weightDiff < -0.1) {
                 $consumptions[] = [
                     'amount' => abs($weightDiff),
-                    'date' => $currentRecord['date']
+                    'date' => $this->extractDate($currentRecord)
                 ];
             }
         }
@@ -161,6 +164,40 @@ class PredictionService
     }
 
     /**
+     * Extrae la fecha de un registro (maneja objetos y arrays)
+     *
+     * @param mixed $record Entidad WeightsLog o array
+     * @return \DateTime
+     */
+    private function extractDate($record): \DateTime
+    {
+        if (is_array($record)) {
+            $date = $record['date'];
+            return $date instanceof \DateTime ? $date : new \DateTime($date);
+        }
+
+        // Es un objeto - usar getter
+        $date = $record->getDate();
+        return $date instanceof \DateTime ? $date : new \DateTime($date);
+    }
+
+    /**
+     * Extrae el peso real de un registro (maneja objetos y arrays)
+     *
+     * @param mixed $record Entidad WeightsLog o array
+     * @return float
+     */
+    private function extractRealWeight($record): float
+    {
+        if (is_array($record)) {
+            return (float) $record['real_weight'];
+        }
+
+        // Es un objeto - usar getter
+        return (float) $record->getRealWeight();
+    }
+
+    /**
      * Calcula el nivel de alerta según días restantes
      *
      * @param float|null $daysUntilMinStock
@@ -186,7 +223,7 @@ class PredictionService
     /**
      * Analiza patrones de consumo por hora y día
      *
-     * @param array $weightsLog
+     * @param array $weightsLog Array de entidades WeightsLog
      * @return array
      */
     public function analyzeConsumptionPatterns(array $weightsLog): array
@@ -214,15 +251,13 @@ class PredictionService
             $current = $weightsLog[$i];
             $previous = $weightsLog[$i - 1];
 
-            $currentWeight = (float) $current['real_weight'];
-            $previousWeight = (float) $previous['real_weight'];
+            $currentWeight = $this->extractRealWeight($current);
+            $previousWeight = $this->extractRealWeight($previous);
             $consumption = $previousWeight - $currentWeight;
 
             // Solo consumos (no reposiciones)
             if ($consumption > 0.1) {
-                $date = $current['date'] instanceof \DateTime
-                    ? $current['date']
-                    : new \DateTime($current['date']);
+                $date = $this->extractDate($current);
 
                 $hour = (int) $date->format('H');
                 $dayOfWeek = $date->format('l');
