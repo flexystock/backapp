@@ -31,42 +31,37 @@ class CreateOrderUseCase implements CreateOrderUseCaseInterface
         $this->clientRepository = $clientRepository;
     }
 
+    /**
+     * Execute create order use case.
+     * 
+     * Note: This use case requires client UUID context to be passed in the request.
+     * The full implementation should be completed when integrating with the TTN
+     * weight monitoring system that triggers automatic orders.
+     * 
+     * @param CreateOrderRequest $request
+     * @return CreateOrderResponse
+     */
     public function execute(CreateOrderRequest $request): CreateOrderResponse
     {
+        // TODO: Add uuidClient to CreateOrderRequest when implementing automatic order creation
+        // This will be needed when weight from TTN falls below minimum stock threshold
+        
         try {
-            // Note: We need to get uuidClient from somewhere (could be added to request)
-            // For now, assuming it's available in the context
-            // $client = $this->clientRepository->findByUuid($uuidClient);
-            // $em = $this->connectionManager->getEntityManager($client->getUuidClient());
+            $this->logger->info('Order creation initiated', [
+                'order_number' => $request->getOrderNumber(),
+                'client_supplier_id' => $request->getClientSupplierId()
+            ]);
 
-            // For demonstration, we'll assume entity manager is injected or available
-            // In real implementation, this would need client context
-
-            // Create order entity
-            $order = new Order();
-            $order->setOrderNumber($request->getOrderNumber());
-            $order->setClientSupplierId($request->getClientSupplierId());
-            $order->setStatus($request->getStatus());
-            $order->setTotalAmount($request->getTotalAmount());
-            $order->setCurrency($request->getCurrency());
-            $order->setDeliveryDate($request->getDeliveryDate());
-            $order->setNotes($request->getNotes());
-            $order->setCreatedByUserId($request->getCreatedByUserId());
-
-            // Note: Repository needs EntityManager from client connection
-            // This is a simplified version - full implementation would need client context
+            // TODO: Implement full order creation logic:
+            // 1. Get client context: $client = $this->clientRepository->findByUuid($uuidClient)
+            // 2. Get client EntityManager: $em = $this->connectionManager->getEntityManager($client->getUuidClient())
+            // 3. Create OrderRepository with client EntityManager
+            // 4. Create Order entity and OrderItem entities
+            // 5. Create OrderHistory entry for initial status
+            // 6. Calculate total amount from items
+            // 7. Persist order and items
             
-            $orderData = [
-                'order_number' => $order->getOrderNumber(),
-                'client_supplier_id' => $order->getClientSupplierId(),
-                'status' => $order->getStatus(),
-                'total_amount' => $order->getTotalAmount(),
-                'currency' => $order->getCurrency(),
-            ];
-
-            $this->logger->info('Order created successfully', ['order_number' => $order->getOrderNumber()]);
-
-            return new CreateOrderResponse($orderData, null, 201);
+            throw new \RuntimeException('ORDER_CREATION_NOT_IMPLEMENTED_YET');
 
         } catch (\Exception $e) {
             $this->logger->error('Error creating order', [
@@ -74,7 +69,7 @@ class CreateOrderUseCase implements CreateOrderUseCaseInterface
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return new CreateOrderResponse(null, 'ERROR_CREATING_ORDER', 500);
+            return new CreateOrderResponse(null, $e->getMessage(), 500);
         }
     }
 }

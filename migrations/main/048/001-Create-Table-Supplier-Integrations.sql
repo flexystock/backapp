@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS `supplier_integrations` (
   `supplier_id` INT NOT NULL,
   
   -- Configuración
+  -- Integration types: 'choco' (Choco API), 'direct_api' (Direct supplier API), 
+  -- 'email' (Email-based ordering), 'manual' (Manual order entry)
   `integration_type` ENUM('choco', 'direct_api', 'email', 'manual') NOT NULL,
   `api_endpoint` VARCHAR(500),
   `api_key_required` BOOLEAN DEFAULT FALSE,
