@@ -6,6 +6,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class UpdateOrderStatusRequest
 {
+    #[Assert\NotBlank(message: 'REQUIRED_UUID_CLIENT')]
+    #[Assert\Uuid(message: 'INVALID_UUID_CLIENT')]
+    private string $uuidClient;
+
     #[Assert\NotBlank(message: 'REQUIRED_ORDER_ID')]
     private int $orderId;
 
@@ -23,17 +27,24 @@ class UpdateOrderStatusRequest
     private ?string $cancellationReason = null;
 
     public function __construct(
+        string $uuidClient,
         int $orderId,
         string $status,
         ?int $changedByUserId = null,
         ?string $notes = null,
         ?string $cancellationReason = null
     ) {
+        $this->uuidClient = $uuidClient;
         $this->orderId = $orderId;
         $this->status = $status;
         $this->changedByUserId = $changedByUserId;
         $this->notes = $notes;
         $this->cancellationReason = $cancellationReason;
+    }
+
+    public function getUuidClient(): string
+    {
+        return $this->uuidClient;
     }
 
     public function getOrderId(): int
