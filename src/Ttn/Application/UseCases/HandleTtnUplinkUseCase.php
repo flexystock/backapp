@@ -8,6 +8,7 @@ use App\Entity\Client\Holiday;
 use App\Entity\Client\WeightsLog;
 use App\Entity\Main\Client as MainClient;
 use App\Infrastructure\Services\ClientConnectionManager;
+use App\Order\Application\Services\AutoOrderService;
 use App\Scales\Application\OutputPorts\ScalesRepositoryInterface;
 use App\Ttn\Application\DTO\MinimumStockNotification;
 use App\Ttn\Application\DTO\WeightVariationAlertNotification;
@@ -29,6 +30,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
     private EntityManagerInterface $mainEntityManager;
     private MinimumStockNotificationInterface $minimumStockNotifier;
     private WeightVariationAlertNotifierInterface $weightVariationNotifier;
+    private AutoOrderService $autoOrderService;
 
     public function __construct(
         PoolTtnDeviceRepositoryInterface $poolTtnDeviceRepo,
@@ -37,7 +39,8 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         LoggerInterface $logger,
         EntityManagerInterface $mainEntityManager,
         MinimumStockNotificationInterface $minimumStockNotifier,
-        WeightVariationAlertNotifierInterface $weightVariationNotifier
+        WeightVariationAlertNotifierInterface $weightVariationNotifier,
+        AutoOrderService $autoOrderService
     ) {
         $this->poolTtnDeviceRepository = $poolTtnDeviceRepo;
         $this->connectionManager = $connManager;
@@ -46,6 +49,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         $this->mainEntityManager = $mainEntityManager;
         $this->minimumStockNotifier = $minimumStockNotifier;
         $this->weightVariationNotifier = $weightVariationNotifier;
+        $this->autoOrderService = $autoOrderService;
     }
 
     public function execute(TtnUplinkRequest $request): void
@@ -255,6 +259,33 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             );
 
             $this->minimumStockNotifier->notify($notification);
+
+            // Create automatic order if enabled for this product
+            try {
+                $order = $this->autoOrderService->createAutoOrder(
+                    $entityManager,
+                    $product,
+                    $newWeight,
+                    $minimumStock
+                );
+
+                if ($order) {
+                    $this->logger->info('[TTN Uplink] Automatic order created for low stock', [
+                        'orderId' => $order->getId(),
+                        'orderNumber' => $order->getOrderNumber(),
+                        'productId' => $product->getId(),
+                        'currentWeight' => $newWeight,
+                        'minimumStock' => $minimumStock,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                $this->logger->error('[TTN Uplink] Error creating automatic order', [
+                    'productId' => $product->getId(),
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                // Continue execution even if auto-order fails
+            }
         }
 
         //ahora guardar en la tabla de sacles la fecha del ultimo envío y el porcentaje de carga
