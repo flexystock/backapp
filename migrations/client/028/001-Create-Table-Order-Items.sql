@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS `order_items` (
   
   -- Foreign Keys
   `order_id` INT NOT NULL,
-  `product_id` INT NOT NULL,
+  `product_id` INT UNSIGNED NOT NULL,
   
   -- Cantidades
   `quantity` DECIMAL(10,2) NOT NULL,

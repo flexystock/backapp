@@ -1,9 +1,8 @@
 CREATE TABLE IF NOT EXISTS `product_suppliers` (
   -- Primary Key
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  
-  -- Foreign Keys
-  `product_id` INT NOT NULL,
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+
+  `product_id` INT UNSIGNED NOT NULL,
   `client_supplier_id` INT NOT NULL,
   
   -- Configuración

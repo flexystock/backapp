@@ -6,16 +6,9 @@ use App\Entity\Client\Order;
 use App\Entity\Client\OrderHistory;
 use App\Entity\Client\OrderItem;
 use App\Entity\Client\Product;
-use App\Order\Infrastructure\OutputAdapters\Repositories\OrderRepository;
-use App\Order\Infrastructure\OutputAdapters\Repositories\OrderHistoryRepository;
-use App\Order\Infrastructure\OutputAdapters\Repositories\OrderItemRepository;
-use App\Order\Infrastructure\OutputAdapters\Repositories\ProductSupplierRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
-/**
- * Service to create automatic orders when stock is low
- */
 class AutoOrderService
 {
     private LoggerInterface $logger;
@@ -28,11 +21,11 @@ class AutoOrderService
     /**
      * Create an automatic order for a product when stock is below minimum
      *
-     * @param EntityManagerInterface $entityManager Client's entity manager
+     * @param EntityManagerInterface $entityManager Client's entity manager (multi-tenant)
      * @param Product $product Product that needs restocking
      * @param float $currentWeight Current weight from TTN
      * @param float $minimumStock Minimum stock threshold
-     * @return Order|null Created order or null if auto-order is disabled or no supplier found
+     * @return Order|null Created order or null if conditions not met
      */
     public function createAutoOrder(
         EntityManagerInterface $entityManager,
@@ -49,13 +42,18 @@ class AutoOrderService
             return null;
         }
 
-        // Find preferred supplier for this product
-        $productSupplierRepo = new ProductSupplierRepository($entityManager);
-        $productSupplier = $productSupplierRepo->findPreferredByProductId($product->getId());
+        // ✅ CORRECTO: Usar getRepository del EntityManager
+        $productSupplierRepo = $entityManager->getRepository(\App\Entity\Client\ProductSupplier::class);
+
+        // Find preferred supplier
+        $productSupplier = $productSupplierRepo->findOneBy([
+            'productId' => $product->getId(),
+            'isPreferred' => true
+        ]);
 
         if (!$productSupplier) {
-            // If no preferred supplier, try to get any supplier
-            $suppliers = $productSupplierRepo->findByProductId($product->getId());
+            // Try to get any supplier
+            $suppliers = $productSupplierRepo->findBy(['productId' => $product->getId()]);
             $productSupplier = !empty($suppliers) ? $suppliers[0] : null;
         }
 
@@ -67,11 +65,17 @@ class AutoOrderService
             return null;
         }
 
-        // Calculate order quantity based on auto_order_quantity_days
+        // ✅ VERIFICAR: ¿Ya existe pedido pendiente para este producto?
+        if ($this->hasPendingOrder($entityManager, $product->getId())) {
+            $this->logger->info('[AutoOrder] Pending order already exists for product', [
+                'productId' => $product->getId(),
+            ]);
+            return null;
+        }
+
+        // Calculate order quantity
         $quantityDays = $product->getAutoOrderQuantityDays();
         $deficit = $minimumStock - $currentWeight;
-        
-        // Use minimum order quantity from supplier or calculated deficit
         $minOrderQty = $productSupplier->getMinOrderQuantity() ?? $deficit;
         $orderQuantity = max($deficit, $minOrderQty);
 
@@ -82,28 +86,25 @@ class AutoOrderService
         $order = new Order();
         $order->setOrderNumber($orderNumber);
         $order->setClientSupplierId($productSupplier->getClientSupplierId());
-        $order->setStatus('pending'); // Set as pending for user confirmation
+        $order->setStatus('pending');
         $order->setCurrency('EUR');
         $order->setNotes(sprintf(
-            'Pedido automático generado por stock bajo. Peso actual: %.2f, Stock mínimo: %.2f',
+            '🤖 Pedido automático generado por stock crítico. Peso actual: %.2f kg, Stock mínimo: %.2f kg',
             $currentWeight,
             $minimumStock
         ));
 
-        // Calculate delivery date based on supplier's delivery days
+        // Calculate delivery date
         $deliveryDays = $productSupplier->getDeliveryDays() ?? 2;
         $deliveryDate = new \DateTime();
         $deliveryDate->modify("+{$deliveryDays} days");
         $order->setDeliveryDate($deliveryDate);
 
-        // Create order repository and save
-        $orderRepo = new OrderRepository($entityManager);
-        
         // Create order item
         $orderItem = new OrderItem();
         $orderItem->setProductId($product->getId());
         $orderItem->setQuantity($orderQuantity);
-        $orderItem->setUnit('kg'); // Default unit
+        $orderItem->setUnit('kg');
         $orderItem->setUnitPrice($productSupplier->getUnitPrice());
         $orderItem->setSubtotal($orderQuantity * ($productSupplier->getUnitPrice() ?? 0));
         $orderItem->setNotes(sprintf(
@@ -112,7 +113,7 @@ class AutoOrderService
             $product->getAutoOrderThreshold()
         ));
 
-        // Set prediction data if available
+        // Set prediction data
         $orderItem->setPredictionData([
             'current_weight' => $currentWeight,
             'minimum_stock' => $minimumStock,
@@ -126,13 +127,14 @@ class AutoOrderService
         // Update order total
         $order->setTotalAmount($orderItem->getSubtotal() ?? 0);
 
-        // Persist order first
-        $orderRepo->save($order);
+        // ✅ Persist order first
+        $entityManager->persist($order);
+        $entityManager->flush();
 
-        // Now set the order_id on the item and persist
+        // Set order_id and persist item
         $orderItem->setOrderId($order->getId());
-        $orderItemRepo = new OrderItemRepository($entityManager);
-        $orderItemRepo->save($orderItem);
+        $entityManager->persist($orderItem);
+        $entityManager->flush();
 
         // Create order history entry
         $orderHistory = new OrderHistory();
@@ -141,8 +143,8 @@ class AutoOrderService
         $orderHistory->setStatusTo('pending');
         $orderHistory->setNotes('Pedido automático creado por stock bajo detectado desde TTN');
 
-        $orderHistoryRepo = new OrderHistoryRepository($entityManager);
-        $orderHistoryRepo->save($orderHistory);
+        $entityManager->persist($orderHistory);
+        $entityManager->flush();
 
         $this->logger->info('[AutoOrder] Automatic order created successfully', [
             'orderId' => $order->getId(),
@@ -158,34 +160,45 @@ class AutoOrderService
     }
 
     /**
+     * Check if there's already a pending or sent order for this product
+     */
+    private function hasPendingOrder(EntityManagerInterface $em, int $productId): bool
+    {
+        $qb = $em->createQueryBuilder();
+        $qb->select('COUNT(o.id)')
+            ->from(\App\Entity\Client\Order::class, 'o')
+            ->join(\App\Entity\Client\OrderItem::class, 'oi', 'WITH', 'oi.orderId = o.id')
+            ->where('oi.productId = :productId')
+            ->andWhere('o.status IN (:statuses)')
+            ->setParameter('productId', $productId)
+            ->setParameter('statuses', ['pending', 'sent']);
+
+        return (int)$qb->getQuery()->getSingleScalarResult() > 0;
+    }
+
+    /**
      * Generate a unique order number
-     *
-     * @param EntityManagerInterface $entityManager
-     * @return string
      */
     private function generateOrderNumber(EntityManagerInterface $entityManager): string
     {
         $date = new \DateTime();
         $prefix = 'ORD-' . $date->format('Ymd');
-        
-        // Find the last order number for today
+
         $connection = $entityManager->getConnection();
-        
         $sql = "SELECT order_number FROM orders WHERE order_number LIKE :prefix ORDER BY order_number DESC LIMIT 1";
         $stmt = $connection->prepare($sql);
         $stmt->bindValue('prefix', $prefix . '%');
         $result = $stmt->executeQuery();
         $lastOrder = $result->fetchAssociative();
-        
+
         if ($lastOrder) {
-            // Extract sequence number and increment
             $lastNumber = $lastOrder['order_number'];
             $sequence = (int) substr($lastNumber, -4);
             $newSequence = $sequence + 1;
         } else {
             $newSequence = 1;
         }
-        
+
         return $prefix . '-' . str_pad((string)$newSequence, 4, '0', STR_PAD_LEFT);
     }
 }
