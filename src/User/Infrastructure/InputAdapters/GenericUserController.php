@@ -237,6 +237,9 @@ class GenericUserController extends AbstractController
             ];
         }, $filteredUsers);
 
+        // reindexamos el array para que las claves sean consecutivas
+        $usersArray = array_values($usersArray);
+
         if (empty($users)) {
             return $this->jsonResponse(['message' => 'NOT_FOUND_ANY_USER'], Response::HTTP_OK);
         }
