@@ -217,13 +217,25 @@ class GenericUserController extends AbstractController
 
         $users = $this->getUsersByClientUseCase->getUsersByClient($uuidClient);
 
+        // Filtrar usuarios por roles permitidos
+        $allowedRoles = ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER'];
+        $filteredUsers = array_filter($users, function ($user) use ($allowedRoles) {
+            $userRoles = $user->getRoles();
+            // Verificar si el usuario tiene al menos uno de los roles permitidos
+            // y no tiene otros roles no permitidos
+            return !empty(array_intersect($userRoles, $allowedRoles))
+                && empty(array_diff($userRoles, $allowedRoles));
+        });
+
         $usersArray = array_map(function ($user) {
-            return ['email' => $user->getEmail(),
-                    'name' => $user->getName(),
-                    'verified' => $user->isVerified(),
-                    'active' => $user->isActive(),
-                    'role' => $user->getRoles(), ];
-        }, $users);
+            return [
+                'email' => $user->getEmail(),
+                'name' => $user->getName(),
+                'verified' => $user->isVerified(),
+                'active' => $user->isActive(),
+                'role' => $user->getRoles(),
+            ];
+        }, $filteredUsers);
 
         if (empty($users)) {
             return $this->jsonResponse(['message' => 'NOT_FOUND_ANY_USER'], Response::HTTP_OK);
