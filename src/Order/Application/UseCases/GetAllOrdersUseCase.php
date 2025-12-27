@@ -8,6 +8,7 @@ use App\Order\Application\DTO\GetAllOrdersRequest;
 use App\Order\Application\DTO\GetAllOrdersResponse;
 use App\Order\Application\InputPorts\GetAllOrdersUseCaseInterface;
 use App\Order\Infrastructure\OutputAdapters\Repositories\OrderRepository;
+use App\Order\Infrastructure\OutputAdapters\Repositories\OrderItemRepository;
 use Psr\Log\LoggerInterface;
 
 class GetAllOrdersUseCase implements GetAllOrdersUseCaseInterface
@@ -38,6 +39,7 @@ class GetAllOrdersUseCase implements GetAllOrdersUseCaseInterface
             // Get client's entity manager
             $em = $this->connectionManager->getEntityManager($client->getUuidClient());
             $orderRepository = new OrderRepository($em);
+            $orderItemRepository = new OrderItemRepository($em);
 
             // Get orders based on filters
             if ($request->getStatus()) {
@@ -48,9 +50,28 @@ class GetAllOrdersUseCase implements GetAllOrdersUseCaseInterface
                 $orders = $em->getRepository(\App\Entity\Client\Order::class)->findAll();
             }
 
-            // Convert orders to array
+            // Convert orders to array with order items
             $ordersData = [];
             foreach ($orders as $order) {
+                // Get order items for this order
+                $orderItems = $orderItemRepository->findByOrderId($order->getId());
+                
+                // Convert order items to array
+                $orderItemsData = [];
+                foreach ($orderItems as $item) {
+                    $orderItemsData[] = [
+                        'id' => $item->getId(),
+                        'product_id' => $item->getProductId(),
+                        'quantity' => $item->getQuantity(),
+                        'unit' => $item->getUnit(),
+                        'unit_price' => $item->getUnitPrice(),
+                        'subtotal' => $item->getSubtotal(),
+                        'notes' => $item->getNotes(),
+                        'prediction_data' => $item->getPredictionData(),
+                        'created_at' => $item->getCreatedAt()->format('Y-m-d H:i:s'),
+                    ];
+                }
+
                 $ordersData[] = [
                     'id' => $order->getId(),
                     'order_number' => $order->getOrderNumber(),
@@ -69,6 +90,7 @@ class GetAllOrdersUseCase implements GetAllOrdersUseCaseInterface
                     'created_by_user_id' => $order->getCreatedByUserId(),
                     'created_at' => $order->getCreatedAt()->format('Y-m-d H:i:s'),
                     'updated_at' => $order->getUpdatedAt()->format('Y-m-d H:i:s'),
+                    'items' => $orderItemsData,
                 ];
             }
 

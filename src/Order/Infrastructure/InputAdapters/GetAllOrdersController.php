@@ -68,6 +68,21 @@ class GetAllOrdersController extends AbstractController
                                     new OA\Property(property: 'currency', type: 'string', example: 'EUR'),
                                     new OA\Property(property: 'delivery_date', type: 'string', format: 'date', example: '2023-12-15'),
                                     new OA\Property(property: 'created_at', type: 'string', format: 'date-time', example: '2023-12-13 10:30:00'),
+                                    new OA\Property(
+                                        property: 'items',
+                                        type: 'array',
+                                        items: new OA\Items(
+                                            properties: [
+                                                new OA\Property(property: 'id', type: 'integer', example: 1),
+                                                new OA\Property(property: 'product_id', type: 'integer', example: 5),
+                                                new OA\Property(property: 'quantity', type: 'number', format: 'float', example: 10.5),
+                                                new OA\Property(property: 'unit', type: 'string', example: 'kg'),
+                                                new OA\Property(property: 'unit_price', type: 'number', format: 'float', example: 12.50),
+                                                new OA\Property(property: 'subtotal', type: 'number', format: 'float', example: 131.25),
+                                            ],
+                                            type: 'object'
+                                        )
+                                    ),
                                 ],
                                 type: 'object'
                             )
