@@ -69,9 +69,17 @@ class GetAllOrdersUseCase implements GetAllOrdersUseCaseInterface
                 // Convert order items to array
                 $orderItemsData = [];
                 foreach ($orderItems as $item) {
+                    // Get product name from client database
+                    $productName = null;
+                    $product = $em->getRepository(\App\Entity\Client\Product::class)->find($item->getProductId());
+                    if ($product) {
+                        $productName = $product->getName();
+                    }
+
                     $orderItemsData[] = [
                         'id' => $item->getId(),
                         'product_id' => $item->getProductId(),
+                        'product_name' => $productName,
                         'quantity' => $item->getQuantity(),
                         'unit' => $item->getUnit(),
                         'unit_price' => $item->getUnitPrice(),

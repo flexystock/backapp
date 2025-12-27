@@ -76,6 +76,7 @@ class GetAllOrdersController extends AbstractController
                                             properties: [
                                                 new OA\Property(property: 'id', type: 'integer', example: 1),
                                                 new OA\Property(property: 'product_id', type: 'integer', example: 5),
+                                                new OA\Property(property: 'product_name', type: 'string', example: 'Harina de Trigo', nullable: true),
                                                 new OA\Property(property: 'quantity', type: 'number', format: 'float', example: 10.5),
                                                 new OA\Property(property: 'unit', type: 'string', example: 'kg'),
                                                 new OA\Property(property: 'unit_price', type: 'number', format: 'float', example: 12.50),
