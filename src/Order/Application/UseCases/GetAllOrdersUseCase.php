@@ -9,6 +9,9 @@ use App\Order\Application\DTO\GetAllOrdersResponse;
 use App\Order\Application\InputPorts\GetAllOrdersUseCaseInterface;
 use App\Order\Infrastructure\OutputAdapters\Repositories\OrderRepository;
 use App\Order\Infrastructure\OutputAdapters\Repositories\OrderItemRepository;
+use App\Order\Infrastructure\OutputAdapters\Repositories\ClientSupplierRepository;
+use App\Supplier\Infrastructure\OutputAdapters\Repositories\SupplierRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
 class GetAllOrdersUseCase implements GetAllOrdersUseCaseInterface
@@ -16,15 +19,18 @@ class GetAllOrdersUseCase implements GetAllOrdersUseCaseInterface
     private ClientConnectionManager $connectionManager;
     private LoggerInterface $logger;
     private ClientRepositoryInterface $clientRepository;
+    private EntityManagerInterface $mainEntityManager;
 
     public function __construct(
         ClientConnectionManager $connectionManager,
         LoggerInterface $logger,
-        ClientRepositoryInterface $clientRepository
+        ClientRepositoryInterface $clientRepository,
+        EntityManagerInterface $mainEntityManager
     ) {
         $this->connectionManager = $connectionManager;
         $this->logger = $logger;
         $this->clientRepository = $clientRepository;
+        $this->mainEntityManager = $mainEntityManager;
     }
 
     public function execute(GetAllOrdersRequest $request): GetAllOrdersResponse
@@ -40,6 +46,10 @@ class GetAllOrdersUseCase implements GetAllOrdersUseCaseInterface
             $em = $this->connectionManager->getEntityManager($client->getUuidClient());
             $orderRepository = new OrderRepository($em);
             $orderItemRepository = new OrderItemRepository($em);
+            $clientSupplierRepository = new ClientSupplierRepository($em);
+            
+            // Get supplier repository from main database
+            $supplierRepository = new SupplierRepository($this->mainEntityManager);
 
             // Get orders based on filters
             if ($request->getStatus()) {
@@ -72,10 +82,21 @@ class GetAllOrdersUseCase implements GetAllOrdersUseCaseInterface
                     ];
                 }
 
+                // Get supplier name from main database
+                $supplierName = null;
+                $clientSupplier = $clientSupplierRepository->findById($order->getClientSupplierId());
+                if ($clientSupplier) {
+                    $supplier = $supplierRepository->findById($clientSupplier->getSupplierId());
+                    if ($supplier) {
+                        $supplierName = $supplier->getName();
+                    }
+                }
+
                 $ordersData[] = [
                     'id' => $order->getId(),
                     'order_number' => $order->getOrderNumber(),
                     'client_supplier_id' => $order->getClientSupplierId(),
+                    'supplier_name' => $supplierName,
                     'status' => $order->getStatus(),
                     'total_amount' => $order->getTotalAmount(),
                     'currency' => $order->getCurrency(),

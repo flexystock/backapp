@@ -63,6 +63,7 @@ class GetAllOrdersController extends AbstractController
                                 properties: [
                                     new OA\Property(property: 'id', type: 'integer', example: 1),
                                     new OA\Property(property: 'order_number', type: 'string', example: 'ORD-20231213-0001'),
+                                    new OA\Property(property: 'supplier_name', type: 'string', example: 'Proveedor ABC', nullable: true),
                                     new OA\Property(property: 'status', type: 'string', example: 'pending'),
                                     new OA\Property(property: 'total_amount', type: 'number', format: 'float', example: 150.50),
                                     new OA\Property(property: 'currency', type: 'string', example: 'EUR'),
