@@ -79,6 +79,9 @@ class GetAllOrdersController extends AbstractController
                                                 new OA\Property(property: 'unit', type: 'string', example: 'kg'),
                                                 new OA\Property(property: 'unit_price', type: 'number', format: 'float', example: 12.50),
                                                 new OA\Property(property: 'subtotal', type: 'number', format: 'float', example: 131.25),
+                                                new OA\Property(property: 'notes', type: 'string', example: 'Auto-generated order', nullable: true),
+                                                new OA\Property(property: 'prediction_data', type: 'object', nullable: true),
+                                                new OA\Property(property: 'created_at', type: 'string', format: 'date-time', example: '2023-12-13 10:30:00'),
                                             ],
                                             type: 'object'
                                         )
