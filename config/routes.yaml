@@ -78,4 +78,14 @@ controllers_ia:
     path: ../src/IA/Infrastructure/InputAdapters/
     namespace: App\IA\Infrastructure\InputAdapters
   type: attribute
+controllers_order:
+  resource:
+    path: ../src/Order/Infrastructure/InputAdapters/
+    namespace: App\Order\Infrastructure\InputAdapters
+  type: attribute
+controllers_supplier:
+  resource:
+    path: ../src/Supplier/Infrastructure/InputAdapters/
+    namespace: App\Supplier\Infrastructure\InputAdapters
+  type: attribute
 

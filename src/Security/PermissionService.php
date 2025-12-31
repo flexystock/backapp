@@ -52,7 +52,8 @@ class PermissionService
             'user.update', 
             'user.view',
             'client.view',
-            'user.update'
+            'user.update',
+            'order.view',
         ],
         'ROLE_MANAGER' => [
             'alarm.update',

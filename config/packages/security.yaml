@@ -96,6 +96,10 @@ security:
         - { path: ^/api/report/products , roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/ia/prediction/all-products , roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/ia/prediction/product , roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/orders , roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/client/suppliers , roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/supplier , roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/product/supplier , roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:

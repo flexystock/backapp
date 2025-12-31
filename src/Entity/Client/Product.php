@@ -83,6 +83,15 @@ class Product
     #[ORM\Column(name: 'min_percentage', type: 'integer', options: ['unsigned' => true, 'default' => 0])]
     private int $minPercentage = 0;
 
+    #[ORM\Column(name: 'auto_order_enabled', type: 'boolean', options: ['default' => true])]
+    private bool $autoOrderEnabled = true;
+
+    #[ORM\Column(name: 'auto_order_threshold', type: 'string', length: 20, options: ['default' => 'critical'])]
+    private string $autoOrderThreshold = 'critical';
+
+    #[ORM\Column(name: 'auto_order_quantity_days', type: 'integer', options: ['default' => 14])]
+    private int $autoOrderQuantityDays = 14;
+
     // Getters y Setters
 
     /**
@@ -373,6 +382,42 @@ class Product
     public function setMinPercentage(int $minPercentage): self
     {
         $this->minPercentage = $minPercentage;
+
+        return $this;
+    }
+
+    public function isAutoOrderEnabled(): bool
+    {
+        return $this->autoOrderEnabled;
+    }
+
+    public function setAutoOrderEnabled(bool $autoOrderEnabled): self
+    {
+        $this->autoOrderEnabled = $autoOrderEnabled;
+
+        return $this;
+    }
+
+    public function getAutoOrderThreshold(): string
+    {
+        return $this->autoOrderThreshold;
+    }
+
+    public function setAutoOrderThreshold(string $autoOrderThreshold): self
+    {
+        $this->autoOrderThreshold = $autoOrderThreshold;
+
+        return $this;
+    }
+
+    public function getAutoOrderQuantityDays(): int
+    {
+        return $this->autoOrderQuantityDays;
+    }
+
+    public function setAutoOrderQuantityDays(int $autoOrderQuantityDays): self
+    {
+        $this->autoOrderQuantityDays = $autoOrderQuantityDays;
 
         return $this;
     }
