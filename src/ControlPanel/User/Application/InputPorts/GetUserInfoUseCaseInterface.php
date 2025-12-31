@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\ControlPanel\User\Application\InputPorts;
 
 use App\ControlPanel\User\Application\DTO\GetUserInfoRequest;

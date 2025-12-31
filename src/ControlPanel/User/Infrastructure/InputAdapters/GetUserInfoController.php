@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\ControlPanel\User\Infrastructure\InputAdapters;
 
 use App\ControlPanel\User\Application\DTO\GetUserInfoRequest;
