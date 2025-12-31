@@ -23,7 +23,7 @@ class GetUserInfoController extends AbstractController
         $this->getUserInfoUseCase = $getUserInfoUseCase;
     }
 
-    #[Route('/api/control-panel/users', name: 'api_control_panel_users', methods: ['GET', 'POST'])]
+    #[Route('/api/control-panel/users', name: 'api_control_panel_users', methods: ['POST'])]
     public function __invoke(Request $request): JsonResponse
     {
         $user = $this->getUser();
