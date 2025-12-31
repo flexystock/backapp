@@ -116,6 +116,26 @@ services:
       $entityManager: '@doctrine.orm.main_entity_manager'
 
   # --------------------------
+  # CONTROL PANEL
+  # --------------------------
+  App\ControlPanel\User\Infrastructure\InputAdapters\:
+    resource: '../src/ControlPanel/User/Infrastructure/InputAdapters'
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\ControlPanel\User\Infrastructure\OutputAdapters\Repositories\UserRepository:
+    arguments:
+      $registry: '@doctrine'
+    tags:
+      - { name: 'doctrine.repository_service' }
+
+  App\ControlPanel\User\Application\OutputPorts\UserRepositoryInterface:
+    alias: App\ControlPanel\User\Infrastructure\OutputAdapters\Repositories\UserRepository
+
+  App\ControlPanel\User\Application\InputPorts\GetUserInfoUseCaseInterface:
+    alias: App\ControlPanel\User\Application\UseCases\GetUserInfoUseCase
+
+  # --------------------------
   # CLIENT
   # --------------------------
   App\Client\Application\UseCases\CreateClientUseCase:
