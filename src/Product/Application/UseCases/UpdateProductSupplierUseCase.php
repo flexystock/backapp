@@ -3,7 +3,7 @@
 namespace App\Product\Application\UseCases;
 
 use App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface;
-use App\Database\ClientConnectionManager;
+use App\Infrastructure\Services\ClientConnectionManager;
 use App\Entity\Client\ProductSupplier;
 use App\Product\Application\DTO\UpdateProductSupplierRequest;
 use App\Product\Application\DTO\UpdateProductSupplierResponse;

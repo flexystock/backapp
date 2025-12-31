@@ -277,6 +277,14 @@ services:
     arguments:
       $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
 
+  App\Product\Application\UseCases\UpdateProductSupplierUseCase:
+    arguments:
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Product\Application\InputPorts\UpdateProductSupplierUseCaseInterface:
+    alias: App\Product\Application\UseCases\UpdateProductSupplierUseCase
+
   # InputPorts -> UseCases (aliases)
   App\Product\Application\InputPorts\GetProductUseCaseInterface:
     alias: App\Product\Application\UseCases\GetProductUseCase
