@@ -38,6 +38,11 @@ class GetUserInfoController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return new JsonResponse(['error' => 'Invalid JSON in request body'], 400);
+        }
+        
         $uuidUser = $data['uuidUser'] ?? null;
 
         $dto = new GetUserInfoRequest($uuidUser);

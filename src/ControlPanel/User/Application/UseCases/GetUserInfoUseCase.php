@@ -6,6 +6,7 @@ use App\ControlPanel\User\Application\DTO\GetUserInfoRequest;
 use App\ControlPanel\User\Application\DTO\GetUserInfoResponse;
 use App\ControlPanel\User\Application\InputPorts\GetUserInfoUseCaseInterface;
 use App\ControlPanel\User\Application\OutputPorts\UserRepositoryInterface;
+use App\Entity\Main\User;
 use Psr\Log\LoggerInterface;
 
 class GetUserInfoUseCase implements GetUserInfoUseCaseInterface
@@ -48,7 +49,7 @@ class GetUserInfoUseCase implements GetUserInfoUseCaseInterface
         }
     }
 
-    private function mapUserToArray($user): array
+    private function mapUserToArray(User $user): array
     {
         return [
             'uuid_user' => $user->getUuid(),
