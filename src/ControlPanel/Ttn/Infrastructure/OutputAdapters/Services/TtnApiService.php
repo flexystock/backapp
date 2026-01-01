@@ -6,6 +6,9 @@ namespace App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Services;
 
 use App\ControlPanel\Ttn\Application\OutputPorts\TtnApiServiceInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class TtnApiService implements TtnApiServiceInterface
@@ -50,7 +53,7 @@ class TtnApiService implements TtnApiServiceInterface
 
             $statusCode = $response->getStatusCode();
 
-            if (200 === $statusCode) {
+            if (Response::HTTP_OK === $statusCode) {
                 $this->logger->info("Successfully deleted device from TTN: {$endDeviceId}");
 
                 return true;
@@ -59,8 +62,12 @@ class TtnApiService implements TtnApiServiceInterface
             $this->logger->error("Failed to delete device from TTN. Status code: {$statusCode}");
 
             return false;
+        } catch (HttpExceptionInterface | TransportExceptionInterface $e) {
+            $this->logger->error("HTTP/Transport exception while deleting device from TTN: {$e->getMessage()}");
+
+            return false;
         } catch (\Exception $e) {
-            $this->logger->error("Exception while deleting device from TTN: {$e->getMessage()}");
+            $this->logger->error("Unexpected exception while deleting device from TTN: {$e->getMessage()}");
 
             return false;
         }

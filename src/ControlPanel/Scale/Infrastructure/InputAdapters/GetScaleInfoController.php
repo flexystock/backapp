@@ -35,7 +35,7 @@ class GetScaleInfoController extends AbstractController
         }
 
         // Only ROOT users can access this endpoint
-        if (!in_array('ROLE_ROOT', $user->getRoles())) {
+        if (!$this->isGranted('ROLE_ROOT')) {
             return new JsonResponse(['error' => 'Access denied. ROOT role required.'], 403);
         }
 
