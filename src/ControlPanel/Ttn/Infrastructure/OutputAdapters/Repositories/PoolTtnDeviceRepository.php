@@ -28,6 +28,5 @@ class PoolTtnDeviceRepository extends ServiceEntityRepository implements PoolTtn
     public function delete(PoolTtnDevice $device): void
     {
         $this->entityManager->remove($device);
-        $this->entityManager->flush();
     }
 }

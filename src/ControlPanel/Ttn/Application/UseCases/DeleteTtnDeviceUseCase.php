@@ -11,6 +11,7 @@ use App\ControlPanel\Ttn\Application\OutputPorts\PoolScalesRepositoryInterface;
 use App\ControlPanel\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface;
 use App\ControlPanel\Ttn\Application\OutputPorts\ScalesRepositoryInterface;
 use App\ControlPanel\Ttn\Application\OutputPorts\TtnApiServiceInterface;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
 class DeleteTtnDeviceUseCase implements DeleteTtnDeviceUseCaseInterface
@@ -20,19 +21,22 @@ class DeleteTtnDeviceUseCase implements DeleteTtnDeviceUseCaseInterface
     private PoolScalesRepositoryInterface $poolScalesRepository;
     private ScalesRepositoryInterface $scalesRepository;
     private TtnApiServiceInterface $ttnApiService;
+    private EntityManagerInterface $entityManager;
 
     public function __construct(
         LoggerInterface $logger,
         PoolTtnDeviceRepositoryInterface $poolTtnDeviceRepository,
         PoolScalesRepositoryInterface $poolScalesRepository,
         ScalesRepositoryInterface $scalesRepository,
-        TtnApiServiceInterface $ttnApiService
+        TtnApiServiceInterface $ttnApiService,
+        EntityManagerInterface $entityManager
     ) {
         $this->logger = $logger;
         $this->poolTtnDeviceRepository = $poolTtnDeviceRepository;
         $this->poolScalesRepository = $poolScalesRepository;
         $this->scalesRepository = $scalesRepository;
         $this->ttnApiService = $ttnApiService;
+        $this->entityManager = $entityManager;
     }
 
     public function execute(DeleteTtnDeviceRequest $request): DeleteTtnDeviceResponse
@@ -70,21 +74,37 @@ class DeleteTtnDeviceUseCase implements DeleteTtnDeviceUseCaseInterface
             );
         }
 
-        // Delete from pool_ttn_device (main database)
-        $this->poolTtnDeviceRepository->delete($poolDevice);
+        // Wrap database deletions in a transaction to ensure consistency
+        $this->entityManager->beginTransaction();
+        try {
+            // Delete from pool_ttn_device (main database)
+            $this->poolTtnDeviceRepository->delete($poolDevice);
 
-        // Delete from pool_scales (client database) if exists
-        $poolScale = $this->poolScalesRepository->findOneByEndDeviceId($endDeviceId);
-        if ($poolScale) {
-            $this->poolScalesRepository->delete($poolScale);
+            // Delete from pool_scales (client database) if exists
+            $poolScale = $this->poolScalesRepository->findOneByEndDeviceId($endDeviceId);
+            if ($poolScale) {
+                $this->poolScalesRepository->delete($poolScale);
+            }
+
+            $this->entityManager->flush();
+            $this->entityManager->commit();
+
+            $this->logger->info("Successfully deleted device: {$endDeviceId}");
+
+            return new DeleteTtnDeviceResponse(
+                true,
+                'Device deleted successfully',
+                200
+            );
+        } catch (\Exception $e) {
+            $this->entityManager->rollback();
+            $this->logger->error("Failed to delete device from database: {$e->getMessage()}");
+
+            return new DeleteTtnDeviceResponse(
+                false,
+                'Failed to delete device from database',
+                500
+            );
         }
-
-        $this->logger->info("Successfully deleted device: {$endDeviceId}");
-
-        return new DeleteTtnDeviceResponse(
-            true,
-            'Device deleted successfully',
-            200
-        );
     }
 }

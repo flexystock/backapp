@@ -28,6 +28,5 @@ class PoolScalesRepository extends ServiceEntityRepository implements PoolScales
     public function delete(PoolScale $scale): void
     {
         $this->entityManager->remove($scale);
-        $this->entityManager->flush();
     }
 }

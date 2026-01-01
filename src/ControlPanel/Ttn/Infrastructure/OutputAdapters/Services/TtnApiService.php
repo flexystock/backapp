@@ -53,7 +53,8 @@ class TtnApiService implements TtnApiServiceInterface
 
             $statusCode = $response->getStatusCode();
 
-            if (Response::HTTP_OK === $statusCode) {
+            // TTN API returns 204 No Content on successful deletion
+            if (Response::HTTP_NO_CONTENT === $statusCode || Response::HTTP_OK === $statusCode) {
                 $this->logger->info("Successfully deleted device from TTN: {$endDeviceId}");
 
                 return true;
