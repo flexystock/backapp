@@ -162,6 +162,54 @@ services:
   App\ControlPanel\Scale\Application\InputPorts\GetScaleInfoUseCaseInterface:
     alias: App\ControlPanel\Scale\Application\UseCases\GetScaleInfoUseCase
 
+  # TTN Section
+  App\ControlPanel\Ttn\Infrastructure\InputAdapters\:
+    resource: '../src/ControlPanel/Ttn/Infrastructure/InputAdapters'
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Repositories\PoolTtnDeviceRepository:
+    arguments:
+      $registry: '@doctrine'
+      $entityManager: '@doctrine.orm.entity_manager'
+    tags:
+      - { name: 'doctrine.repository_service' }
+
+  App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Repositories\PoolScalesRepository:
+    arguments:
+      $registry: '@doctrine'
+      $entityManager: '@doctrine.orm.entity_manager'
+    tags:
+      - { name: 'doctrine.repository_service' }
+
+  App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Repositories\ScalesRepository:
+    arguments:
+      $registry: '@doctrine'
+    tags:
+      - { name: 'doctrine.repository_service' }
+
+  App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Services\TtnApiService:
+    arguments:
+      $httpClient: '@http_client'
+      $ttnApiBaseUrl: '%env(TTN_API_BASE_URL)%'
+      $ttnApiKey: '%env(TTN_API_KEY)%'
+      $ttnApplicationId: '%env(TTN_APPLICATION_ID)%'
+
+  App\ControlPanel\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface:
+    alias: App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Repositories\PoolTtnDeviceRepository
+
+  App\ControlPanel\Ttn\Application\OutputPorts\PoolScalesRepositoryInterface:
+    alias: App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Repositories\PoolScalesRepository
+
+  App\ControlPanel\Ttn\Application\OutputPorts\ScalesRepositoryInterface:
+    alias: App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Repositories\ScalesRepository
+
+  App\ControlPanel\Ttn\Application\OutputPorts\TtnApiServiceInterface:
+    alias: App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Services\TtnApiService
+
+  App\ControlPanel\Ttn\Application\InputPorts\DeleteTtnDeviceUseCaseInterface:
+    alias: App\ControlPanel\Ttn\Application\UseCases\DeleteTtnDeviceUseCase
+
   # --------------------------
   # CLIENT
   # --------------------------
