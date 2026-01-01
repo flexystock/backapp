@@ -45,8 +45,7 @@ class GetScaleInfoUseCase implements GetScaleInfoUseCaseInterface
             $endDeviceName = $scale->getEndDeviceName();
             $clients = [];
             if ($endDeviceName) {
-                $clientsResult = $this->clientRepository->findByUuids([$endDeviceName]);
-                $clients = $clientsResult;
+                $clients = $this->clientRepository->findByUuids([$endDeviceName]);
             }
 
             $scaleInfo = $this->mapScaleToArray($scale, $clients);

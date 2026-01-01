@@ -16,11 +16,6 @@ class ScaleRepository extends ServiceEntityRepository implements ScaleRepository
         parent::__construct($registry, PoolTtnDevice::class);
     }
 
-    public function findAll(): array
-    {
-        return parent::findAll();
-    }
-
     public function findOneByEndDeviceId(string $endDeviceId): ?PoolTtnDevice
     {
         return $this->findOneBy(['end_device_id' => $endDeviceId]);
