@@ -9,6 +9,7 @@ use App\ControlPanel\Scale\Application\DTO\GetScaleInfoResponse;
 use App\ControlPanel\Scale\Application\InputPorts\GetScaleInfoUseCaseInterface;
 use App\ControlPanel\Scale\Application\OutputPorts\ClientRepositoryInterface;
 use App\ControlPanel\Scale\Application\OutputPorts\ScaleRepositoryInterface;
+use App\Entity\Main\PoolTtnDevice;
 use Psr\Log\LoggerInterface;
 
 class GetScaleInfoUseCase implements GetScaleInfoUseCaseInterface
@@ -56,7 +57,7 @@ class GetScaleInfoUseCase implements GetScaleInfoUseCaseInterface
         }
     }
 
-    private function mapScaleToArray(\App\Entity\Main\PoolTtnDevice $scale): array
+    private function mapScaleToArray(PoolTtnDevice $scale): array
     {
         $clientName = null;
         $endDeviceName = $scale->getEndDeviceName();
