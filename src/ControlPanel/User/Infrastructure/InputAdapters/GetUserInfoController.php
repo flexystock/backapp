@@ -39,10 +39,17 @@ class GetUserInfoController extends AbstractController
             return new JsonResponse(['error' => 'Access denied. ROOT role required.'], 403);
         }
 
-        $data = json_decode($request->getContent(), true);
+        $content = $request->getContent();
         
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return new JsonResponse(['error' => 'Invalid JSON in request body'], 400);
+        // Handle empty content
+        if (empty($content)) {
+            $data = [];
+        } else {
+            $data = json_decode($content, true);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return new JsonResponse(['error' => 'Invalid JSON in request body'], 400);
+            }
         }
         
         $uuidUser = $data['uuidUser'] ?? null;

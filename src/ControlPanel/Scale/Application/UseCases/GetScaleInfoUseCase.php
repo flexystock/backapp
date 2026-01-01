@@ -41,7 +41,15 @@ class GetScaleInfoUseCase implements GetScaleInfoUseCaseInterface
                 return new GetScaleInfoResponse(null, 'Scale not found', 404);
             }
 
-            $scaleInfo = $this->mapScaleToArray($scale);
+            // Load client for single scale
+            $endDeviceName = $scale->getEndDeviceName();
+            $clients = [];
+            if ($endDeviceName) {
+                $clientsResult = $this->clientRepository->findByUuids([$endDeviceName]);
+                $clients = $clientsResult;
+            }
+
+            $scaleInfo = $this->mapScaleToArray($scale, $clients);
 
             return new GetScaleInfoResponse([$scaleInfo], null, 200);
         } else {
@@ -63,34 +71,14 @@ class GetScaleInfoUseCase implements GetScaleInfoUseCaseInterface
             // Map scales to array
             $scalesInfo = [];
             foreach ($scales as $scale) {
-                $scalesInfo[] = $this->mapScaleToArrayWithClients($scale, $clients);
+                $scalesInfo[] = $this->mapScaleToArray($scale, $clients);
             }
 
             return new GetScaleInfoResponse($scalesInfo, null, 200);
         }
     }
 
-    private function mapScaleToArray(PoolTtnDevice $scale): array
-    {
-        $clientName = null;
-        $endDeviceName = $scale->getEndDeviceName();
-        
-        // The end_device_name is the uuid_client, so we fetch the client name
-        if ($endDeviceName) {
-            $client = $this->clientRepository->findOneByUuid($endDeviceName);
-            if ($client) {
-                $clientName = $client->getName();
-            }
-        }
-
-        return [
-            'end_device_id' => $scale->getEndDeviceId(),
-            'end_device_name' => $endDeviceName,
-            'client_name' => $clientName,
-        ];
-    }
-
-    private function mapScaleToArrayWithClients(PoolTtnDevice $scale, array $clients): array
+    private function mapScaleToArray(PoolTtnDevice $scale, array $clients = []): array
     {
         $clientName = null;
         $endDeviceName = $scale->getEndDeviceName();
