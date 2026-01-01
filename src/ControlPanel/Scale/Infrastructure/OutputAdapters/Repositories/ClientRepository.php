@@ -20,4 +20,25 @@ class ClientRepository extends ServiceEntityRepository implements ClientReposito
     {
         return $this->findOneBy(['uuid_client' => $uuid]);
     }
+
+    public function findByUuids(array $uuids): array
+    {
+        if (empty($uuids)) {
+            return [];
+        }
+
+        $clients = $this->createQueryBuilder('c')
+            ->where('c.uuid_client IN (:uuids)')
+            ->setParameter('uuids', $uuids)
+            ->getQuery()
+            ->getResult();
+
+        // Index by UUID for easy lookup
+        $indexed = [];
+        foreach ($clients as $client) {
+            $indexed[$client->getUuidClient()] = $client;
+        }
+
+        return $indexed;
+    }
 }

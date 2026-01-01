@@ -18,9 +18,7 @@ class ScaleRepository extends ServiceEntityRepository implements ScaleRepository
 
     public function findAll(): array
     {
-        return $this->createQueryBuilder('s')
-            ->getQuery()
-            ->getResult();
+        return parent::findAll();
     }
 
     public function findOneByEndDeviceId(string $endDeviceId): ?PoolTtnDevice
