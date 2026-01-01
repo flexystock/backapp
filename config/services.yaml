@@ -135,6 +135,33 @@ services:
   App\ControlPanel\User\Application\InputPorts\GetUserInfoUseCaseInterface:
     alias: App\ControlPanel\User\Application\UseCases\GetUserInfoUseCase
 
+  # Scale Section
+  App\ControlPanel\Scale\Infrastructure\InputAdapters\:
+    resource: '../src/ControlPanel/Scale/Infrastructure/InputAdapters'
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\ControlPanel\Scale\Infrastructure\OutputAdapters\Repositories\ScaleRepository:
+    arguments:
+      $registry: '@doctrine'
+    tags:
+      - { name: 'doctrine.repository_service' }
+
+  App\ControlPanel\Scale\Infrastructure\OutputAdapters\Repositories\ClientRepository:
+    arguments:
+      $registry: '@doctrine'
+    tags:
+      - { name: 'doctrine.repository_service' }
+
+  App\ControlPanel\Scale\Application\OutputPorts\ScaleRepositoryInterface:
+    alias: App\ControlPanel\Scale\Infrastructure\OutputAdapters\Repositories\ScaleRepository
+
+  App\ControlPanel\Scale\Application\OutputPorts\ClientRepositoryInterface:
+    alias: App\ControlPanel\Scale\Infrastructure\OutputAdapters\Repositories\ClientRepository
+
+  App\ControlPanel\Scale\Application\InputPorts\GetScaleInfoUseCaseInterface:
+    alias: App\ControlPanel\Scale\Application\UseCases\GetScaleInfoUseCase
+
   # --------------------------
   # CLIENT
   # --------------------------
