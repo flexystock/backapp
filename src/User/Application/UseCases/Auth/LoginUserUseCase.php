@@ -164,7 +164,7 @@ class LoginUserUseCase implements LoginUserInputPort
     {
         $user->setFailedAttempts(0);
         $user->setLockedUntil(null); // Desbloquear la cuenta en caso de que esté bloqueada
-        $user->setLastAccess(new \DateTime()); // Update last_access field with current datetime
+        $user->setLastAccess(new \DateTimeImmutable()); // Actualiza el campo last_access con la fecha y hora actual
         $this->entityManager->persist($user);
         $this->entityManager->flush();
     }
