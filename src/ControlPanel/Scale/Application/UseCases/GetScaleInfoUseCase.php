@@ -56,7 +56,7 @@ class GetScaleInfoUseCase implements GetScaleInfoUseCaseInterface
         }
     }
 
-    private function mapScaleToArray($scale): array
+    private function mapScaleToArray(\App\Entity\Main\PoolTtnDevice $scale): array
     {
         $clientName = null;
         $endDeviceName = $scale->getEndDeviceName();
