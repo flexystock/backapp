@@ -24,17 +24,16 @@ class GetUserInfoUseCase implements GetUserInfoUseCaseInterface
 
     public function execute(GetUserInfoRequest $request): GetUserInfoResponse
     {
-        $uuidUser = $request->getUuidUser();
+        $emailUser = $request->getEmailUser();
 
-        if ($uuidUser) {
+        if ($emailUser) {
             // Get specific user
-            $this->logger->info("Executing ControlPanel GetUserInfoUseCase for user: {$uuidUser}");
-            $user = $this->userRepository->findOneByUuid($uuidUser);
+            $this->logger->info("Executing ControlPanel GetUserInfoUseCase for user: {$emailUser}");
+            $user = $this->userRepository->findOneByEmail($emailUser);
 
             if (!$user) {
                 return new GetUserInfoResponse(null, 'User not found', 404);
             }
-
             $userInfo = $this->mapUserToArray($user);
 
             return new GetUserInfoResponse([$userInfo], null, 200);
@@ -53,18 +52,30 @@ class GetUserInfoUseCase implements GetUserInfoUseCaseInterface
 
     private function mapUserToArray(User $user): array
     {
+        $userCreatedBy = $user->getUuidUserCreation();
+        $userCreatedBy = $this->userRepository->findOneByUuid($userCreatedBy);
+        $userEmailCreatedBy = $userCreatedBy ? $userCreatedBy->getEmail() : null;
+        $userUpdatedBy = $user->getUuidUserModification();
+        $userUpdatedBy = $this->userRepository->findOneByUuid($userUpdatedBy);
+        $userEmailUpdatedBy = $userUpdatedBy ? $userUpdatedBy->getEmail() : null;
+
         return [
             'uuid_user' => $user->getUuid(),
-            'name' => $user->getName(),
-            'surnames' => $user->getSurnames(),
-            'phone' => $user->getPhone(),
+            'name' => $user->getName() ?? '',  // ← Añade ?? ''
+            'surnames' => $user->getSurnames() ?? '',  // ← Añade ?? ''
+            'phone' => $user->getPhone() ?? '',  // ← Añade ?? ''
             'email' => $user->getEmail(),
             'is_root' => $user->isRoot(),
             'active' => $user->isActive(),
-            'document_type' => $user->getDocumentType(),
-            'document_number' => $user->getDocumentNumber(),
-            'preferred_contact_method' => $user->getPreferredContactMethod(),
+            'document_type' => $user->getDocumentType() ?? '',  // ← Añade ?? ''
+            'document_number' => $user->getDocumentNumber() ?? '',  // ← IMPORTANTE: Añade ?? ''
+            'preferred_contact_method' => $user->getPreferredContactMethod() ?? '',  // ← Añade ?? ''
             'is_verified' => $user->isVerified(),
+            'user_created_by' => $userEmailCreatedBy?? '',  // ← Añade ?? ''
+            'user_updated_by' => $userEmailUpdatedBy?? '',  // ← Añade ?? ''
+            'date_created' => $user->getDatehourCreation()?->format('Y-m-d H:i:s') ?? '',  // ← Añade ?? ''
+            'date_updated' => $user->getDatehourModification()?->format('Y-m-d H:i:s') ?? '',  // ← Añade ?? ''
+            'last_login' => $user->getLastAccess()?->format('Y-m-d H:i:s') ?? '',  // ← Añade ?? ''
         ];
     }
 }

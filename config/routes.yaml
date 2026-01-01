@@ -80,7 +80,7 @@ controllers_ia:
   type: attribute
 controllers_control_panel:
   resource:
-    path: ../src/ControlPanel/User/Infrastructure/InputAdapters/
-    namespace: App\ControlPanel\User\Infrastructure\InputAdapters
+    path: ../src/ControlPanel/
+    namespace: App\ControlPanel
   type: attribute
 

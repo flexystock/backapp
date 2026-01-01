@@ -11,10 +11,10 @@ interface GetUserInfoUseCaseInterface
 {
     /**
      * Retrieves user information for the control panel.
-     * If uuidUser is provided, returns info for that specific user.
-     * If uuidUser is null, returns info for all users.
+     * If emailUser is provided, returns info for that specific user.
+     * If emailUser is null, returns info for all users.
      *
-     * @param GetUserInfoRequest $request the request containing optional user UUID
+     * @param GetUserInfoRequest $request the request containing optional user EMAIL
      *
      * @return GetUserInfoResponse the response containing user(s) information
      */

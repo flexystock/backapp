@@ -51,10 +51,10 @@ class GetUserInfoController extends AbstractController
                 return new JsonResponse(['error' => 'Invalid JSON in request body'], 400);
             }
         }
-        
-        $uuidUser = $data['uuidUser'] ?? null;
 
-        $dto = new GetUserInfoRequest($uuidUser);
+        $emailUser = $data['email'] ?? null;
+
+        $dto = new GetUserInfoRequest($emailUser);
 
         $response = $this->getUserInfoUseCase->execute($dto);
 

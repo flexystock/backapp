@@ -6,15 +6,15 @@ namespace App\ControlPanel\User\Application\DTO;
 
 class GetUserInfoRequest
 {
-    private ?string $uuidUser;
+    private ?string $emailUser;
 
-    public function __construct(?string $uuidUser = null)
+    public function __construct(?string $emailUser = null)
     {
-        $this->uuidUser = $uuidUser;
+        $this->emailUser = $emailUser;
     }
 
-    public function getUuidUser(): ?string
+    public function getEmailUser(): ?string
     {
-        return $this->uuidUser;
+        return $this->emailUser;
     }
 }

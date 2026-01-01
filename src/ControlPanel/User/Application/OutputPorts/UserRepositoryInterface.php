@@ -16,11 +16,20 @@ interface UserRepositoryInterface
     public function findAll(): array;
 
     /**
-     * Find a user by their UUID.
+     * Find a user by their EMAIL.
      *
-     * @param string $uuid the user's UUID
+     * @param string $email the user's EMAIL
      *
      * @return User|null the User entity or null if not found
      */
-    public function findOneByUuid(string $uuid): ?User;
+    public function findOneByEmail(string $email): ?User;
+
+    /**
+     * Find a user by their UUID.
+     *
+     * @param string $uuidUser the user's UUID
+     *
+     * @return User|null the User entity or null if not found
+     */
+    public function findOneByUuid(string $uuidUser): ?User;
 }
