@@ -51,6 +51,11 @@ class LoginUserUseCase implements LoginUserInputPort
         }
 
         $this->resetFailedAttempts($user);
+        
+        // Update last_access field with current datetime
+        $user->setLastAccess(new \DateTime());
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
 
         if ($user->isActive()) {
             $this->registerLogin($user, $ipAddress);
