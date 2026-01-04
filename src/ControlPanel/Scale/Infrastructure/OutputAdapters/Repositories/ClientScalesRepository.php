@@ -46,7 +46,9 @@ class ClientScalesRepository implements ClientScalesRepositoryInterface
 
                 // Map results to associative array
                 foreach ($results as $result) {
-                    $voltagePercentages[$result['end_device_id']] = (float) $result['voltage_percentage'];
+                    $endDeviceId = $result['end_device_id'];
+                    $voltagePercentage = $result['voltage_percentage'];
+                    $voltagePercentages[$endDeviceId] = $voltagePercentage !== null ? (float) $voltagePercentage : null;
                 }
             } catch (\Exception $e) {
                 $this->logger->error("Error getting voltage percentages for client {$clientUuid}: {$e->getMessage()}");
