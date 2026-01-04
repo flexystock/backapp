@@ -9,6 +9,7 @@ use App\Entity\Main\PurchaseScales;
 use App\Event\MailLogTarget;
 use App\Event\MailSentEvent;
 use App\Scales\Application\OutputPorts\EmailPurchaseScalesServiceInterface;
+use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
@@ -63,9 +64,9 @@ class EmailPurchaseScalesService implements EmailPurchaseScalesServiceInterface
         // Get client's primary contact email (assuming there's a way to get it)
         // For now, we'll need to determine how to get client contact email
         // This might need to be passed as a parameter or retrieved from client entity
-        
+
         $clientEmail = $this->getClientContactEmail($client);
-        
+
         if (!$clientEmail) {
             $this->logger->warning('No email found for client', [
                 'uuidClient' => $client->getUuidClient(),
@@ -165,31 +166,32 @@ class EmailPurchaseScalesService implements EmailPurchaseScalesServiceInterface
         array $additional = []
     ): void {
         $event = new MailSentEvent(
-            target: MailLogTarget::MAIN,
             recipient: $recipient,
             subject: $subject,
             body: $body,
             status: $status,
             errorMessage: $errorMessage,
             errorCode: $errorCode,
+            sentAt: new DateTimeImmutable(),
+            additionalData: array_merge(['type' => $type], $additional),
             errorType: $errorType,
-            type: $type,
-            additional: $additional
+            user: null,
+            logTarget: MailLogTarget::MAIN
         );
 
-        $this->eventDispatcher->dispatch($event, MailSentEvent::NAME);
+        $this->eventDispatcher->dispatch($event);
     }
 
     /**
      * Get client contact email.
-     * 
+     *
      * TODO: Implement logic to get client contact email.
      * This needs to query the appropriate user or contact table to find
      * the primary contact email for the client. Options include:
      * 1. Query users table for users associated with this client
      * 2. Add a contact_email field to the client table
      * 3. Create a separate client_contacts table
-     * 
+     *
      * For now, returning null and logging a warning.
      * The sendScalesProcessingNotificationToClient method will not send
      * emails until this is implemented.
@@ -203,21 +205,21 @@ class EmailPurchaseScalesService implements EmailPurchaseScalesServiceInterface
             'uuidClient' => $client->getUuidClient(),
             'clientName' => $client->getName(),
         ]);
-        
+
         // TODO: Implement one of these approaches:
         // Option 1: Query users associated with client
         // $users = $this->entityManager->getRepository(User::class)
         //     ->findBy(['clients' => $client], [], 1);
         // return $users ? $users[0]->getEmail() : null;
-        
+
         // Option 2: If client has a contact_email field
         // return $client->getContactEmail();
-        
+
         // Option 3: Query a client_contacts table
         // $contact = $this->entityManager->getRepository(ClientContact::class)
         //     ->findOneBy(['client' => $client, 'is_primary' => true]);
         // return $contact ? $contact->getEmail() : null;
-        
+
         return null;
     }
 }

@@ -936,14 +936,9 @@ services:
   # --------------------------
   # SCALES PURCHASE
   # --------------------------
-  App\Scales\Infrastructure\InputAdapters\:
-    resource: '../src/Scales/Infrastructure/InputAdapters'
-    tags: ['controller.service_arguments']
-    public: true
-
   App\Scales\Infrastructure\OutputAdapters\Repositories\PurchaseScalesRepository:
     arguments:
-      $entityManager: '@doctrine.orm.default_entity_manager'
+      $entityManager: '@doctrine.orm.main_entity_manager'
 
   App\Scales\Application\OutputPorts\PurchaseScalesRepositoryInterface:
     alias: App\Scales\Infrastructure\OutputAdapters\Repositories\PurchaseScalesRepository
@@ -961,7 +956,7 @@ services:
     arguments:
       $purchaseScalesRepository: '@App\Scales\Application\OutputPorts\PurchaseScalesRepositoryInterface'
       $emailService: '@App\Scales\Application\OutputPorts\EmailPurchaseScalesServiceInterface'
-      $entityManager: '@doctrine.orm.default_entity_manager'
+      $entityManager: '@doctrine.orm.main_entity_manager'
       $logger: '@logger'
 
   App\Scales\Application\InputPorts\PurchaseScalesUseCaseInterface:
