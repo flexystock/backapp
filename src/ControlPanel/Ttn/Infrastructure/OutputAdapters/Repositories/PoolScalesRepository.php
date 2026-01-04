@@ -33,6 +33,5 @@ class PoolScalesRepository extends ServiceEntityRepository implements PoolScales
     public function save(PoolScale $scale): void
     {
         $this->entityManager->persist($scale);
-        $this->entityManager->flush();
     }
 }
