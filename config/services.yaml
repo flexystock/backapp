@@ -932,3 +932,37 @@ services:
     resource: '../src/IA/Infrastructure/InputAdapters'
     tags: ['controller.service_arguments']
     public: true
+
+  # --------------------------
+  # SCALES PURCHASE
+  # --------------------------
+  App\Scales\Infrastructure\InputAdapters\:
+    resource: '../src/Scales/Infrastructure/InputAdapters'
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Scales\Infrastructure\OutputAdapters\Repositories\PurchaseScalesRepository:
+    arguments:
+      $entityManager: '@doctrine.orm.default_entity_manager'
+
+  App\Scales\Application\OutputPorts\PurchaseScalesRepositoryInterface:
+    alias: App\Scales\Infrastructure\OutputAdapters\Repositories\PurchaseScalesRepository
+
+  App\Scales\Infrastructure\OutputAdapters\Services\EmailPurchaseScalesService:
+    arguments:
+      $mailer: '@mailer.mailer'
+      $eventDispatcher: '@event_dispatcher'
+      $logger: '@logger'
+
+  App\Scales\Application\OutputPorts\EmailPurchaseScalesServiceInterface:
+    alias: App\Scales\Infrastructure\OutputAdapters\Services\EmailPurchaseScalesService
+
+  App\Scales\Application\UseCases\PurchaseScalesUseCase:
+    arguments:
+      $purchaseScalesRepository: '@App\Scales\Application\OutputPorts\PurchaseScalesRepositoryInterface'
+      $emailService: '@App\Scales\Application\OutputPorts\EmailPurchaseScalesServiceInterface'
+      $entityManager: '@doctrine.orm.default_entity_manager'
+      $logger: '@logger'
+
+  App\Scales\Application\InputPorts\PurchaseScalesUseCaseInterface:
+    alias: App\Scales\Application\UseCases\PurchaseScalesUseCase
