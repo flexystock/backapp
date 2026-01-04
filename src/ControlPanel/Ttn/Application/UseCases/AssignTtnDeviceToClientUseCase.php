@@ -52,17 +52,18 @@ class AssignTtnDeviceToClientUseCase implements AssignTtnDeviceToClientUseCaseIn
                 );
             }
 
-            // 2. Update the end_device_name with the client UUID
-            $ttnDevice->setEndDeviceName($uuidClient);
-            $ttnDevice->setUuidUserModification('system'); // or get from authenticated user
-            $ttnDevice->setDatehourModification(new \DateTimeImmutable());
-
-            // 3. Save the updated device in pool_ttn_device (main DB)
-            $this->poolTtnDeviceRepository->save($ttnDevice);
-
-            // 4. Create a new record in pool_scales (client DB)
+            // 2. Start transaction before any database changes
             $this->entityManager->beginTransaction();
             try {
+                // 3. Update the end_device_name with the client UUID
+                $ttnDevice->setEndDeviceName($uuidClient);
+                $ttnDevice->setUuidUserModification('system'); // or get from authenticated user
+                $ttnDevice->setDatehourModification(new \DateTimeImmutable());
+
+                // Persist changes to pool_ttn_device (main DB) without flushing yet
+                $this->entityManager->persist($ttnDevice);
+
+                // 4. Create a new record in pool_scales (client DB)
                 // Get the client's entity manager
                 $clientEntityManager = $this->connectionManager->getEntityManager($uuidClient);
 
@@ -75,13 +76,15 @@ class AssignTtnDeviceToClientUseCase implements AssignTtnDeviceToClientUseCaseIn
                 $poolScale->setAppEUI($ttnDevice->getAppEUI());
                 $poolScale->setDevEUI($ttnDevice->getDevEUI());
                 $poolScale->setAppKey($ttnDevice->getAppKey());
-                $poolScale->setDatehourCreation(new \DateTime());
+                $poolScale->setDatehourCreation(new \DateTimeImmutable());
                 $poolScale->setUuidUserCreation('system'); // or get from authenticated user
 
                 // Save to client's database
                 $clientEntityManager->persist($poolScale);
                 $clientEntityManager->flush();
 
+                // Flush main database changes
+                $this->entityManager->flush();
                 $this->entityManager->commit();
 
                 $this->logger->info("Successfully assigned device {$endDeviceId} to client {$uuidClient}");
