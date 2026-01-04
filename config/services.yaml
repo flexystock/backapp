@@ -961,3 +961,24 @@ services:
 
   App\Scales\Application\InputPorts\PurchaseScalesUseCaseInterface:
     alias: App\Scales\Application\UseCases\PurchaseScalesUseCase
+
+  # --------------------------
+  # CONTROL PANEL - PURCHASE
+  # --------------------------
+  App\ControlPanel\Purchase\Infrastructure\InputAdapters\:
+    resource: '../src/ControlPanel/Purchase/Infrastructure/InputAdapters'
+    tags: ['controller.service_arguments']
+
+  App\ControlPanel\Purchase\Application\OutputPorts\PurchaseScalesRepositoryInterface:
+    alias: App\ControlPanel\Purchase\Infrastructure\OutputAdapters\Repositories\PurchaseScalesRepository
+
+  App\ControlPanel\Purchase\Infrastructure\OutputAdapters\Repositories\PurchaseScalesRepository:
+    arguments:
+      $entityManager: '@doctrine.orm.main_entity_manager'
+
+  App\ControlPanel\Purchase\Application\UseCases\GetPurchaseScalesUseCase:
+    arguments:
+      $purchaseScalesRepository: '@App\ControlPanel\Purchase\Application\OutputPorts\PurchaseScalesRepositoryInterface'
+
+  App\ControlPanel\Purchase\Application\InputPorts\GetPurchaseScalesUseCaseInterface:
+    alias: App\ControlPanel\Purchase\Application\UseCases\GetPurchaseScalesUseCase
