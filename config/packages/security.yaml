@@ -70,6 +70,7 @@ security:
         - { path: ^/api/control-panel, roles: ROLE_ROOT }
         - { path: ^/api/control-panel/scales, roles: ROLE_ROOT }
         - { path: ^/api/control-panel/ttn/device, roles: ROLE_ROOT }
+        - { path: ^/api/control-panel/ttn/assign-device, roles: ROLE_ROOT }
         - { path: ^/api/assign_scale_product, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/weight_analytics/product_weight_summary , roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/user/get_info, roles: IS_AUTHENTICATED_FULLY }
