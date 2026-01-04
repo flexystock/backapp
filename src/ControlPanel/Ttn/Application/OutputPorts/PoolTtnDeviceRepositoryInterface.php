@@ -23,4 +23,11 @@ interface PoolTtnDeviceRepositoryInterface
      * @param PoolTtnDevice $device the device to delete
      */
     public function delete(PoolTtnDevice $device): void;
+
+    /**
+     * Save or update a device in the pool.
+     *
+     * @param PoolTtnDevice $device the device to save
+     */
+    public function save(PoolTtnDevice $device): void;
 }

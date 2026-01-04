@@ -23,4 +23,11 @@ interface PoolScalesRepositoryInterface
      * @param PoolScale $scale the scale to delete
      */
     public function delete(PoolScale $scale): void;
+
+    /**
+     * Save a scale in the pool.
+     *
+     * @param PoolScale $scale the scale to save
+     */
+    public function save(PoolScale $scale): void;
 }

@@ -210,6 +210,9 @@ services:
   App\ControlPanel\Ttn\Application\InputPorts\DeleteTtnDeviceUseCaseInterface:
     alias: App\ControlPanel\Ttn\Application\UseCases\DeleteTtnDeviceUseCase
 
+  App\ControlPanel\Ttn\Application\InputPorts\AssignTtnDeviceToClientUseCaseInterface:
+    alias: App\ControlPanel\Ttn\Application\UseCases\AssignTtnDeviceToClientUseCase
+
   # --------------------------
   # CLIENT
   # --------------------------

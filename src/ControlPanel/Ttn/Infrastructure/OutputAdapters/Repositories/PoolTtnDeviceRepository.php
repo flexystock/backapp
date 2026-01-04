@@ -29,4 +29,10 @@ class PoolTtnDeviceRepository extends ServiceEntityRepository implements PoolTtn
     {
         $this->entityManager->remove($device);
     }
+
+    public function save(PoolTtnDevice $device): void
+    {
+        $this->entityManager->persist($device);
+        $this->entityManager->flush();
+    }
 }
