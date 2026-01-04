@@ -33,4 +33,9 @@ interface PurchaseScalesRepositoryInterface
      * @return PurchaseScales[]
      */
     public function findByStatus(string $status): array;
+
+    /**
+     * Save purchase scales entity
+     */
+    public function save(PurchaseScales $purchaseScales): void;
 }

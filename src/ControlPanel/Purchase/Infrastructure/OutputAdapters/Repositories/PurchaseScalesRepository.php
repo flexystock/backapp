@@ -40,4 +40,10 @@ class PurchaseScalesRepository implements PurchaseScalesRepositoryInterface
         return $this->entityManager->getRepository(PurchaseScales::class)
             ->findBy(['status' => $status], ['purchase_at' => 'DESC']);
     }
+
+    public function save(PurchaseScales $purchaseScales): void
+    {
+        $this->entityManager->persist($purchaseScales);
+        $this->entityManager->flush();
+    }
 }

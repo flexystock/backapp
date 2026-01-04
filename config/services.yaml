@@ -982,3 +982,30 @@ services:
 
   App\ControlPanel\Purchase\Application\InputPorts\GetPurchaseScalesUseCaseInterface:
     alias: App\ControlPanel\Purchase\Application\UseCases\GetPurchaseScalesUseCase
+
+  # Process Purchase Scales
+  App\ControlPanel\Purchase\Infrastructure\OutputAdapters\Repositories\ClientRepository:
+    arguments:
+      $entityManager: '@doctrine.orm.main_entity_manager'
+
+  App\ControlPanel\Purchase\Application\OutputPorts\ClientRepositoryInterface:
+    alias: App\ControlPanel\Purchase\Infrastructure\OutputAdapters\Repositories\ClientRepository
+
+  App\ControlPanel\Purchase\Infrastructure\OutputAdapters\Services\EmailProcessPurchaseScalesService:
+    arguments:
+      $mailer: '@mailer.mailer'
+      $eventDispatcher: '@event_dispatcher'
+      $logger: '@logger'
+
+  App\ControlPanel\Purchase\Application\OutputPorts\EmailProcessPurchaseScalesServiceInterface:
+    alias: App\ControlPanel\Purchase\Infrastructure\OutputAdapters\Services\EmailProcessPurchaseScalesService
+
+  App\ControlPanel\Purchase\Application\UseCases\ProcessPurchaseScalesUseCase:
+    arguments:
+      $purchaseScalesRepository: '@App\ControlPanel\Purchase\Application\OutputPorts\PurchaseScalesRepositoryInterface'
+      $clientRepository: '@App\ControlPanel\Purchase\Application\OutputPorts\ClientRepositoryInterface'
+      $registerTtnDeviceUseCase: '@App\Ttn\Application\InputPorts\RegisterTtnDeviceUseCaseInterface'
+      $emailService: '@App\ControlPanel\Purchase\Application\OutputPorts\EmailProcessPurchaseScalesServiceInterface'
+
+  App\ControlPanel\Purchase\Application\InputPorts\ProcessPurchaseScalesUseCaseInterface:
+    alias: App\ControlPanel\Purchase\Application\UseCases\ProcessPurchaseScalesUseCase
