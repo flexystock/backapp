@@ -182,14 +182,42 @@ class EmailPurchaseScalesService implements EmailPurchaseScalesServiceInterface
 
     /**
      * Get client contact email.
-     * This method should be implemented based on how client contact emails are stored.
-     * For now, returning null as placeholder.
+     * 
+     * TODO: Implement logic to get client contact email.
+     * This needs to query the appropriate user or contact table to find
+     * the primary contact email for the client. Options include:
+     * 1. Query users table for users associated with this client
+     * 2. Add a contact_email field to the client table
+     * 3. Create a separate client_contacts table
+     * 
+     * For now, returning null and logging a warning.
+     * The sendScalesProcessingNotificationToClient method will not send
+     * emails until this is implemented.
+     *
+     * @param Client $client The client to get contact email for
+     * @return string|null The client's contact email, or null if not found
      */
     private function getClientContactEmail(Client $client): ?string
     {
-        // TODO: Implement logic to get client contact email
-        // This might require querying a related users table or contact information
-        // For now, we'll return null and log a warning
+        $this->logger->warning('getClientContactEmail not implemented', [
+            'uuidClient' => $client->getUuidClient(),
+            'clientName' => $client->getName(),
+        ]);
+        
+        // TODO: Implement one of these approaches:
+        // Option 1: Query users associated with client
+        // $users = $this->entityManager->getRepository(User::class)
+        //     ->findBy(['clients' => $client], [], 1);
+        // return $users ? $users[0]->getEmail() : null;
+        
+        // Option 2: If client has a contact_email field
+        // return $client->getContactEmail();
+        
+        // Option 3: Query a client_contacts table
+        // $contact = $this->entityManager->getRepository(ClientContact::class)
+        //     ->findOneBy(['client' => $client, 'is_primary' => true]);
+        // return $contact ? $contact->getEmail() : null;
+        
         return null;
     }
 }
