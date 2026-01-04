@@ -153,11 +153,18 @@ services:
     tags:
       - { name: 'doctrine.repository_service' }
 
+  App\ControlPanel\Scale\Infrastructure\OutputAdapters\Repositories\ClientScalesRepository:
+    arguments:
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+
   App\ControlPanel\Scale\Application\OutputPorts\ScaleRepositoryInterface:
     alias: App\ControlPanel\Scale\Infrastructure\OutputAdapters\Repositories\ScaleRepository
 
   App\ControlPanel\Scale\Application\OutputPorts\ClientRepositoryInterface:
     alias: App\ControlPanel\Scale\Infrastructure\OutputAdapters\Repositories\ClientRepository
+
+  App\ControlPanel\Scale\Application\OutputPorts\ClientScalesRepositoryInterface:
+    alias: App\ControlPanel\Scale\Infrastructure\OutputAdapters\Repositories\ClientScalesRepository
 
   App\ControlPanel\Scale\Application\InputPorts\GetScaleInfoUseCaseInterface:
     alias: App\ControlPanel\Scale\Application\UseCases\GetScaleInfoUseCase
