@@ -88,7 +88,7 @@ class ProcessPurchaseScalesUseCase implements ProcessPurchaseScalesUseCaseInterf
                     // If any device fails, return error
                     return new ProcessPurchaseScalesResponse(
                         false,
-                        'Failed to create device ' . ($i + 1) . ' of ' . $quantity . ': ' . $registerResponse->getMessage(),
+                        'Failed to create device ' . ($i + 1) . ' of ' . $quantity . ': ' . $registerResponse->getError(),
                         $devicesCreated
                     );
                 }
