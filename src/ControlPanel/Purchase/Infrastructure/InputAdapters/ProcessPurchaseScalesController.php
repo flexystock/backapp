@@ -71,8 +71,15 @@ class ProcessPurchaseScalesController extends AbstractController
             );
         }
 
-        // Get user UUID (assuming User entity has getUuidUser method)
-        $uuidUser = method_exists($user, 'getUuidUser') ? $user->getUuidUser() : 'system';
+        // Get user UUID
+        $uuidUser = method_exists($user, 'getUuid') ? $user->getUuid() : null;
+        
+        if (!$uuidUser) {
+            return new JsonResponse(
+                ['error' => 'Unable to retrieve user UUID'],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
 
         // Create request DTO
         $requestDto = new ProcessPurchaseScalesRequest(
