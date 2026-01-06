@@ -153,7 +153,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      *
      * @param string $uuid UUID identifier
      */
-    public function setUuid(string $uuid): self
+    public function setUuid(?string $uuid): self
     {
         $this->uuid_user = $uuid;
 
@@ -209,7 +209,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      *
      * @return int phone number
      */
-    public function getPhone(): int
+    public function getPhone(): ?int
     {
         return $this->phone;
     }
@@ -219,7 +219,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      *
      * @param int $phone contact phone
      */
-    public function setPhone(int $phone): self
+    public function setPhone(?int $phone): self
     {
         $this->phone = $phone;
 
@@ -488,55 +488,55 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->document_type;
     }
 
-    public function setDocumentType(string $document_type): self
+    public function setDocumentType(?string $document_type): self
     {
         $this->document_type = $document_type;
 
         return $this;
     }
 
-    public function getDocumentNumber(): string
+    public function getDocumentNumber(): ?string
     {
         return $this->document_number;
     }
 
-    public function setDocumentNumber(string $document_number): self
+    public function setDocumentNumber(?string $document_number): self
     {
         $this->document_number = $document_number;
 
         return $this;
     }
 
-    public function getTimeZone(): string
+    public function getTimeZone(): ?string
     {
         return $this->timezone;
     }
 
-    public function setTimeZone(string $timezone): self
+    public function setTimeZone(?string $timezone): self
     {
         $this->timezone = $timezone;
 
         return $this;
     }
 
-    public function getLanguage(): string
+    public function getLanguage(): ?string
     {
         return $this->language;
     }
 
-    public function setLanguage(string $language): self
+    public function setLanguage(?string $language): self
     {
         $this->language = $language;
 
         return $this;
     }
 
-    public function getPreferredContactMethod(): string
+    public function getPreferredContactMethod(): ?string
     {
         return $this->preferred_contact_method;
     }
 
-    public function setPreferredContactMethod(string $preferred_contact_method): self
+    public function setPreferredContactMethod(?string $preferred_contact_method): self
     {
         $this->preferred_contact_method = $preferred_contact_method;
 

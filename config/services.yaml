@@ -116,6 +116,111 @@ services:
       $entityManager: '@doctrine.orm.main_entity_manager'
 
   # --------------------------
+  # CONTROL PANEL
+  # --------------------------
+  App\ControlPanel\User\Infrastructure\InputAdapters\:
+    resource: '../src/ControlPanel/User/Infrastructure/InputAdapters'
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\ControlPanel\User\Infrastructure\OutputAdapters\Repositories\UserRepository:
+    arguments:
+      $registry: '@doctrine'
+    tags:
+      - { name: 'doctrine.repository_service' }
+
+  App\ControlPanel\User\Application\OutputPorts\UserRepositoryInterface:
+    alias: App\ControlPanel\User\Infrastructure\OutputAdapters\Repositories\UserRepository
+
+  App\ControlPanel\User\Application\InputPorts\GetUserInfoUseCaseInterface:
+    alias: App\ControlPanel\User\Application\UseCases\GetUserInfoUseCase
+
+  # Scale Section
+  App\ControlPanel\Scale\Infrastructure\InputAdapters\:
+    resource: '../src/ControlPanel/Scale/Infrastructure/InputAdapters'
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\ControlPanel\Scale\Infrastructure\OutputAdapters\Repositories\ScaleRepository:
+    arguments:
+      $registry: '@doctrine'
+    tags:
+      - { name: 'doctrine.repository_service' }
+
+  App\ControlPanel\Scale\Infrastructure\OutputAdapters\Repositories\ClientRepository:
+    arguments:
+      $registry: '@doctrine'
+    tags:
+      - { name: 'doctrine.repository_service' }
+
+  App\ControlPanel\Scale\Infrastructure\OutputAdapters\Repositories\ClientScalesRepository:
+    arguments:
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+
+  App\ControlPanel\Scale\Application\OutputPorts\ScaleRepositoryInterface:
+    alias: App\ControlPanel\Scale\Infrastructure\OutputAdapters\Repositories\ScaleRepository
+
+  App\ControlPanel\Scale\Application\OutputPorts\ClientRepositoryInterface:
+    alias: App\ControlPanel\Scale\Infrastructure\OutputAdapters\Repositories\ClientRepository
+
+  App\ControlPanel\Scale\Application\OutputPorts\ClientScalesRepositoryInterface:
+    alias: App\ControlPanel\Scale\Infrastructure\OutputAdapters\Repositories\ClientScalesRepository
+
+  App\ControlPanel\Scale\Application\InputPorts\GetScaleInfoUseCaseInterface:
+    alias: App\ControlPanel\Scale\Application\UseCases\GetScaleInfoUseCase
+
+  # TTN Section
+  App\ControlPanel\Ttn\Infrastructure\InputAdapters\:
+    resource: '../src/ControlPanel/Ttn/Infrastructure/InputAdapters'
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Repositories\PoolTtnDeviceRepository:
+    arguments:
+      $registry: '@doctrine'
+      $entityManager: '@doctrine.orm.entity_manager'
+    tags:
+      - { name: 'doctrine.repository_service' }
+
+  App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Repositories\PoolScalesRepository:
+    arguments:
+      $registry: '@doctrine'
+      $entityManager: '@doctrine.orm.entity_manager'
+    tags:
+      - { name: 'doctrine.repository_service' }
+
+  App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Repositories\ScalesRepository:
+    arguments:
+      $registry: '@doctrine'
+    tags:
+      - { name: 'doctrine.repository_service' }
+
+  App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Services\TtnApiService:
+    arguments:
+      $httpClient: '@http_client'
+      $ttnApiBaseUrl: '%env(TTN_API_BASE_URL)%'
+      $ttnApiKey: '%env(TTN_API_KEY)%'
+      $ttnApplicationId: '%env(TTN_APPLICATION_ID)%'
+
+  App\ControlPanel\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface:
+    alias: App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Repositories\PoolTtnDeviceRepository
+
+  App\ControlPanel\Ttn\Application\OutputPorts\PoolScalesRepositoryInterface:
+    alias: App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Repositories\PoolScalesRepository
+
+  App\ControlPanel\Ttn\Application\OutputPorts\ScalesRepositoryInterface:
+    alias: App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Repositories\ScalesRepository
+
+  App\ControlPanel\Ttn\Application\OutputPorts\TtnApiServiceInterface:
+    alias: App\ControlPanel\Ttn\Infrastructure\OutputAdapters\Services\TtnApiService
+
+  App\ControlPanel\Ttn\Application\InputPorts\DeleteTtnDeviceUseCaseInterface:
+    alias: App\ControlPanel\Ttn\Application\UseCases\DeleteTtnDeviceUseCase
+
+  App\ControlPanel\Ttn\Application\InputPorts\AssignTtnDeviceToClientUseCaseInterface:
+    alias: App\ControlPanel\Ttn\Application\UseCases\AssignTtnDeviceToClientUseCase
+
+  # --------------------------
   # CLIENT
   # --------------------------
   App\Client\Application\UseCases\CreateClientUseCase:
@@ -827,3 +932,80 @@ services:
     resource: '../src/IA/Infrastructure/InputAdapters'
     tags: ['controller.service_arguments']
     public: true
+
+  # --------------------------
+  # SCALES PURCHASE
+  # --------------------------
+  App\Scales\Infrastructure\OutputAdapters\Repositories\PurchaseScalesRepository:
+    arguments:
+      $entityManager: '@doctrine.orm.main_entity_manager'
+
+  App\Scales\Application\OutputPorts\PurchaseScalesRepositoryInterface:
+    alias: App\Scales\Infrastructure\OutputAdapters\Repositories\PurchaseScalesRepository
+
+  App\Scales\Infrastructure\OutputAdapters\Services\EmailPurchaseScalesService:
+    arguments:
+      $mailer: '@mailer.mailer'
+      $eventDispatcher: '@event_dispatcher'
+      $logger: '@logger'
+
+  App\Scales\Application\OutputPorts\EmailPurchaseScalesServiceInterface:
+    alias: App\Scales\Infrastructure\OutputAdapters\Services\EmailPurchaseScalesService
+
+  App\Scales\Application\UseCases\PurchaseScalesUseCase:
+    arguments:
+      $purchaseScalesRepository: '@App\Scales\Application\OutputPorts\PurchaseScalesRepositoryInterface'
+      $emailService: '@App\Scales\Application\OutputPorts\EmailPurchaseScalesServiceInterface'
+      $entityManager: '@doctrine.orm.main_entity_manager'
+      $logger: '@logger'
+
+  App\Scales\Application\InputPorts\PurchaseScalesUseCaseInterface:
+    alias: App\Scales\Application\UseCases\PurchaseScalesUseCase
+
+  # --------------------------
+  # CONTROL PANEL - PURCHASE
+  # --------------------------
+  App\ControlPanel\Purchase\Infrastructure\InputAdapters\:
+    resource: '../src/ControlPanel/Purchase/Infrastructure/InputAdapters'
+    tags: ['controller.service_arguments']
+
+  App\ControlPanel\Purchase\Application\OutputPorts\PurchaseScalesRepositoryInterface:
+    alias: App\ControlPanel\Purchase\Infrastructure\OutputAdapters\Repositories\PurchaseScalesRepository
+
+  App\ControlPanel\Purchase\Infrastructure\OutputAdapters\Repositories\PurchaseScalesRepository:
+    arguments:
+      $entityManager: '@doctrine.orm.main_entity_manager'
+
+  App\ControlPanel\Purchase\Application\UseCases\GetPurchaseScalesUseCase:
+    arguments:
+      $purchaseScalesRepository: '@App\ControlPanel\Purchase\Application\OutputPorts\PurchaseScalesRepositoryInterface'
+
+  App\ControlPanel\Purchase\Application\InputPorts\GetPurchaseScalesUseCaseInterface:
+    alias: App\ControlPanel\Purchase\Application\UseCases\GetPurchaseScalesUseCase
+
+  # Process Purchase Scales
+  App\ControlPanel\Purchase\Infrastructure\OutputAdapters\Repositories\ClientRepository:
+    arguments:
+      $entityManager: '@doctrine.orm.main_entity_manager'
+
+  App\ControlPanel\Purchase\Application\OutputPorts\ClientRepositoryInterface:
+    alias: App\ControlPanel\Purchase\Infrastructure\OutputAdapters\Repositories\ClientRepository
+
+  App\ControlPanel\Purchase\Infrastructure\OutputAdapters\Services\EmailProcessPurchaseScalesService:
+    arguments:
+      $mailer: '@mailer.mailer'
+      $eventDispatcher: '@event_dispatcher'
+      $logger: '@logger'
+
+  App\ControlPanel\Purchase\Application\OutputPorts\EmailProcessPurchaseScalesServiceInterface:
+    alias: App\ControlPanel\Purchase\Infrastructure\OutputAdapters\Services\EmailProcessPurchaseScalesService
+
+  App\ControlPanel\Purchase\Application\UseCases\ProcessPurchaseScalesUseCase:
+    arguments:
+      $purchaseScalesRepository: '@App\ControlPanel\Purchase\Application\OutputPorts\PurchaseScalesRepositoryInterface'
+      $clientRepository: '@App\ControlPanel\Purchase\Application\OutputPorts\ClientRepositoryInterface'
+      $registerTtnDeviceUseCase: '@App\Ttn\Application\InputPorts\RegisterTtnDeviceUseCaseInterface'
+      $emailService: '@App\ControlPanel\Purchase\Application\OutputPorts\EmailProcessPurchaseScalesServiceInterface'
+
+  App\ControlPanel\Purchase\Application\InputPorts\ProcessPurchaseScalesUseCaseInterface:
+    alias: App\ControlPanel\Purchase\Application\UseCases\ProcessPurchaseScalesUseCase

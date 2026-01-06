@@ -156,7 +156,7 @@ class LoginUserUseCase implements LoginUserInputPort
      * Restablece el contador de intentos fallidos de login para un usuario.
      *
      * Este método establece el contador de intentos fallidos a 0 y desbloquea la cuenta si estaba bloqueada,
-     * eliminando cualquier valor en el campo `lockedUntil`.
+     * eliminando cualquier valor en el campo `lockedUntil`. También actualiza el campo `last_access` con la fecha y hora actual.
      *
      * @param User $user la entidad del usuario cuyo contador de intentos fallidos se va a restablecer
      */
@@ -164,6 +164,7 @@ class LoginUserUseCase implements LoginUserInputPort
     {
         $user->setFailedAttempts(0);
         $user->setLockedUntil(null); // Desbloquear la cuenta en caso de que esté bloqueada
+        $user->setLastAccess(new \DateTimeImmutable()); // Actualiza el campo last_access con la fecha y hora actual
         $this->entityManager->persist($user);
         $this->entityManager->flush();
     }
