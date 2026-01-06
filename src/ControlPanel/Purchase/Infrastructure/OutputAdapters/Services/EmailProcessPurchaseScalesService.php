@@ -34,7 +34,12 @@ class EmailProcessPurchaseScalesService implements EmailProcessPurchaseScalesSer
 
     public function sendScalesProcessingNotificationToClient(Client $client, PurchaseScales $purchaseScales): void
     {
-        // Get client contact email
+        $this->logger->info('Attempting to send scales processing notification', [
+            'uuidClient' => $client->getUuidClient(),
+            'clientName' => $client->getName(),
+            'uuidPurchase' => $purchaseScales->getUuidPurchase(),
+        ]);
+
         $clientEmail = $this->getClientContactEmail($client);
 
         if (!$clientEmail) {
@@ -86,14 +91,16 @@ class EmailProcessPurchaseScalesService implements EmailProcessPurchaseScalesSer
     }
 
     /**
-     * Send email and catch exceptions.
-     *
-     * @return array{string, ?string, ?int, ?string} [status, errorMessage, errorCode, errorType]
+     * @return array{string, ?string, ?int, ?string}
      */
     private function sendCatching(Email $email): array
     {
         try {
             $this->mailer->send($email);
+            $this->logger->info('Email sent successfully', [
+                'to' => $email->getTo()[0]->getAddress(),
+                'subject' => $email->getSubject(),
+            ]);
             return ['sent', null, null, null];
         } catch (TransportExceptionInterface $e) {
             $this->logger->error('Failed to send email', [
@@ -132,19 +139,23 @@ class EmailProcessPurchaseScalesService implements EmailProcessPurchaseScalesSer
         $this->eventDispatcher->dispatch($event);
     }
 
-    /**
-     * Get client contact email.
-     *
-     * TODO: Implement logic to get client contact email.
-     * See EmailPurchaseScalesService for implementation notes.
-     */
     private function getClientContactEmail(Client $client): ?string
     {
-        $this->logger->warning('getClientContactEmail not implemented', [
+        $email = $client->getCompanyEmail();
+
+        if (!$email) {
+            $this->logger->warning('No company email found for client', [
+                'uuidClient' => $client->getUuidClient(),
+                'clientName' => $client->getName(),
+            ]);
+            return null;
+        }
+
+        $this->logger->info('Client contact email found', [
             'uuidClient' => $client->getUuidClient(),
-            'clientName' => $client->getName(),
+            'email' => $email,
         ]);
 
-        return null;
+        return $email;
     }
 }

@@ -185,7 +185,6 @@ class EmailPurchaseScalesService implements EmailPurchaseScalesServiceInterface
     /**
      * Get client contact email.
      *
-     * TODO: Implement logic to get client contact email.
      * This needs to query the appropriate user or contact table to find
      * the primary contact email for the client. Options include:
      * 1. Query users table for users associated with this client
@@ -201,25 +200,21 @@ class EmailPurchaseScalesService implements EmailPurchaseScalesServiceInterface
      */
     private function getClientContactEmail(Client $client): ?string
     {
-        $this->logger->warning('getClientContactEmail not implemented', [
+        $email = $client->getCompanyEmail();
+
+        if (!$email) {
+            $this->logger->warning('No company email found for client', [
+                'uuidClient' => $client->getUuidClient(),
+                'clientName' => $client->getName(),
+            ]);
+            return null;
+        }
+
+        $this->logger->info('Client contact email found', [
             'uuidClient' => $client->getUuidClient(),
-            'clientName' => $client->getName(),
+            'email' => $email,
         ]);
 
-        // TODO: Implement one of these approaches:
-        // Option 1: Query users associated with client
-        // $users = $this->entityManager->getRepository(User::class)
-        //     ->findBy(['clients' => $client], [], 1);
-        // return $users ? $users[0]->getEmail() : null;
-
-        // Option 2: If client has a contact_email field
-        // return $client->getContactEmail();
-
-        // Option 3: Query a client_contacts table
-        // $contact = $this->entityManager->getRepository(ClientContact::class)
-        //     ->findOneBy(['client' => $client, 'is_primary' => true]);
-        // return $contact ? $contact->getEmail() : null;
-
-        return null;
+        return $email;
     }
 }
