@@ -17,6 +17,14 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+        
+        ttn_webhook:
+            pattern: ^/api/ttn-uplink
+            security: false
+
+        stripe_webhook:
+            pattern: ^/api/stripe/webhook
+            security: false
 
         api:
             pattern: ^/api
