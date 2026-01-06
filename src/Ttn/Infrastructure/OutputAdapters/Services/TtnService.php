@@ -156,7 +156,7 @@ class TtnService implements TtnServiceInterface
                         'application_server_address',
                         'ids.device_id',
                         'ids.dev_eui',
-                        'ids.join_eui',
+                        // 'ids.join_eui' is read-only, already set in Identity Server
                         'root_keys.app_key.key',
                     ],
                 ],
@@ -183,7 +183,7 @@ class TtnService implements TtnServiceInterface
                         'lorawan_version',
                         'ids.device_id',
                         'ids.dev_eui',
-                        'ids.join_eui',
+                        // 'ids.join_eui' is read-only, already set in Identity Server
                         'lorawan_phy_version',
                         'frequency_plan_id',
                     ],
@@ -202,7 +202,8 @@ class TtnService implements TtnServiceInterface
                     ],
                 ],
                 'field_mask' => [
-                    'paths' => ['ids.device_id', 'ids.dev_eui', 'ids.join_eui'],
+                    // 'ids.join_eui' is read-only, already set in Identity Server
+                    'paths' => ['ids.device_id', 'ids.dev_eui'],
                 ],
             ];
 
