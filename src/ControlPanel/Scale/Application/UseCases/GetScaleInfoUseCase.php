@@ -49,14 +49,16 @@ class GetScaleInfoUseCase implements GetScaleInfoUseCaseInterface
             $endDeviceName = $scale->getEndDeviceName();
             $clients = [];
             $voltagePercentages = [];
+            $lastSend = [];
             
             if ($endDeviceName) {
                 $clients = $this->clientRepository->findByUuids([$endDeviceName]);
                 $scalesByClient = [$endDeviceName => [$endDeviceId]];
                 $voltagePercentages = $this->clientScalesRepository->getVoltagePercentagesByClient($scalesByClient);
+                $lastSend = $this->clientScalesRepository->getLastSendTimestampsByClient($scalesByClient);
             }
 
-            $scaleInfo = $this->mapScaleToArray($scale, $clients, $voltagePercentages);
+            $scaleInfo = $this->mapScaleToArray($scale, $clients, $voltagePercentages, $lastSend);
 
             return new GetScaleInfoResponse([$scaleInfo], null, 200);
         } else {
@@ -85,17 +87,19 @@ class GetScaleInfoUseCase implements GetScaleInfoUseCaseInterface
             // Batch load voltage percentages from client databases
             $voltagePercentages = $this->clientScalesRepository->getVoltagePercentagesByClient($scalesByClient);
 
+            $lastSend = $this->clientScalesRepository->getLastSendTimestampsByClient($scalesByClient);
+
             // Map scales to array
             $scalesInfo = [];
             foreach ($scales as $scale) {
-                $scalesInfo[] = $this->mapScaleToArray($scale, $clients, $voltagePercentages);
+                $scalesInfo[] = $this->mapScaleToArray($scale, $clients, $voltagePercentages, $lastSend);
             }
 
             return new GetScaleInfoResponse($scalesInfo, null, 200);
         }
     }
 
-    private function mapScaleToArray(PoolTtnDevice $scale, array $clients = [], array $voltagePercentages = []): array
+    private function mapScaleToArray(PoolTtnDevice $scale, array $clients = [], array $voltagePercentages = [], array $lastSend = []): array
     {
         $clientName = null;
         $endDeviceName = $scale->getEndDeviceName();
@@ -111,6 +115,7 @@ class GetScaleInfoUseCase implements GetScaleInfoUseCaseInterface
             'end_device_name' => $endDeviceName,
             'client_name' => $clientName,
             'voltage_percentage' => $voltagePercentages[$endDeviceId] ?? null,
+            'last_send_timestamp' => $lastSend[$endDeviceId] ?? null,
         ];
     }
 }
