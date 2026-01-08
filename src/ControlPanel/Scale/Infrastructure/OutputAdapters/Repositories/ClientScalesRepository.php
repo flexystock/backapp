@@ -58,4 +58,41 @@ class ClientScalesRepository implements ClientScalesRepositoryInterface
 
         return $voltagePercentages;
     }
+
+    public function getLastSendTimestampsByClient(array $scalesByClient): array
+    {
+        $lastSendTimestamps = [];
+
+        foreach ($scalesByClient as $clientUuid => $endDeviceIds) {
+            if (empty($endDeviceIds)) {
+                continue;
+            }
+
+            try {
+                // Get the client's entity manager
+                $clientEntityManager = $this->connectionManager->getEntityManager($clientUuid);
+
+                // Query scales for this client
+                $qb = $clientEntityManager->createQueryBuilder();
+                $qb->select('s.end_device_id', 's.last_send')
+                    ->from(Scales::class, 's')
+                    ->where($qb->expr()->in('s.end_device_id', ':endDeviceIds'))
+                    ->setParameter('endDeviceIds', $endDeviceIds);
+
+                $results = $qb->getQuery()->getResult();
+
+                // Map results to associative array
+                foreach ($results as $result) {
+                    $endDeviceId = $result['end_device_id'];
+                    $lastSend = $result['last_send'];
+                    $lastSendTimestamps[$endDeviceId] = $lastSend ? \DateTimeImmutable::createFromMutable($lastSend) : null;
+                }
+            } catch (\Exception $e) {
+                $this->logger->error("Error getting last send timestamps for client {$clientUuid}: {$e->getMessage()}");
+                // Continue with other clients even if one fails
+            }
+        }
+
+        return $lastSendTimestamps;
+    }
 }
