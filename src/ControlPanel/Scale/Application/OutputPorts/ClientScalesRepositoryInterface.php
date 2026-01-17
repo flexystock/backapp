@@ -35,4 +35,15 @@ interface ClientScalesRepositoryInterface
      * @return array associative array [end_device_id => bool]
      */
     public function getActiveStatusByClient(array $scalesByClient): array;
+
+    /**
+     * Update active status for a scale in a client database.
+     *
+     * @param string $clientUuid UUID of the client
+     * @param string $endDeviceId end_device_id of the scale
+     * @param bool $active new active status
+     *
+     * @return bool true if successful, false otherwise
+     */
+    public function updateActiveStatus(string $clientUuid, string $endDeviceId, bool $active): bool;
 }

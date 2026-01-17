@@ -132,4 +132,34 @@ class ClientScalesRepository implements ClientScalesRepositoryInterface
 
         return $activeStatuses;
     }
+
+    public function updateActiveStatus(string $clientUuid, string $endDeviceId, bool $active): bool
+    {
+        try {
+            // Get the client's entity manager
+            $clientEntityManager = $this->connectionManager->getEntityManager($clientUuid);
+
+            // Find the scale by end_device_id
+            $scale = $clientEntityManager->getRepository(Scales::class)
+                ->findOneBy(['end_device_id' => $endDeviceId]);
+
+            if (!$scale) {
+                $this->logger->warning("Scale not found with end_device_id {$endDeviceId} for client {$clientUuid}");
+
+                return false;
+            }
+
+            // Update the active status
+            $scale->setActive($active);
+            $clientEntityManager->flush();
+
+            $this->logger->info("Successfully updated active status to " . ($active ? 'true' : 'false') . " for scale {$endDeviceId} in client {$clientUuid}");
+
+            return true;
+        } catch (\Exception $e) {
+            $this->logger->error("Error updating active status for scale {$endDeviceId} in client {$clientUuid}: {$e->getMessage()}");
+
+            return false;
+        }
+    }
 }
