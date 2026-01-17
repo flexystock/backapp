@@ -41,4 +41,9 @@ class ClientRepository extends ServiceEntityRepository implements ClientReposito
 
         return $indexed;
     }
+
+    public function findOneByName(string $name): ?Client
+    {
+        return $this->findOneBy(['name' => $name]);
+    }
 }

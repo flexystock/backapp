@@ -169,6 +169,9 @@ services:
   App\ControlPanel\Scale\Application\InputPorts\GetScaleInfoUseCaseInterface:
     alias: App\ControlPanel\Scale\Application\UseCases\GetScaleInfoUseCase
 
+  App\ControlPanel\Scale\Application\InputPorts\ActivateDeactivateScaleUseCaseInterface:
+    alias: App\ControlPanel\Scale\Application\UseCases\ActivateDeactivateScaleUseCase
+
   # TTN Section
   App\ControlPanel\Ttn\Infrastructure\InputAdapters\:
     resource: '../src/ControlPanel/Ttn/Infrastructure/InputAdapters'

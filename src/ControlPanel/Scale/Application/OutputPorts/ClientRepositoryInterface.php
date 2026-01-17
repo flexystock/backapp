@@ -25,4 +25,13 @@ interface ClientRepositoryInterface
      * @return array array of Client entities indexed by UUID
      */
     public function findByUuids(array $uuids): array;
+
+    /**
+     * Find a client by their name.
+     *
+     * @param string $name the client's name
+     *
+     * @return Client|null the Client entity or null if not found
+     */
+    public function findOneByName(string $name): ?Client;
 }
