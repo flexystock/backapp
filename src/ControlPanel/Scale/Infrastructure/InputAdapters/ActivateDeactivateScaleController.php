@@ -66,6 +66,11 @@ class ActivateDeactivateScaleController extends AbstractController
 
         $clientName = $data['client_name'];
         $endDeviceId = $data['end_device_id'];
+        
+        // Validate boolean value
+        if (!is_bool($data['active']) && !in_array($data['active'], [0, 1, '0', '1', true, false], true)) {
+            return new JsonResponse(['error' => 'active must be a boolean value (true, false, 0, or 1)'], 400);
+        }
         $active = (bool) $data['active'];
 
         $dto = new ActivateDeactivateScaleRequest($clientName, $endDeviceId, $active);
