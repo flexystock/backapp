@@ -95,4 +95,41 @@ class ClientScalesRepository implements ClientScalesRepositoryInterface
 
         return $lastSendTimestamps;
     }
+
+    public function getActiveStatusByClient(array $scalesByClient): array
+    {
+        $activeStatuses = [];
+
+        foreach ($scalesByClient as $clientUuid => $endDeviceIds) {
+            if (empty($endDeviceIds)) {
+                continue;
+            }
+
+            try {
+                // Get the client's entity manager
+                $clientEntityManager = $this->connectionManager->getEntityManager($clientUuid);
+
+                // Query scales for this client
+                $qb = $clientEntityManager->createQueryBuilder();
+                $qb->select('s.end_device_id', 's.active')
+                    ->from(Scales::class, 's')
+                    ->where($qb->expr()->in('s.end_device_id', ':endDeviceIds'))
+                    ->setParameter('endDeviceIds', $endDeviceIds);
+
+                $results = $qb->getQuery()->getResult();
+
+                // Map results to associative array
+                foreach ($results as $result) {
+                    $endDeviceId = $result['end_device_id'];
+                    $active = $result['active'];
+                    $activeStatuses[$endDeviceId] = (bool) $active;
+                }
+            } catch (\Exception $e) {
+                $this->logger->error("Error getting active status for client {$clientUuid}: {$e->getMessage()}");
+                // Continue with other clients even if one fails
+            }
+        }
+
+        return $activeStatuses;
+    }
 }
