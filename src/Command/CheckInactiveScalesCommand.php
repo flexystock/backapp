@@ -62,11 +62,11 @@ class CheckInactiveScalesCommand extends Command
                         s.voltage_percentage,
                         s.battery_die,
                         p.name as product_name,
-                        TIMESTAMPDIFF(MINUTE, s.last_send, NOW()) as minutes_ago
+                        TIMESTAMPDIFF(MINUTE, DATE_ADD(s.last_send, INTERVAL -1 HOUR), UTC_TIMESTAMP()) as minutes_ago
                     FROM scales s
                     LEFT JOIN products p ON s.product_id = p.id
                     WHERE s.last_send IS NOT NULL 
-                    AND s.last_send < DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+                    AND DATE_ADD(s.last_send, INTERVAL -1 HOUR) < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 MINUTE)
                     AND s.active = 1
                 ";
 
