@@ -50,15 +50,17 @@ class GetScaleInfoUseCase implements GetScaleInfoUseCaseInterface
             $clients = [];
             $voltagePercentages = [];
             $lastSend = [];
+            $activeStatuses = [];
             
             if ($endDeviceName) {
                 $clients = $this->clientRepository->findByUuids([$endDeviceName]);
                 $scalesByClient = [$endDeviceName => [$endDeviceId]];
                 $voltagePercentages = $this->clientScalesRepository->getVoltagePercentagesByClient($scalesByClient);
                 $lastSend = $this->clientScalesRepository->getLastSendTimestampsByClient($scalesByClient);
+                $activeStatuses = $this->clientScalesRepository->getActiveStatusByClient($scalesByClient);
             }
 
-            $scaleInfo = $this->mapScaleToArray($scale, $clients, $voltagePercentages, $lastSend);
+            $scaleInfo = $this->mapScaleToArray($scale, $clients, $voltagePercentages, $lastSend, $activeStatuses);
 
             return new GetScaleInfoResponse([$scaleInfo], null, 200);
         } else {
@@ -89,17 +91,19 @@ class GetScaleInfoUseCase implements GetScaleInfoUseCaseInterface
 
             $lastSend = $this->clientScalesRepository->getLastSendTimestampsByClient($scalesByClient);
 
+            $activeStatuses = $this->clientScalesRepository->getActiveStatusByClient($scalesByClient);
+
             // Map scales to array
             $scalesInfo = [];
             foreach ($scales as $scale) {
-                $scalesInfo[] = $this->mapScaleToArray($scale, $clients, $voltagePercentages, $lastSend);
+                $scalesInfo[] = $this->mapScaleToArray($scale, $clients, $voltagePercentages, $lastSend, $activeStatuses);
             }
 
             return new GetScaleInfoResponse($scalesInfo, null, 200);
         }
     }
 
-    private function mapScaleToArray(PoolTtnDevice $scale, array $clients = [], array $voltagePercentages = [], array $lastSend = []): array
+    private function mapScaleToArray(PoolTtnDevice $scale, array $clients = [], array $voltagePercentages = [], array $lastSend = [], array $activeStatuses = []): array
     {
         $clientName = null;
         $endDeviceName = $scale->getEndDeviceName();
@@ -116,6 +120,7 @@ class GetScaleInfoUseCase implements GetScaleInfoUseCaseInterface
             'client_name' => $clientName,
             'voltage_percentage' => $voltagePercentages[$endDeviceId] ?? null,
             'last_send_timestamp' => $lastSend[$endDeviceId] ?? null,
+            'active' => $activeStatuses[$endDeviceId] ?? false,
         ];
     }
 }

@@ -78,6 +78,7 @@ security:
         - { path: ^/api/admin, roles: ROLE_ROOT }
         - { path: ^/api/control-panel, roles: ROLE_ROOT }
         - { path: ^/api/control-panel/scales, roles: ROLE_ROOT }
+        - { path: ^/api/control-panel/scales/activate-deactivate, roles: ROLE_ROOT }
         - { path: ^/api/control-panel/ttn/device, roles: ROLE_ROOT }
         - { path: ^/api/control-panel/ttn/assign-device, roles: ROLE_ROOT }
         - { path: ^/api/control-panel/purchases, roles: ROLE_ROOT }
