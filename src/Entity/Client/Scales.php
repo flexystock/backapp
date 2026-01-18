@@ -31,6 +31,13 @@ class Scales
     private string $uuid_scale;
 
     /**
+     * Estado de activación de la báscula (0=desactivada, 1=activa).
+     * TINYINT(1) NOT NULL DEFAULT 0.
+     */
+    #[ORM\Column(name: 'active', type: 'boolean', options: ['default' => 0])]
+    private bool $active = false;
+
+    /**
      * ID del dispositivo en TTN (end_device_id).
      */
     #[ORM\Column(name: 'end_device_id', type: 'string', length: 50)]
@@ -269,6 +276,18 @@ class Scales
     public function setVoltagePercentage(float $voltagePercentage): self
     {
         $this->voltage_percentage = $voltagePercentage;
+
+        return $this;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->active;
+    }
+
+    public function setActive(bool $active): self
+    {
+        $this->active = $active;
 
         return $this;
     }

@@ -25,4 +25,25 @@ interface ClientScalesRepositoryInterface
      * @return array associative array [end_device_id => DateTimeImmutable|null]
      */
     public function getLastSendTimestampsByClient(array $scalesByClient): array;
+
+    /**
+     * Get active status for scales from client databases.
+     * Returns an associative array with end_device_id as key and active status (bool) as value.
+     *
+     * @param array $scalesByClient array where keys are client UUIDs and values are arrays of end_device_ids
+     *
+     * @return array associative array [end_device_id => bool]
+     */
+    public function getActiveStatusByClient(array $scalesByClient): array;
+
+    /**
+     * Update active status for a scale in a client database.
+     *
+     * @param string $clientUuid UUID of the client
+     * @param string $endDeviceId end_device_id of the scale
+     * @param bool $active new active status
+     *
+     * @return bool true if successful, false otherwise
+     */
+    public function updateActiveStatus(string $clientUuid, string $endDeviceId, bool $active): bool;
 }
