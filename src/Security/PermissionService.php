@@ -36,6 +36,7 @@ class PermissionService
             'product.view', 
             'product.update',
             'report.view',
+            'report.create',
             'scale.view', 
             'scale.assign',
             'scale.create', 
