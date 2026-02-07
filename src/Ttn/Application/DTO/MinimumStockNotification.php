@@ -7,7 +7,7 @@ class MinimumStockNotification
     public function __construct(
         private readonly string $uuidClient,
         private readonly string $clientName,
-        private readonly ?string $recipientEmail,
+        private readonly array $recipientEmails,
         private readonly int $productId,
         private readonly string $productName,
         private readonly int $scaleId,
@@ -29,9 +29,12 @@ class MinimumStockNotification
         return $this->clientName;
     }
 
-    public function getRecipientEmail(): ?string
+    /**
+     * @return string[]
+     */
+    public function getRecipientEmails(): array
     {
-        return $this->recipientEmail;
+        return $this->recipientEmails;
     }
 
     public function getProductId(): int
