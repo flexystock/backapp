@@ -364,7 +364,8 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
     ): array {
         $query = $entityManager->createQuery(
             'SELECT atr.email FROM App\Entity\Client\AlarmTypeRecipient atr 
-             WHERE atr.uuid_client = :uuidClient AND atr.alarmType = :alarmTypeId'
+             JOIN atr.alarmType at
+             WHERE atr.uuid_client = :uuidClient AND at.id = :alarmTypeId'
         );
         $query->setParameter('uuidClient', $uuidClient);
         $query->setParameter('alarmTypeId', $alarmTypeId);
