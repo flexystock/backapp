@@ -23,7 +23,7 @@ class GetAlarmRecipientsUseCase implements GetAlarmRecipientsUseCaseInterface
     public function execute(string $uuidClient, ?int $alarmTypeId = null): array
     {
         // Switch to client database
-        $this->connectionManager->switchConnection($uuidClient);
+        //$this->connectionManager->switchConnection($uuidClient);
         $entityManager = $this->connectionManager->getEntityManager($uuidClient);
 
         // Create repository

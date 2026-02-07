@@ -17,7 +17,7 @@ class DeleteAlarmRecipientUseCase implements DeleteAlarmRecipientUseCaseInterfac
     public function execute(int $id, string $uuidClient): bool
     {
         // Switch to client database
-        $this->connectionManager->switchConnection($uuidClient);
+        //$this->connectionManager->switchConnection($uuidClient);
         $entityManager = $this->connectionManager->getEntityManager($uuidClient);
 
         // Create repository

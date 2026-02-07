@@ -22,7 +22,7 @@ class CreateAlarmRecipientUseCase implements CreateAlarmRecipientUseCaseInterfac
         $uuidClient = $request->getUuidClient();
 
         // Switch to client database
-        $this->connectionManager->switchConnection($uuidClient);
+        //$this->connectionManager->switchConnection($uuidClient);
         $entityManager = $this->connectionManager->getEntityManager($uuidClient);
 
         // Create repository
