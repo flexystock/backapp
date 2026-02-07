@@ -27,7 +27,7 @@ class EmailMinimumStockNotifier implements MinimumStockNotificationInterface
 
     public function notify(MinimumStockNotification $notification): void
     {
-        $recipientEmail = $notification->getRecipientEmail();
+        $recipientEmails = $notification->getRecipientEmails();
         $subject = sprintf('Alerta de stock bajo: %s', $notification->getProductName());
         $txtActual = number_format($notification->getCurrentWeight(), 0, '.', '');
         $txtMin = number_format($notification->getMinimumStock(), 0, '.', '');
@@ -60,13 +60,39 @@ class EmailMinimumStockNotifier implements MinimumStockNotificationInterface
         $errorCode = null;
         $errorType = null;
         $sentAt = new DateTimeImmutable();
-        $recipientForLog = $recipientEmail ?? 'not-configured';
 
-        if (!$recipientEmail) {
+        if (empty($recipientEmails)) {
             $status = 'failure';
-            $errorMessage = 'El cliente no tiene un correo electrónico configurado.';
-            $errorType = 'missing_recipient';
-        } else {
+            $errorMessage = 'No hay destinatarios configurados para este tipo de alarma.';
+            $errorType = 'missing_recipients';
+            
+            $this->dispatchMailSentEvent(
+                'not-configured',
+                $subject,
+                $htmlBody,
+                $status,
+                $errorMessage,
+                $errorCode,
+                $sentAt,
+                $errorType,
+                $notification
+            );
+            
+            $this->logger->warning('[EmailMinimumStockNotifier] No recipients configured for stock alert.', [
+                'uuidClient' => $notification->getUuidClient(),
+                'productId' => $notification->getProductId(),
+            ]);
+            
+            return;
+        }
+
+        // Send email to all recipients
+        foreach ($recipientEmails as $recipientEmail) {
+            $emailStatus = 'success';
+            $emailErrorMessage = null;
+            $emailErrorCode = null;
+            $emailErrorType = null;
+
             $email = (new Email())
                 ->from($this->senderEmail)
                 ->to($recipientEmail)
@@ -77,30 +103,31 @@ class EmailMinimumStockNotifier implements MinimumStockNotificationInterface
             try {
                 $this->mailer->send($email);
             } catch (TransportExceptionInterface $exception) {
-                $status = 'failure';
-                $errorMessage = $exception->getMessage();
-                $errorCode = $this->normalizeErrorCode($exception->getCode());
-                $errorType = get_debug_type($exception);
+                $emailStatus = 'failure';
+                $emailErrorMessage = $exception->getMessage();
+                $emailErrorCode = $this->normalizeErrorCode($exception->getCode());
+                $emailErrorType = get_debug_type($exception);
 
                 $this->logger->error('[EmailMinimumStockNotifier] Error enviando alerta de stock.', [
                     'exception' => $exception->getMessage(),
                     'uuidClient' => $notification->getUuidClient(),
                     'productId' => $notification->getProductId(),
+                    'recipient' => $recipientEmail,
                 ]);
             }
-        }
 
-        $this->dispatchMailSentEvent(
-            $recipientForLog,
-            $subject,
-            $htmlBody,
-            $status,
-            $errorMessage,
-            $errorCode,
-            $sentAt,
-            $errorType,
-            $notification
-        );
+            $this->dispatchMailSentEvent(
+                $recipientEmail,
+                $subject,
+                $htmlBody,
+                $emailStatus,
+                $emailErrorMessage,
+                $emailErrorCode,
+                $sentAt,
+                $emailErrorType,
+                $notification
+            );
+        }
     }
 
     private function dispatchMailSentEvent(
