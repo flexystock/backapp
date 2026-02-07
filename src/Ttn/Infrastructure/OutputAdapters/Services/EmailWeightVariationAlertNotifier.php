@@ -25,7 +25,7 @@ class EmailWeightVariationAlertNotifier implements WeightVariationAlertNotifierI
 
     public function notify(WeightVariationAlertNotification $notification): void
     {
-        $recipientEmail = $notification->getRecipientEmail();
+        $recipientEmails = $notification->getRecipientEmails();
         $reasons = $this->buildReasons($notification);
         $subject = sprintf('Alerta de variación de peso: %s', $notification->getProductName());
         $textVariation = number_format($notification->getVariation(), 2, ',', '.');
@@ -81,13 +81,39 @@ class EmailWeightVariationAlertNotifier implements WeightVariationAlertNotifierI
         $errorCode = null;
         $errorType = null;
         $sentAt = new DateTimeImmutable();
-        $recipientForLog = $recipientEmail ?? 'not-configured';
 
-        if (!$recipientEmail) {
+        if (empty($recipientEmails)) {
             $status = 'failure';
-            $errorMessage = 'El cliente no tiene un correo electrónico configurado.';
-            $errorType = 'missing_recipient';
-        } else {
+            $errorMessage = 'No hay destinatarios configurados para este tipo de alarma.';
+            $errorType = 'missing_recipients';
+            
+            $this->dispatchMailSentEvent(
+                'not-configured',
+                $subject,
+                $htmlBody,
+                $status,
+                $errorMessage,
+                $errorCode,
+                $sentAt,
+                $errorType,
+                $notification
+            );
+            
+            $this->logger->warning('[EmailWeightVariationAlertNotifier] No recipients configured for weight variation alert.', [
+                'uuidClient' => $notification->getUuidClient(),
+                'productId' => $notification->getProductId(),
+            ]);
+            
+            return;
+        }
+
+        // Send email to all recipients
+        foreach ($recipientEmails as $recipientEmail) {
+            $emailStatus = 'success';
+            $emailErrorMessage = null;
+            $emailErrorCode = null;
+            $emailErrorType = null;
+
             $email = (new Email())
                 ->from($this->senderEmail)
                 ->to($recipientEmail)
@@ -98,30 +124,31 @@ class EmailWeightVariationAlertNotifier implements WeightVariationAlertNotifierI
             try {
                 $this->mailer->send($email);
             } catch (TransportExceptionInterface $exception) {
-                $status = 'failure';
-                $errorMessage = $exception->getMessage();
-                $errorCode = $this->normalizeErrorCode($exception->getCode());
-                $errorType = get_debug_type($exception);
+                $emailStatus = 'failure';
+                $emailErrorMessage = $exception->getMessage();
+                $emailErrorCode = $this->normalizeErrorCode($exception->getCode());
+                $emailErrorType = get_debug_type($exception);
 
                 $this->logger->error('[EmailWeightVariationAlertNotifier] Error enviando alerta de variación de peso.', [
                     'exception' => $exception->getMessage(),
                     'uuidClient' => $notification->getUuidClient(),
                     'productId' => $notification->getProductId(),
+                    'recipient' => $recipientEmail,
                 ]);
             }
-        }
 
-        $this->dispatchMailSentEvent(
-            $recipientForLog,
-            $subject,
-            $htmlBody,
-            $status,
-            $errorMessage,
-            $errorCode,
-            $sentAt,
-            $errorType,
-            $notification
-        );
+            $this->dispatchMailSentEvent(
+                $recipientEmail,
+                $subject,
+                $htmlBody,
+                $emailStatus,
+                $emailErrorMessage,
+                $emailErrorCode,
+                $sentAt,
+                $emailErrorType,
+                $notification
+            );
+        }
     }
 
     private function buildReasons(WeightVariationAlertNotification $notification): string

@@ -33,14 +33,14 @@ try {
 
 // Obtener clientes
 if ($clientIdentifier !== null) {
-    $sql = "SELECT uuid_client, database_name, host, port_bbdd, database_user_name, database_password 
+    $sql = "SELECT uuid_client, database_name, host, port_bbdd, database_user_name, database_password, company_email 
             FROM client 
             WHERE uuid_client = :id OR database_name = :id2";
     $stmt = $mainPdo->prepare($sql);
     $stmt->execute(['id' => $clientIdentifier, 'id2' => $clientIdentifier]);
     $clients = $stmt->fetchAll();
 } else {
-    $sql = "SELECT uuid_client, database_name, host, port_bbdd, database_user_name, database_password 
+    $sql = "SELECT uuid_client, database_name, host, port_bbdd, database_user_name, database_password, company_email 
             FROM client";
     $stmt = $mainPdo->query($sql);
     $clients = $stmt->fetchAll();
@@ -55,7 +55,7 @@ function isSqlFile(string $file): bool {
     return strtolower(pathinfo($file, PATHINFO_EXTENSION)) === 'sql';
 }
 
-function applyMigrations(PDO $pdo, string $basePath): void {
+function applyMigrations(PDO $pdo, string $basePath, ?string $uuidClient = null, ?string $companyEmail = null): void {
     if (!is_dir($basePath)) {
         echo "❌ Invalid migrations path: $basePath\n";
         return;
@@ -119,6 +119,31 @@ function applyMigrations(PDO $pdo, string $basePath): void {
                 $ins = $pdo->prepare("INSERT INTO migrations_version (version, script) VALUES (?, ?)");
                 $ins->execute([$versionDir, $file]);
                 echo "✅ Applied migration: $file\n";
+                
+                // Special handling for migration 026/002 - populate alarm_type_recipients
+                if ($versionDir === '026' && $file === '002-Create-Table-Alarm-Type-Recipients.sql') {
+                    if ($uuidClient && $companyEmail) {
+                        echo "📧 Populating alarm_type_recipients with company_email...\n";
+                        try {
+                            // Get all alarm types
+                            $stmt = $pdo->query("SELECT id FROM alarm_types");
+                            $alarmTypes = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                            
+                            // Insert company_email for each alarm type
+                            $insertStmt = $pdo->prepare(
+                                "INSERT IGNORE INTO alarm_type_recipients (uuid_client, alarm_type_id, email) VALUES (?, ?, ?)"
+                            );
+                            
+                            foreach ($alarmTypes as $alarmTypeId) {
+                                $insertStmt->execute([$uuidClient, $alarmTypeId, $companyEmail]);
+                            }
+                            
+                            echo "✅ Populated alarm_type_recipients for " . count($alarmTypes) . " alarm types\n";
+                        } catch (Throwable $e) {
+                            echo "⚠️  Warning: Could not populate alarm_type_recipients: " . $e->getMessage() . "\n";
+                        }
+                    }
+                }
             } catch (Throwable $e) {
                 echo "❌ Migration error in $file: ".$e->getMessage()."\n";
                 exit(1);
@@ -161,7 +186,7 @@ foreach ($clients as $c) {
         ]);
 
         echo "✅ Connection successful\n";
-        applyMigrations($pdo, $basePath);
+        applyMigrations($pdo, $basePath, $c['uuid_client'], $c['company_email'] ?? null);
         echo "✅ Client migrations completed\n";
 
     } catch (PDOException $e) {
