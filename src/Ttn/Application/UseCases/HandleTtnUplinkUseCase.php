@@ -171,10 +171,21 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                     'uuidClient' => $uuidClient,
                 ]);
             } else {
+                // Determine alarm type: holiday takes precedence, then horario (out of hours)
+                $alarmTypeId = $isHoliday ? 3 : 2; // 3 = holiday, 2 = horario
+                
+                // Get emails from AlarmTypeRecipient table using client's entity manager
+                $recipientEmails = $this->getRecipientEmailsForAlarmType($entityManager, $uuidClient, $alarmTypeId);
+                
+                $this->logger->info('[TTN Uplink] Retrieved recipients for weight variation alert.', [
+                    'alarmTypeId' => $alarmTypeId,
+                    'recipientCount' => count($recipientEmails),
+                ]);
+
                 $notification = new WeightVariationAlertNotification(
                     $uuidClient,
                     $mainClient->getClientName(),
-                    $mainClient->getCompanyEmail(),
+                    $recipientEmails,
                     (int) $product->getId(),
                     $product->getName(),
                     (int) $scale->getId(),
@@ -240,10 +251,18 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                 return;
             }
 
+            // Get emails for stock alarm type (alarm_type_id = 1)
+            $recipientEmails = $this->getRecipientEmailsForAlarmType($entityManager, $uuidClient, 1); // 1 = stock
+            
+            $this->logger->info('[TTN Uplink] Retrieved recipients for stock alert.', [
+                'alarmTypeId' => 1,
+                'recipientCount' => count($recipientEmails),
+            ]);
+
             $notification = new MinimumStockNotification(
                 $uuidClient,
                 $mainClient->getClientName(),
-                $mainClient->getCompanyEmail(),
+                $recipientEmails,
                 (int) $product->getId(),
                 $product->getName(),
                 (int) $scale->getId(),
@@ -328,5 +347,30 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         }
 
         return is_numeric($errorCode) ? ((int) $errorCode ?: null) : null;
+    }
+
+    /**
+     * Get recipient emails for a specific alarm type from the client database
+     *
+     * @param EntityManagerInterface $entityManager
+     * @param string $uuidClient
+     * @param int $alarmTypeId
+     * @return string[]
+     */
+    private function getRecipientEmailsForAlarmType(
+        EntityManagerInterface $entityManager,
+        string $uuidClient,
+        int $alarmTypeId
+    ): array {
+        $query = $entityManager->createQuery(
+            'SELECT atr.email FROM App\Entity\Client\AlarmTypeRecipient atr 
+             WHERE atr.uuid_client = :uuidClient AND atr.alarmType = :alarmTypeId'
+        );
+        $query->setParameter('uuidClient', $uuidClient);
+        $query->setParameter('alarmTypeId', $alarmTypeId);
+
+        $result = $query->getResult();
+
+        return array_map(fn($row) => $row['email'], $result);
     }
 }
