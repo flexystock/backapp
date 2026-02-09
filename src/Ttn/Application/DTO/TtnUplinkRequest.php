@@ -9,14 +9,18 @@ class TtnUplinkRequest
     private ?string $joinEui;
     private ?float $voltage;
     private ?float $weight;
+    private int $weightGrams;
 
-    public function __construct(?string $devEui, ?string $deviceId, ?string $joinEui, ?float $voltage, ?float $weight)
+    public function __construct(?string $devEui, ?string $deviceId,
+                                ?string $joinEui, ?float $voltage, ?float $weight,
+                                int $weightGrams)
     {
         $this->devEui = $devEui;
         $this->deviceId = $deviceId;
         $this->joinEui = $joinEui;
         $this->voltage = $voltage;
         $this->weight = $weight;
+        $this->weightGrams = $weightGrams;
     }
 
     public function getDevEui(): ?string
@@ -42,5 +46,10 @@ class TtnUplinkRequest
     public function getWeight(): ?float
     {
         return $this->weight;
+    }
+
+    public function getWeightGrams(): int  // ← NUEVO
+    {
+        return $this->weightGrams;
     }
 }

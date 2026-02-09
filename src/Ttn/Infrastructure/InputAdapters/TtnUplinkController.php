@@ -38,6 +38,7 @@ class TtnUplinkController extends AbstractController
         // En “decoded_payload” están los valores “voltage” y “weight”
         $voltage = $data['uplink_message']['decoded_payload']['voltaje_V'] ?? null;
         $weight = $data['uplink_message']['decoded_payload']['peso_kg'] ?? null;
+        $weightGrams = $data['uplink_message']['decoded_payload']['peso_gramos'] ?? null;
 
         //logs
         $this->logger->debug('[TTN Uplink] deviceId', ['deviceId' => $deviceId]);
@@ -45,6 +46,7 @@ class TtnUplinkController extends AbstractController
         $this->logger->debug('[TTN Uplink] join_eui', ['join_eui' => $joinEui]);
         $this->logger->debug('[TTN Uplink] voltaje_V', ['voltaje_V' => $voltage]);
         $this->logger->debug('[TTN Uplink] peso_kg', ['peso_kg' => $weight]);
+        $this->logger->debug('[TTN Uplink] peso_gramos', ['peso_gramos' => $weightGrams]);
 
         // 4) Loguear o trabajar con esas variables
         $this->logger->info('Campos relevantes de TTN', [
@@ -53,10 +55,11 @@ class TtnUplinkController extends AbstractController
             'join_eui' => $joinEui,
             'voltage' => $voltage,
             'weight' => $weight,
+            'weight_grams' => $weightGrams
         ]);
 
         // 5) Sigue con tu lógica: guardarlo en BBDD, etc.
-        $uplinkRequest = new TtnUplinkRequest($devEui, $deviceId, $joinEui, $voltage, $weight);
+        $uplinkRequest = new TtnUplinkRequest($devEui, $deviceId, $joinEui, $voltage, $weight, $weightGrams);
         $this->handleTtnUplinkUseCase->execute($uplinkRequest);
 
         // 4) Retornar 200 o la que TTN necesite
