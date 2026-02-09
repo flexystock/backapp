@@ -39,6 +39,9 @@ class WeightsLog
     #[ORM\Column(name: 'real_weight', type: 'decimal', precision: 8, scale: 5)]
     private float $real_weight;
 
+    #[ORM\Column(type: 'integer', nullable: true, options: ['unsigned' => true])]
+    private ?int $weight_grams = null;
+
     /**
      * Peso ajustado, si se aplica algún factor de corrección.
      */
@@ -111,6 +114,17 @@ class WeightsLog
     {
         $this->real_weight = $realWeight;
 
+        return $this;
+    }
+
+    public function getWeightGrams(): ?int  // ← NUEVO
+    {
+        return $this->weight_grams;
+    }
+
+    public function setWeightGrams(?int $weight_grams): self  // ← NUEVO
+    {
+        $this->weight_grams = $weight_grams;
         return $this;
     }
 

@@ -50,22 +50,26 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
 
     public function execute(TtnUplinkRequest $request): void
     {
-        $devEui = $request->getDevEui(); // o deviceId
+        $devEui = $request->getDevEui();
         $this->logger->info('[TTN Uplink] Iniciando execute.', [
             'devEui' => $devEui,
             'deviceId' => $request->getDeviceId(),
             'voltage' => $request->getVoltage(),
-            'weight' => $request->getWeight(),
+            'weight_grams' => $request->getWeightGrams(),
+            'weight_kg' => $request->getWeight(),
         ]);
+
         if (!$devEui) {
             $this->logger->error('DEV_EUI_MISSING');
             throw new \RuntimeException('DEV_EUI_MISSING');
         }
+
         $deviceId = $request->getDeviceId();
         if (!$deviceId) {
             $this->logger->error('DEVICE_ID_MISSING');
             throw new \RuntimeException('DEVICE_ID_MISSING');
         }
+
         // 1) Buscar en pool_ttn_device
         $this->logger->debug('[TTN Uplink] Buscando en pool_ttn_device', ['deviceId' => $deviceId]);
         $ttnDevice = $this->poolTtnDeviceRepository->findOneBy($deviceId);
@@ -74,7 +78,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             throw new \RuntimeException('DEVICE_NOT_FOUND');
         }
 
-        $uuidClient = $ttnDevice->getEndDeviceName(); // o si guardas en otra columna
+        $uuidClient = $ttnDevice->getEndDeviceName();
         $this->logger->debug('[TTN Uplink] uuidClient obtenido', ['uuidClient' => $uuidClient]);
 
         // 2) Conectarte a la BBDD del cliente
@@ -93,7 +97,8 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             $this->logger->error('SCALE_NOT_FOUND', ['deviceId' => $deviceId]);
             throw new \RuntimeException('SCALE_NOT_FOUND');
         }
-        //porcentaje de las pilas
+
+        // Porcentaje de las pilas
         $percentage = max(0, min(100, ($request->getVoltage() - 3.2) / (3.6 - 3.2) * 100));
         $this->logger->debug('[TTN Uplink] Calculado voltagePercentage', [
             'percentage' => $percentage,
@@ -111,8 +116,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             $this->logger->error('PRODUCT_NOT_FOUND', ['scaleId' => $scale->getId()]);
             throw new \RuntimeException('PRODUCT_NOT_FOUND');
         }
-        // Esta línea fuerza a Doctrine a cargar todas las propiedades de $product y
-        // lo convierte en un objeto real en lugar de un lazy ghost:
+
         $this->logger->debug('[TTN Uplink] Forzamos la inicialización de product');
         $entityManager->initializeObject($product);
 
@@ -128,25 +132,120 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             $nameUnit = 'Kg';
         }
 
-        // Buscar el último WeightsLog de esta báscula, ordenado por fecha desc
+        // ============================================================
+        // COMPARACIÓN EN GRAMOS
+        // ============================================================
+
+        $newWeightGrams = $request->getWeightGrams();
+        $newWeightKg = $request->getWeight();
+
+        // Buscar el último WeightsLog de esta báscula
         $weightsLogRepo = $entityManager->getRepository(WeightsLog::class);
         $lastLog = $weightsLogRepo->findOneBy(
-            ['scale' => $scale],       // same scale
-            ['date' => 'DESC']         // order by date desc
+            ['scale' => $scale],
+            ['date' => 'DESC']
         );
 
-        $previousWeight = $lastLog ? $lastLog->getRealWeight() : 0.0; // si no existe, p.ej. 0.0
-        $newWeight = $request->getWeight();
-        $variation = abs($newWeight - $previousWeight);
-        if ($variation < $weightRange) {
-            // Variación por debajo del umbral => descartar
-            $this->logger->info('[TTN Uplink] Variación de peso menor que el rango, se descarta.', [
-                'variation' => $variation,
-                'weightRange' => $weightRange,
+        // Si no hay registros previos, crear el primero
+        if (!$lastLog) {
+            $this->logger->info('[TTN Uplink] Primera lectura, creando registro inicial', [
+                'newWeightGrams' => $newWeightGrams,
             ]);
 
-            return;  // o "return" si no quieres guardar
+            $weightLog = new WeightsLog();
+            $weightLog->setScale($scale);
+            $weightLog->setProduct($scale->getProduct());
+            $weightLog->setDate(new \DateTime());
+            $weightLog->setRealWeight($newWeightKg);
+            $weightLog->setWeightGrams($newWeightGrams);
+            $weightLog->setAdjustWeight($newWeightKg);
+            $weightLog->setVoltage($request->getVoltage());
+            $weightLog->setChargePercentage($percentage);
+
+            $entityManager->persist($weightLog);
+            $entityManager->flush();
+
+            $this->logger->info('[TTN Uplink] Registro inicial creado', [
+                'weightsLogId' => $weightLog->getId(),
+            ]);
+
+            return;
         }
+
+        // Obtener último peso guardado
+        $lastWeightGrams = $lastLog->getWeightGrams();
+        $lastRealWeightKg = $lastLog->getRealWeight();
+        $variationGrams = abs($newWeightGrams - $lastWeightGrams);
+
+        $this->logger->debug('[TTN Uplink] Comparación de pesos', [
+            'lastWeightGrams' => $lastWeightGrams,
+            'lastRealWeightKg' => $lastRealWeightKg,
+            'newWeightGrams' => $newWeightGrams,
+            'variationGrams' => $variationGrams,
+            'weightRange' => $weightRange,
+        ]);
+
+        // ============================================================
+        // DECISIÓN: UPDATE vs INSERT
+        // ============================================================
+
+        if ($variationGrams < $weightRange) {
+            // VARIACIÓN PEQUEÑA → ACTUALIZAR registro existente
+            $this->logger->info('[TTN Uplink] Variación menor que umbral, ACTUALIZANDO registro existente', [
+                'variationGrams' => $variationGrams,
+                'weightRange' => $weightRange,
+                'weightsLogId' => $lastLog->getId(),
+                'lastWeightGrams' => $lastWeightGrams,
+                'newWeightGrams' => $newWeightGrams,
+            ]);
+
+            // Actualizar el registro existente con el nuevo peso
+            $lastLog->setWeightGrams($newWeightGrams);
+            $lastLog->setDate(new \DateTime());
+            $lastLog->setVoltage($request->getVoltage());
+            $lastLog->setChargePercentage($percentage);
+
+            // NO cambiar real_weight (sigue siendo el mismo número de tornillos)
+
+            $entityManager->flush();
+
+            $this->logger->info('[TTN Uplink] Registro actualizado', [
+                'weightsLogId' => $lastLog->getId(),
+                'updatedWeightGrams' => $newWeightGrams,
+                'realWeight' => $lastLog->getRealWeight(),
+            ]);
+
+            // NO ejecutar notificaciones (no hay cambio real de stock)
+            return;
+        }
+
+        // ============================================================
+        // VARIACIÓN SIGNIFICATIVA → CREAR nuevo registro
+        // ============================================================
+
+        // Calcular si es AUMENTO o DISMINUCIÓN (con signo)
+        $weightDelta = $newWeightGrams - $lastWeightGrams;
+        $weightDeltaKg = $weightDelta / 1000.0;
+
+        // Calcular nuevo real_weight SUMANDO la diferencia
+        $newRealWeightKg = $lastRealWeightKg + $weightDeltaKg;
+
+        $this->logger->info('[TTN Uplink] Variación SIGNIFICATIVA detectada, creando nuevo registro', [
+            'lastWeightGrams' => $lastWeightGrams,
+            'newWeightGrams' => $newWeightGrams,
+            'weightDelta' => $weightDelta,
+            'weightDeltaKg' => $weightDeltaKg,
+            'lastRealWeightKg' => $lastRealWeightKg,
+            'newRealWeightKg' => $newRealWeightKg,
+            'variationGrams' => $variationGrams,
+            'weightRange' => $weightRange,
+        ]);
+
+        $variationKg = abs($weightDeltaKg);
+
+        // ============================================================
+        // NOTIFICACIONES (solo si hay cambio significativo)
+        // ============================================================
 
         $now = new \DateTimeImmutable();
         $isHoliday = $this->isHoliday($entityManager, $now);
@@ -160,8 +259,6 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             $this->logger->info('[TTN Uplink] Variación detectada fuera de horario o en día festivo.', [
                 'isHoliday' => $isHoliday,
                 'isWithinBusinessHours' => $isWithinBusinessHours,
-                'holidayNotificationsEnabled' => $notificationSettings['holidays'],
-                'outOfHoursNotificationsEnabled' => $notificationSettings['out_of_hours'],
             ]);
 
             $mainClient = $this->findMainClient($uuidClient);
@@ -171,12 +268,9 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                     'uuidClient' => $uuidClient,
                 ]);
             } else {
-                // Determine alarm type: holiday takes precedence, then horario (out of hours)
-                $alarmTypeId = $isHoliday ? 3 : 2; // 3 = holiday, 2 = horario
-                
-                // Get emails from AlarmTypeRecipient table using client's entity manager
+                $alarmTypeId = $isHoliday ? 3 : 2;
                 $recipientEmails = $this->getRecipientEmailsForAlarmType($entityManager, $uuidClient, $alarmTypeId);
-                
+
                 $this->logger->info('[TTN Uplink] Retrieved recipients for weight variation alert.', [
                     'alarmTypeId' => $alarmTypeId,
                     'recipientCount' => count($recipientEmails),
@@ -190,9 +284,9 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                     $product->getName(),
                     (int) $scale->getId(),
                     $deviceId,
-                    (float) $previousWeight,
-                    (float) $newWeight,
-                    (float) $variation,
+                    (float) $lastRealWeightKg,      // Peso anterior
+                    (float) $newRealWeightKg,       // Peso nuevo CALCULADO
+                    (float) $variationKg,
                     (float) $weightRange,
                     $nameUnit ?? 'Kg',
                     $now,
@@ -206,54 +300,53 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             $this->logger->info('[TTN Uplink] Alerta de variación omitida por configuración del cliente.', [
                 'isHoliday' => $isHoliday,
                 'isWithinBusinessHours' => $isWithinBusinessHours,
-                'holidayNotificationsEnabled' => $notificationSettings['holidays'],
-                'outOfHoursNotificationsEnabled' => $notificationSettings['out_of_hours'],
             ]);
         }
 
-        // 3) Insertar en la tabla la “medición”
+        // ============================================================
+        // CREAR NUEVO REGISTRO EN BD
+        // ============================================================
 
         $weightLog = new WeightsLog();
         $weightLog->setScale($scale);
-
         $weightLog->setProduct($scale->getProduct());
         $weightLog->setDate(new \DateTime());
-        $weightLog->setRealWeight($request->getWeight());
-        $weightLog->setAdjustWeight($request->getWeight());
-        $weightLog->setChargePercentage(0.0);
+        $weightLog->setRealWeight($newRealWeightKg);        // ← PESO CALCULADO
+        $weightLog->setWeightGrams($newWeightGrams);
+        $weightLog->setAdjustWeight($newRealWeightKg);      // ← PESO CALCULADO
         $weightLog->setVoltage($request->getVoltage());
         $weightLog->setChargePercentage($percentage);
 
         $entityManager->persist($weightLog);
-
         $entityManager->flush();
-        $this->logger->info('[TTN Uplink] WeightsLog insertado correctamente', [
+
+        $this->logger->info('[TTN Uplink] Nuevo registro creado', [
             'weightsLogId' => $weightLog->getId(),
-            'scaleId' => $scale->getId(),
-            'productId' => $product->getId(),
+            'weight_grams' => $newWeightGrams,
+            'real_weight_kg' => $newRealWeightKg,
         ]);
 
+        // ============================================================
+        // NOTIFICACIÓN DE STOCK MÍNIMO
+        // ============================================================
+
         $minimumStock = $product->getStock();
-        if (null !== $minimumStock && $newWeight <= $minimumStock) {
-            $this->logger->info('[TTN Uplink] Peso por debajo del stock mínimo, preparando notificación.', [
-                'currentWeight' => $newWeight,
+        if (null !== $minimumStock && $newRealWeightKg <= $minimumStock) {
+            $this->logger->info('[TTN Uplink] Peso por debajo del stock mínimo', [
+                'currentWeight' => $newRealWeightKg,
                 'minimumStock' => $minimumStock,
-                'productId' => $product->getId(),
             ]);
 
-            /** @var MainClient|null $mainClient */
             $mainClient = $mainClient ?? $this->findMainClient($uuidClient);
             if (!$mainClient) {
                 $this->logger->error('[TTN Uplink] CLIENT_NOT_FOUND para notificación de stock.', [
                     'uuidClient' => $uuidClient,
                 ]);
-
                 return;
             }
 
-            // Get emails for stock alarm type (alarm_type_id = 1)
-            $recipientEmails = $this->getRecipientEmailsForAlarmType($entityManager, $uuidClient, 1); // 1 = stock
-            
+            $recipientEmails = $this->getRecipientEmailsForAlarmType($entityManager, $uuidClient, 1);
+
             $this->logger->info('[TTN Uplink] Retrieved recipients for stock alert.', [
                 'alarmTypeId' => 1,
                 'recipientCount' => count($recipientEmails),
@@ -267,7 +360,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                 $product->getName(),
                 (int) $scale->getId(),
                 $deviceId,
-                (float) $newWeight,
+                (float) $newRealWeightKg,           // ← PESO CALCULADO
                 (float) $minimumStock,
                 (float) $weightRange,
                 $nameUnit
@@ -275,8 +368,6 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
 
             $this->minimumStockNotifier->notify($notification);
         }
-
-        //ahora guardar en la tabla de sacles la fecha del ultimo envío y el porcentaje de carga
     }
 
     private function isHoliday(EntityManagerInterface $entityManager, \DateTimeImmutable $dateTime): bool
@@ -350,8 +441,6 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
     }
 
     /**
-     * Get recipient emails for a specific alarm type from the client database
-     *
      * @param EntityManagerInterface $entityManager
      * @param string $uuidClient
      * @param int $alarmTypeId
