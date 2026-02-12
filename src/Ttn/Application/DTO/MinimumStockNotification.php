@@ -15,7 +15,8 @@ class MinimumStockNotification
         private readonly float $currentWeight,
         private readonly float $minimumStock,
         private readonly float $weightRange,
-        private readonly string $nameUnit
+        private readonly string $nameUnit,
+        private readonly ?float $conversionFactor = null
     ) {
     }
 
@@ -75,5 +76,10 @@ class MinimumStockNotification
     public function getNameUnit(): string
     {
         return $this->nameUnit;
+    }
+
+    public function getConversionFactor(): ?float
+    {
+        return $this->conversionFactor;
     }
 }
