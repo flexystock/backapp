@@ -399,11 +399,19 @@ class Product
             case 1:
                 // Stock is in unit1, convert to kg
                 $weightUnit1 = $this->weight_unit1;
-                return $weightUnit1 ? $this->stock * $weightUnit1 : $this->stock;
+                if (!$weightUnit1 || $weightUnit1 <= 0) {
+                    // Fallback: if weight_unit1 is not configured, treat stock as kg
+                    return $this->stock;
+                }
+                return $this->stock * $weightUnit1;
             case 2:
                 // Stock is in unit2, convert to kg
                 $weightUnit2 = $this->weight_unit2;
-                return $weightUnit2 ? $this->stock * $weightUnit2 : $this->stock;
+                if (!$weightUnit2 || $weightUnit2 <= 0) {
+                    // Fallback: if weight_unit2 is not configured, treat stock as kg
+                    return $this->stock;
+                }
+                return $this->stock * $weightUnit2;
             case 0:
             default:
                 // Stock is already in kg

@@ -31,6 +31,8 @@ class EmailMinimumStockNotifier implements MinimumStockNotificationInterface
         $subject = sprintf('Alerta de stock bajo: %s', $notification->getProductName());
         
         // Convert current weight from kg to the configured unit
+        // Formula: weight_in_units = weight_kg / (kg_per_unit)
+        // Example: 0.5797 kg / 0.01054 kg/unit = 55 units
         $conversionFactor = $notification->getConversionFactor() ?? 1.0;
         $currentWeightInUnits = $conversionFactor > 0 
             ? $notification->getCurrentWeight() / $conversionFactor 
