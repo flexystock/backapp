@@ -330,11 +330,12 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         // NOTIFICACIÓN DE STOCK MÍNIMO
         // ============================================================
 
-        $minimumStock = $product->getStock();
-        if (null !== $minimumStock && $newRealWeightKg <= $minimumStock) {
+        $minimumStockInKg = $product->getMinimumStockInKg();
+        if (null !== $minimumStockInKg && $newRealWeightKg <= $minimumStockInKg) {
             $this->logger->info('[TTN Uplink] Peso por debajo del stock mínimo', [
                 'currentWeight' => $newRealWeightKg,
-                'minimumStock' => $minimumStock,
+                'minimumStockInKg' => $minimumStockInKg,
+                'minimumStockInUnits' => $product->getStock(),
             ]);
 
             $mainClient = $mainClient ?? $this->findMainClient($uuidClient);
@@ -361,9 +362,10 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                 (int) $scale->getId(),
                 $deviceId,
                 (float) $newRealWeightKg,           // ← PESO CALCULADO
-                (float) $minimumStock,
+                (float) $product->getStock(),       // ← Stock en unidades configuradas
                 (float) $weightRange,
-                $nameUnit
+                $nameUnit,
+                $product->getConversionFactor()     // ← Factor de conversión
             );
 
             $this->minimumStockNotifier->notify($notification);

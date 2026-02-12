@@ -29,7 +29,14 @@ class EmailMinimumStockNotifier implements MinimumStockNotificationInterface
     {
         $recipientEmails = $notification->getRecipientEmails();
         $subject = sprintf('Alerta de stock bajo: %s', $notification->getProductName());
-        $txtActual = number_format($notification->getCurrentWeight(), 0, '.', '');
+        
+        // Convert current weight from kg to the configured unit
+        $conversionFactor = $notification->getConversionFactor() ?? 1.0;
+        $currentWeightInUnits = $conversionFactor > 0 
+            ? $notification->getCurrentWeight() / $conversionFactor 
+            : $notification->getCurrentWeight();
+        
+        $txtActual = number_format($currentWeightInUnits, 0, '.', '');
         $txtMin = number_format($notification->getMinimumStock(), 0, '.', '');
 
         $textBody = sprintf(
