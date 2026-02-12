@@ -376,4 +376,66 @@ class Product
 
         return $this;
     }
+
+    /**
+     * Get minimum stock in kilograms based on the main unit.
+     * 
+     * Converts the stock value to kg according to the main_unit setting:
+     * - main_unit = 0: stock is already in kg
+     * - main_unit = 1: stock is in unit1, multiply by weight_unit1 to get kg
+     * - main_unit = 2: stock is in unit2, multiply by weight_unit2 to get kg
+     * 
+     * @return float|null Minimum stock in kg, or null if stock is not set
+     */
+    public function getMinimumStockInKg(): ?float
+    {
+        if (null === $this->stock) {
+            return null;
+        }
+
+        $mainUnit = (int) $this->main_unit;
+
+        switch ($mainUnit) {
+            case 1:
+                // Stock is in unit1, convert to kg
+                $weightUnit1 = $this->weight_unit1;
+                if (!$weightUnit1 || $weightUnit1 <= 0) {
+                    // Fallback: if weight_unit1 is not configured, treat stock as kg
+                    return $this->stock;
+                }
+                return $this->stock * $weightUnit1;
+            case 2:
+                // Stock is in unit2, convert to kg
+                $weightUnit2 = $this->weight_unit2;
+                if (!$weightUnit2 || $weightUnit2 <= 0) {
+                    // Fallback: if weight_unit2 is not configured, treat stock as kg
+                    return $this->stock;
+                }
+                return $this->stock * $weightUnit2;
+            case 0:
+            default:
+                // Stock is already in kg
+                return $this->stock;
+        }
+    }
+
+    /**
+     * Get the conversion factor from the main unit to kg.
+     * 
+     * @return float Conversion factor (weight of one unit in kg)
+     */
+    public function getConversionFactor(): float
+    {
+        $mainUnit = (int) $this->main_unit;
+
+        switch ($mainUnit) {
+            case 1:
+                return $this->weight_unit1 ?? 1.0;
+            case 2:
+                return $this->weight_unit2 ?? 1.0;
+            case 0:
+            default:
+                return 1.0;
+        }
+    }
 }

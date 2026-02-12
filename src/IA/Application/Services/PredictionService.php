@@ -54,7 +54,7 @@ class PredictionService
 
         // Extraer peso actual
         $currentWeight = $this->extractRealWeight($lastRecord);
-        $minStock = (float) $product->getStock();
+        $minStock = (float) ($product->getMinimumStockInKg() ?? 0);
 
         // Calcular días transcurridos
         $daysDifference = $lastDate->diff($firstDate)->days;
