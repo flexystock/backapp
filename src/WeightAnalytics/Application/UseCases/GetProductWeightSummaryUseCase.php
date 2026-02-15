@@ -55,15 +55,17 @@ class GetProductWeightSummaryUseCase implements GetProductWeightSummaryUseCaseIn
             // Obtener información del producto para unidades
             $product = $em->getRepository(\App\Entity\Client\Product::class)->find($productId);
             
-            $unitInfo = null;
-            if ($product) {
-                $unitInfo = $this->getProductUnitInfo($product);
+            if (!$product) {
+                $this->logger->warning("GetProductWeightSummaryUseCase: Producto no encontrado con ID '$productId'.");
+                return new GetProductWeightSummaryResponse(null, 'Product not found', 404);
             }
+
+            $unitInfo = $this->getProductUnitInfo($product);
 
             $summaryArray = [];
             foreach ($summary as $item) {
                 $realWeight = $item->getRealWeight();
-                $conversionFactor = $unitInfo ? $unitInfo['conversion_factor'] : 1;
+                $conversionFactor = $unitInfo['conversion_factor'];
                 
                 // Calcular stock en la unidad principal del producto
                 $stockInUnits = $conversionFactor > 0 ? $realWeight / $conversionFactor : 0;
