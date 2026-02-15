@@ -52,26 +52,76 @@ class GetProductWeightSummaryUseCase implements GetProductWeightSummaryUseCaseIn
 
             $summary = $repo->getProductWeightSummary($productId, $fromDateObj, $toDateObj);
 
+            // Obtener información del producto para unidades
+            $product = $em->getRepository(\App\Entity\Client\Product::class)->find($productId);
+            
+            $unitInfo = null;
+            if ($product) {
+                $unitInfo = $this->getProductUnitInfo($product);
+            }
+
             $summaryArray = [];
             foreach ($summary as $item) {
+                $realWeight = $item->getRealWeight();
+                $conversionFactor = $unitInfo ? $unitInfo['conversion_factor'] : 1;
+                
+                // Calcular stock en la unidad principal del producto
+                $stockInUnits = $conversionFactor > 0 ? $realWeight / $conversionFactor : 0;
+                
                 $summaryArray[] = [
                     'id' => $item->getId(),
                     'scale_id' => $item->getScaleId(),
                     'product_id' => $item->getProductId(),
                     'date' => $item->getDate()->format('Y-m-d H:i:s'),
-                    'real_weight' => $item->getRealWeight(),
+                    'stock' => $stockInUnits,
                     'adjust_weight' => $item->getAdjustWeight(),
                     'charge_percentage' => $item->getChargePercentage(),
                     'voltage' => $item->getVoltage(),
                 ];
             }
 
-            return new GetProductWeightSummaryResponse($summaryArray, null, 200);
+            // Agregar información de unidades a la respuesta
+            $responseData = [
+                'summary' => $summaryArray,
+                'unit_info' => $unitInfo,
+            ];
+
+            return new GetProductWeightSummaryResponse($responseData, null, 200);
         } catch (\Exception $e) {
             // Loguear para debug
             $this->logger->error('Error en GetProductWeightSummaryUseCase: '.$e->getMessage());
 
             return new GetProductWeightSummaryResponse(null, 'INTERNAL_SERVER_ERROR', 500);
+        }
+    }
+
+    /**
+     * Obtiene la información de unidades del producto.
+     */
+    private function getProductUnitInfo(\App\Entity\Client\Product $product): array
+    {
+        $mainUnit = (int) $product->getMainUnit();
+
+        switch ($mainUnit) {
+            case 1:
+                return [
+                    'main_unit' => $mainUnit,
+                    'unit_name' => $product->getNameUnit1(),
+                    'conversion_factor' => $product->getWeightUnit1() ?? 1,
+                ];
+            case 2:
+                return [
+                    'main_unit' => $mainUnit,
+                    'unit_name' => $product->getNameUnit2(),
+                    'conversion_factor' => $product->getWeightUnit2() ?? 1,
+                ];
+            case 0:
+            default:
+                return [
+                    'main_unit' => 0,
+                    'unit_name' => 'Kg',
+                    'conversion_factor' => 1,
+                ];
         }
     }
 }

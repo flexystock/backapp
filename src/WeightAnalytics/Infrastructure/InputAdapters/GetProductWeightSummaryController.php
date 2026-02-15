@@ -57,6 +57,6 @@ class GetProductWeightSummaryController extends AbstractController
             return new JsonResponse(['error' => $response->getError()], $response->getStatusCode());
         }
 
-        return new JsonResponse(['summary' => $response->getSummary()], 200);
+        return new JsonResponse($response->getSummary(), 200);
     }
 }
