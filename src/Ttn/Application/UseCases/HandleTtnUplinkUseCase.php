@@ -123,6 +123,12 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         $weightRange = $product->getWeightRange() ?? 0.0;
         $this->logger->debug('[TTN Uplink] Obtenido weightRange del product', ['weightRange' => $weightRange]);
 
+        // Obtener la tara del producto (ya está en gramos en BBDD)
+        $tareGrams = $product->getTare();
+        $this->logger->debug('[TTN Uplink] Tara del producto', [
+            'tareGrams' => $tareGrams,
+        ]);
+
         $mainNameUnit = $product->getMainUnit();
         if (1 == $mainNameUnit) {
             $nameUnit = $product->getNameUnit1();
@@ -136,8 +142,19 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         // COMPARACIÓN EN GRAMOS
         // ============================================================
 
-        $newWeightGrams = $request->getWeightGrams();
-        $newWeightKg = $request->getWeight();
+        // Peso bruto recibido desde TTN (incluye contenedor/tara)
+        $grossWeightGrams = $request->getWeightGrams();
+        
+        // Restar la tara para obtener el peso neto del producto
+        $newWeightGrams = $grossWeightGrams - $tareGrams;
+        $newWeightKg = $newWeightGrams / 1000.0;
+
+        $this->logger->debug('[TTN Uplink] Cálculo de peso neto', [
+            'grossWeightGrams' => $grossWeightGrams,
+            'tareGrams' => $tareGrams,
+            'newWeightGrams' => $newWeightGrams,
+            'newWeightKg' => $newWeightKg,
+        ]);
 
         // Buscar el último WeightsLog de esta báscula
         $weightsLogRepo = $entityManager->getRepository(WeightsLog::class);
