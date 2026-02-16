@@ -124,7 +124,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         $this->logger->debug('[TTN Uplink] Obtenido weightRange del product', ['weightRange' => $weightRange]);
 
         // Obtener la tara del producto (ya está en gramos en BBDD)
-        $tareGrams = $product->getTare();
+        $tareGrams = $product->getTare() ?? 0.0;
         $this->logger->debug('[TTN Uplink] Tara del producto', [
             'tareGrams' => $tareGrams,
         ]);
@@ -146,7 +146,8 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         $grossWeightGrams = $request->getWeightGrams();
         
         // Restar la tara para obtener el peso neto del producto
-        $newWeightGrams = $grossWeightGrams - $tareGrams;
+        // Asegurar que el peso neto no sea negativo (protección contra errores de configuración)
+        $newWeightGrams = max(0, $grossWeightGrams - $tareGrams);
         $newWeightKg = $newWeightGrams / 1000.0;
 
         $this->logger->debug('[TTN Uplink] Cálculo de peso neto', [
