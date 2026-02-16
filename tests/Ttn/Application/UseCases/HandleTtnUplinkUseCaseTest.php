@@ -5,6 +5,7 @@ namespace App\Tests\Ttn\Application\UseCases;
 use App\Entity\Client\Product;
 use App\Entity\Client\Scales;
 use App\Entity\Client\WeightsLog;
+use App\Entity\Main\PoolTtnDevice;
 use App\Infrastructure\Services\ClientConnectionManager;
 use App\Scales\Application\OutputPorts\ScalesRepositoryInterface;
 use App\Ttn\Application\DTO\TtnUplinkRequest;
@@ -12,7 +13,6 @@ use App\Ttn\Application\OutputPorts\MinimumStockNotificationInterface;
 use App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface;
 use App\Ttn\Application\OutputPorts\WeightVariationAlertNotifierInterface;
 use App\Ttn\Application\UseCases\HandleTtnUplinkUseCase;
-use App\Ttn\Domain\PoolTtnDevice;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
@@ -31,7 +31,9 @@ class HandleTtnUplinkUseCaseTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->poolTtnDeviceRepository = $this->createMock(PoolTtnDeviceRepositoryInterface::class);
+        $this->poolTtnDeviceRepository = $this->getMockBuilder(PoolTtnDeviceRepositoryInterface::class)
+            ->addMethods(['findOneBy'])
+            ->getMock();
         $this->connectionManager = $this->createMock(ClientConnectionManager::class);
         $this->scaleRepository = $this->createMock(ScalesRepositoryInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
@@ -64,9 +66,10 @@ class HandleTtnUplinkUseCaseTest extends TestCase
         $request = new TtnUplinkRequest(
             $devEui,
             $deviceId,
+            null, // joinEui
             3.5,
-            $grossWeightGrams,
-            null
+            null, // weight (will be calculated)
+            $grossWeightGrams
         );
 
         // Mock TTN device
@@ -162,9 +165,10 @@ class HandleTtnUplinkUseCaseTest extends TestCase
         $request = new TtnUplinkRequest(
             $devEui,
             $deviceId,
+            null, // joinEui
             3.5,
-            $newGrossWeightGrams,
-            null
+            null, // weight (will be calculated)
+            $newGrossWeightGrams
         );
 
         // Mock TTN device
@@ -263,9 +267,10 @@ class HandleTtnUplinkUseCaseTest extends TestCase
         $request = new TtnUplinkRequest(
             $devEui,
             $deviceId,
+            null, // joinEui
             3.5,
-            $weightGrams,
-            null
+            null, // weight (will be calculated)
+            $weightGrams
         );
 
         // Mock TTN device
