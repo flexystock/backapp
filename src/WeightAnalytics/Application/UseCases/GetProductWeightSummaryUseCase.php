@@ -75,7 +75,7 @@ class GetProductWeightSummaryUseCase implements GetProductWeightSummaryUseCaseIn
                     'scale_id' => $item->getScaleId(),
                     'product_id' => $item->getProductId(),
                     'date' => $item->getDate()->format('Y-m-d H:i:s'),
-                    'stock' => $stockInUnits,
+                    'stock' => round($stockInUnits),
                     'adjust_weight' => $item->getAdjustWeight(),
                     'charge_percentage' => $item->getChargePercentage(),
                     'voltage' => $item->getVoltage(),
