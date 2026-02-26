@@ -28,10 +28,10 @@ class EmailWeightVariationAlertNotifier implements WeightVariationAlertNotifierI
         $recipientEmails = $notification->getRecipientEmails();
         $reasons = $this->buildReasons($notification);
         $subject = sprintf('Alerta de variación de peso: %s', $notification->getProductName());
-        $textVariation = number_format($notification->getVariation(), 2, ',', '.');
-        $textCurrent = number_format($notification->getCurrentWeight(), 2, ',', '.');
-        $textPrevious = number_format($notification->getPreviousWeight(), 2, ',', '.');
-        $textThreshold = number_format($notification->getWeightRange(), 2, ',', '.');
+        $textVariation = number_format($notification->getVariation(), 0, ',', '.');
+        $textCurrent = number_format($notification->getCurrentWeight(), 0, ',', '.');
+        $textPrevious = number_format($notification->getPreviousWeight(), 0, ',', '.');
+        $textThreshold = number_format($notification->getWeightRange(), 0, ',', '.');
         $occurredAt = $notification->getOccurredAt()->format('d/m/Y H:i:s');
         $unit = $notification->getNameUnit();
 
