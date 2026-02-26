@@ -2,50 +2,27 @@
 
 namespace App\Ttn\Application\UseCases;
 
-use App\Entity\Client\BusinessHour;
-use App\Entity\Client\ClientConfig;
-use App\Entity\Client\Holiday;
 use App\Entity\Client\WeightsLog;
-use App\Entity\Main\Client as MainClient;
 use App\Infrastructure\Services\ClientConnectionManager;
-use App\Scales\Application\OutputPorts\ScalesRepositoryInterface;
-use App\Ttn\Application\DTO\MinimumStockNotification;
-use App\Ttn\Application\DTO\WeightVariationAlertNotification;
 use App\Ttn\Application\DTO\TtnUplinkRequest;
 use App\Ttn\Application\InputPorts\HandleTtnUplinkUseCaseInterface;
-use App\Ttn\Application\OutputPorts\MinimumStockNotificationInterface;
 use App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface;
-use App\Ttn\Application\OutputPorts\WeightVariationAlertNotifierInterface;
-use Doctrine\DBAL\Types\Types;
+use App\Ttn\Application\Services\BusinessHoursCheckerService;
+use App\Ttn\Application\Services\TtnAlarmNotificationService;
+use App\Ttn\Application\Services\WeightsLogService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
 class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
 {
-    private PoolTtnDeviceRepositoryInterface $poolTtnDeviceRepository;
-    private ClientConnectionManager $connectionManager;
-    private ScalesRepositoryInterface $ScaleRepository;
-    private LoggerInterface $logger;
-    private EntityManagerInterface $mainEntityManager;
-    private MinimumStockNotificationInterface $minimumStockNotifier;
-    private WeightVariationAlertNotifierInterface $weightVariationNotifier;
-
     public function __construct(
-        PoolTtnDeviceRepositoryInterface $poolTtnDeviceRepo,
-        ClientConnectionManager $connManager,
-        ScalesRepositoryInterface $ScaleRepository,
-        LoggerInterface $logger,
-        EntityManagerInterface $mainEntityManager,
-        MinimumStockNotificationInterface $minimumStockNotifier,
-        WeightVariationAlertNotifierInterface $weightVariationNotifier
+        private readonly PoolTtnDeviceRepositoryInterface $poolTtnDeviceRepository,
+        private readonly ClientConnectionManager $connectionManager,
+        private readonly LoggerInterface $logger,
+        private readonly BusinessHoursCheckerService $businessHoursChecker,
+        private readonly WeightsLogService $weightsLogService,
+        private readonly TtnAlarmNotificationService $notificationService
     ) {
-        $this->poolTtnDeviceRepository = $poolTtnDeviceRepo;
-        $this->connectionManager = $connManager;
-        $this->ScaleRepository = $ScaleRepository;
-        $this->logger = $logger;
-        $this->mainEntityManager = $mainEntityManager;
-        $this->minimumStockNotifier = $minimumStockNotifier;
-        $this->weightVariationNotifier = $weightVariationNotifier;
     }
 
     public function execute(TtnUplinkRequest $request): void
@@ -84,7 +61,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         // 2) Conectarte a la BBDD del cliente
         $entityManager = $this->connectionManager->getEntityManager($uuidClient);
 
-        $notificationSettings = $this->getNotificationSettings($entityManager);
+        $notificationSettings = $this->notificationService->getNotificationSettings($entityManager);
         $this->logger->debug('[TTN Uplink] Configuración de alarmas cargada.', [
             'outOfHours' => $notificationSettings['out_of_hours'],
             'holidays' => $notificationSettings['holidays'],
@@ -144,7 +121,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
 
         // Peso bruto recibido desde TTN (incluye contenedor/tara)
         $grossWeightGrams = $request->getWeightGrams();
-        
+
         // Restar la tara para obtener el peso neto del producto
         // Asegurar que el peso neto no sea negativo (protección contra errores de configuración)
         $newWeightGrams = max(0, $grossWeightGrams - $tareGrams);
@@ -170,18 +147,14 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                 'newWeightGrams' => $newWeightGrams,
             ]);
 
-            $weightLog = new WeightsLog();
-            $weightLog->setScale($scale);
-            $weightLog->setProduct($scale->getProduct());
-            $weightLog->setDate(new \DateTime());
-            $weightLog->setRealWeight($newWeightKg);
-            $weightLog->setWeightGrams($newWeightGrams);
-            $weightLog->setAdjustWeight($newWeightKg);
-            $weightLog->setVoltage($request->getVoltage());
-            $weightLog->setChargePercentage($percentage);
-
-            $entityManager->persist($weightLog);
-            $entityManager->flush();
+            $weightLog = $this->weightsLogService->createLog(
+                $entityManager,
+                $scale,
+                $newWeightKg,
+                $newWeightGrams,
+                $request->getVoltage(),
+                $percentage
+            );
 
             $this->logger->info('[TTN Uplink] Registro inicial creado', [
                 'weightsLogId' => $weightLog->getId(),
@@ -217,15 +190,13 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                 'newWeightGrams' => $newWeightGrams,
             ]);
 
-            // Actualizar el registro existente con el nuevo peso
-            $lastLog->setWeightGrams($newWeightGrams);
-            $lastLog->setDate(new \DateTime());
-            $lastLog->setVoltage($request->getVoltage());
-            $lastLog->setChargePercentage($percentage);
-
-            // NO cambiar real_weight (sigue siendo el mismo número de tornillos)
-
-            $entityManager->flush();
+            $this->weightsLogService->updateMinorVariationLog(
+                $lastLog,
+                $newWeightGrams,
+                $request->getVoltage(),
+                $percentage,
+                $entityManager
+            );
 
             $this->logger->info('[TTN Uplink] Registro actualizado', [
                 'weightsLogId' => $lastLog->getId(),
@@ -266,8 +237,8 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         // ============================================================
 
         $now = new \DateTimeImmutable();
-        $isHoliday = $this->isHoliday($entityManager, $now);
-        $isWithinBusinessHours = $this->isWithinBusinessHours($entityManager, $now);
+        $isHoliday = $this->businessHoursChecker->isHoliday($entityManager, $now);
+        $isWithinBusinessHours = $this->businessHoursChecker->isWithinBusinessHours($entityManager, $now);
         $mainClient = null;
 
         $shouldNotifyForHoliday = $isHoliday && $notificationSettings['holidays'];
@@ -279,7 +250,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                 'isWithinBusinessHours' => $isWithinBusinessHours,
             ]);
 
-            $mainClient = $this->findMainClient($uuidClient);
+            $mainClient = $this->notificationService->findMainClient($uuidClient);
 
             if (!$mainClient) {
                 $this->logger->error('[TTN Uplink] CLIENT_NOT_FOUND para alerta de variación de peso.', [
@@ -287,32 +258,29 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                 ]);
             } else {
                 $alarmTypeId = $isHoliday ? 3 : 2;
-                $recipientEmails = $this->getRecipientEmailsForAlarmType($entityManager, $uuidClient, $alarmTypeId);
 
-                $this->logger->info('[TTN Uplink] Retrieved recipients for weight variation alert.', [
+                $this->logger->info('[TTN Uplink] Sending weight variation alert.', [
                     'alarmTypeId' => $alarmTypeId,
-                    'recipientCount' => count($recipientEmails),
                 ]);
 
-                $notification = new WeightVariationAlertNotification(
+                $this->notificationService->notifyWeightVariation(
+                    $entityManager,
                     $uuidClient,
-                    $mainClient->getClientName(),
-                    $recipientEmails,
+                    $mainClient,
                     (int) $product->getId(),
                     $product->getName(),
                     (int) $scale->getId(),
                     $deviceId,
-                    (float) $lastRealWeightKg,      // Peso anterior
-                    (float) $newRealWeightKg,       // Peso nuevo CALCULADO
+                    (float) $lastRealWeightKg,
+                    (float) $newRealWeightKg,
                     (float) $variationKg,
                     (float) $weightRange,
                     $nameUnit ?? 'Kg',
                     $now,
                     $isHoliday,
-                    !$isWithinBusinessHours
+                    !$isWithinBusinessHours,
+                    $alarmTypeId
                 );
-
-                $this->weightVariationNotifier->notify($notification);
             }
         } elseif ($isHoliday || !$isWithinBusinessHours) {
             $this->logger->info('[TTN Uplink] Alerta de variación omitida por configuración del cliente.', [
@@ -325,18 +293,14 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         // CREAR NUEVO REGISTRO EN BD
         // ============================================================
 
-        $weightLog = new WeightsLog();
-        $weightLog->setScale($scale);
-        $weightLog->setProduct($scale->getProduct());
-        $weightLog->setDate(new \DateTime());
-        $weightLog->setRealWeight($newRealWeightKg);        // ← PESO CALCULADO
-        $weightLog->setWeightGrams($newWeightGrams);
-        $weightLog->setAdjustWeight($newRealWeightKg);      // ← PESO CALCULADO
-        $weightLog->setVoltage($request->getVoltage());
-        $weightLog->setChargePercentage($percentage);
-
-        $entityManager->persist($weightLog);
-        $entityManager->flush();
+        $weightLog = $this->weightsLogService->createLog(
+            $entityManager,
+            $scale,
+            $newRealWeightKg,
+            $newWeightGrams,
+            $request->getVoltage(),
+            $percentage
+        );
 
         $this->logger->info('[TTN Uplink] Nuevo registro creado', [
             'weightsLogId' => $weightLog->getId(),
@@ -356,7 +320,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                 'minimumStockInUnits' => $product->getStock(),
             ]);
 
-            $mainClient = $mainClient ?? $this->findMainClient($uuidClient);
+            $mainClient = $mainClient ?? $this->notificationService->findMainClient($uuidClient);
             if (!$mainClient) {
                 $this->logger->error('[TTN Uplink] CLIENT_NOT_FOUND para notificación de stock.', [
                     'uuidClient' => $uuidClient,
@@ -364,123 +328,24 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                 return;
             }
 
-            $recipientEmails = $this->getRecipientEmailsForAlarmType($entityManager, $uuidClient, 1);
-
-            $this->logger->info('[TTN Uplink] Retrieved recipients for stock alert.', [
+            $this->logger->info('[TTN Uplink] Sending minimum stock alert.', [
                 'alarmTypeId' => 1,
-                'recipientCount' => count($recipientEmails),
             ]);
 
-            $notification = new MinimumStockNotification(
+            $this->notificationService->notifyMinimumStock(
+                $entityManager,
                 $uuidClient,
-                $mainClient->getClientName(),
-                $recipientEmails,
+                $mainClient,
                 (int) $product->getId(),
                 $product->getName(),
                 (int) $scale->getId(),
                 $deviceId,
-                (float) $newRealWeightKg,           // ← PESO CALCULADO
-                (float) $product->getStock(),       // ← Stock en unidades configuradas
+                (float) $newRealWeightKg,
+                (float) $product->getStock(),
                 (float) $weightRange,
                 $nameUnit,
-                $product->getConversionFactor()     // ← Factor de conversión
+                $product->getConversionFactor()
             );
-
-            $this->minimumStockNotifier->notify($notification);
         }
-    }
-
-    private function isHoliday(EntityManagerInterface $entityManager, \DateTimeImmutable $dateTime): bool
-    {
-        $holidayRepo = $entityManager->getRepository(Holiday::class);
-
-        $count = $holidayRepo->createQueryBuilder('h')
-            ->select('COUNT(h.id)')
-            ->where('h.holidayDate = :date')
-            ->setParameter('date', $dateTime->setTime(0, 0), Types::DATE_IMMUTABLE)
-            ->getQuery()
-            ->getSingleScalarResult();
-
-        return ((int) $count) > 0;
-    }
-
-    private function isWithinBusinessHours(EntityManagerInterface $entityManager, \DateTimeImmutable $dateTime): bool
-    {
-        $dayOfWeek = (int) $dateTime->format('N');
-        $businessHours = $entityManager->getRepository(BusinessHour::class)->findBy([
-            'dayOfWeek' => $dayOfWeek,
-        ]);
-
-        foreach ($businessHours as $businessHour) {
-            if ($businessHour->coversDateTime($dateTime)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function findMainClient(string $uuidClient): ?MainClient
-    {
-        return $this->mainEntityManager->getRepository(MainClient::class)->find($uuidClient);
-    }
-
-    /**
-     * @return array{out_of_hours: bool, holidays: bool, battery_shelve: bool}
-     */
-    private function getNotificationSettings(EntityManagerInterface $entityManager): array
-    {
-        $clientConfig = $entityManager->getRepository(ClientConfig::class)->findOneBy([]);
-
-        if (!$clientConfig instanceof ClientConfig) {
-            return [
-                'out_of_hours' => true,
-                'holidays' => true,
-                'battery_shelve' => true,
-            ];
-        }
-
-        return [
-            'out_of_hours' => $clientConfig->isCheckOutOfHours(),
-            'holidays' => $clientConfig->isCheckHolidays(),
-            'battery_shelve' => $clientConfig->isCheckBatteryShelve(),
-        ];
-    }
-
-    private function normalizeErrorCode(int|string|null $errorCode): ?int
-    {
-        if (null === $errorCode) {
-            return null;
-        }
-
-        if (is_int($errorCode)) {
-            return 0 !== $errorCode ? $errorCode : null;
-        }
-
-        return is_numeric($errorCode) ? ((int) $errorCode ?: null) : null;
-    }
-
-    /**
-     * @param EntityManagerInterface $entityManager
-     * @param string $uuidClient
-     * @param int $alarmTypeId
-     * @return string[]
-     */
-    private function getRecipientEmailsForAlarmType(
-        EntityManagerInterface $entityManager,
-        string $uuidClient,
-        int $alarmTypeId
-    ): array {
-        $query = $entityManager->createQuery(
-            'SELECT atr.email FROM App\Entity\Client\AlarmTypeRecipient atr 
-             JOIN atr.alarmType at
-             WHERE atr.uuid_client = :uuidClient AND at.id = :alarmTypeId'
-        );
-        $query->setParameter('uuidClient', $uuidClient);
-        $query->setParameter('alarmTypeId', $alarmTypeId);
-
-        $result = $query->getResult();
-
-        return array_map(fn($row) => $row['email'], $result);
     }
 }
