@@ -40,7 +40,7 @@ class WeightsLogService
         EntityManagerInterface $entityManager
     ): void {
         $existingLog->setWeightGrams($weightGrams);
-        $existingLog->setDate(new \DateTime());
+        //$existingLog->setDate(new \DateTime());
         $existingLog->setVoltage($voltage);
         $existingLog->setChargePercentage($chargePercentage);
 
