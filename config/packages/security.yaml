@@ -26,12 +26,6 @@ security:
             pattern: ^/api/stripe/webhook
             security: false
 
-        api:
-            pattern: ^/api
-            stateless: true
-            provider: app_user_provider
-            jwt: ~
-
         login:
             pattern: ^/api/login
             stateless: true
@@ -40,6 +34,12 @@ security:
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
                 provider: app_user_provider
+
+        api:
+            pattern: ^/api
+            stateless: true
+            provider: app_user_provider
+            jwt: ~
 
         main:
             lazy: true
