@@ -594,12 +594,11 @@ services:
   App\Ttn\Application\InputPorts\HandleTtnUplinkUseCaseInterface:
     alias: App\Ttn\Application\UseCases\HandleTtnUplinkUseCase
 
-  App\Ttn\Application\UseCases\HandleTtnUplinkUseCase:
+  App\Ttn\Application\Services\TtnAlarmNotificationService:
     arguments:
-      $poolTtnDeviceRepo: '@App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface'
-      $connManager: '@App\Infrastructure\Services\ClientConnectionManager'
-      $ScaleRepository: '@App\Scales\Application\OutputPorts\ScalesRepositoryInterface'
-      $minimumStockNotifier: '@App\Ttn\Application\OutputPorts\MinimumStockNotificationInterface'
+      $mainEntityManager: '@doctrine.orm.main_entity_manager'
+
+  App\Ttn\Application\UseCases\HandleTtnUplinkUseCase: ~
 
   # --------------------------
   # ALARM

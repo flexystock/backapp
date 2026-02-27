@@ -8,5 +8,7 @@ interface PoolTtnDeviceRepositoryInterface
 {
     public function getAll(): array;
 
+    public function findOneBy(string $endDeviceId): ?PoolTtnDevice;
+
     public function findLastDevice(): ?PoolTtnDevice;
 }

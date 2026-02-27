@@ -7,11 +7,13 @@ use App\Entity\Client\Scales;
 use App\Entity\Client\WeightsLog;
 use App\Entity\Main\PoolTtnDevice;
 use App\Infrastructure\Services\ClientConnectionManager;
-use App\Scales\Application\OutputPorts\ScalesRepositoryInterface;
 use App\Ttn\Application\DTO\TtnUplinkRequest;
 use App\Ttn\Application\OutputPorts\MinimumStockNotificationInterface;
 use App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface;
 use App\Ttn\Application\OutputPorts\WeightVariationAlertNotifierInterface;
+use App\Ttn\Application\Services\BusinessHoursCheckerService;
+use App\Ttn\Application\Services\TtnAlarmNotificationService;
+use App\Ttn\Application\Services\WeightsLogService;
 use App\Ttn\Application\UseCases\HandleTtnUplinkUseCase;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
@@ -22,7 +24,6 @@ class HandleTtnUplinkUseCaseTest extends TestCase
 {
     private PoolTtnDeviceRepositoryInterface $poolTtnDeviceRepository;
     private ClientConnectionManager $connectionManager;
-    private ScalesRepositoryInterface $scaleRepository;
     private LoggerInterface $logger;
     private EntityManagerInterface $mainEntityManager;
     private MinimumStockNotificationInterface $minimumStockNotifier;
@@ -31,24 +32,26 @@ class HandleTtnUplinkUseCaseTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->poolTtnDeviceRepository = $this->getMockBuilder(PoolTtnDeviceRepositoryInterface::class)
-            ->addMethods(['findOneBy'])
-            ->getMock();
+        $this->poolTtnDeviceRepository = $this->createMock(PoolTtnDeviceRepositoryInterface::class);
         $this->connectionManager = $this->createMock(ClientConnectionManager::class);
-        $this->scaleRepository = $this->createMock(ScalesRepositoryInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->mainEntityManager = $this->createMock(EntityManagerInterface::class);
         $this->minimumStockNotifier = $this->createMock(MinimumStockNotificationInterface::class);
         $this->weightVariationNotifier = $this->createMock(WeightVariationAlertNotifierInterface::class);
 
+        $notificationService = new TtnAlarmNotificationService(
+            $this->minimumStockNotifier,
+            $this->weightVariationNotifier,
+            $this->mainEntityManager
+        );
+
         $this->useCase = new HandleTtnUplinkUseCase(
             $this->poolTtnDeviceRepository,
             $this->connectionManager,
-            $this->scaleRepository,
             $this->logger,
-            $this->mainEntityManager,
-            $this->minimumStockNotifier,
-            $this->weightVariationNotifier
+            new BusinessHoursCheckerService(),
+            new WeightsLogService(),
+            $notificationService
         );
     }
 
@@ -59,7 +62,7 @@ class HandleTtnUplinkUseCaseTest extends TestCase
         $devEui = 'test-eui-456';
         $uuidClient = 'client-uuid-789';
         $grossWeightGrams = 5000; // 5 kg gross weight
-        $tareGrams = 1500; // 1500 grams tare (already in grams in DB)
+        $tareGrams = 1500.0; // 1500 grams tare (already in grams in DB)
         $expectedNetWeightGrams = 3500; // 5000 - 1500 = 3500 grams
         $expectedNetWeightKg = 3.5; // 3.5 kg
 
@@ -151,7 +154,7 @@ class HandleTtnUplinkUseCaseTest extends TestCase
         
         // Previous reading: 5000g gross (with 1500g tare = 3500g net)
         $previousGrossWeightGrams = 5000;
-        $tareGrams = 1500; // Tare in grams (already in grams in DB)
+        $tareGrams = 1500.0; // Tare in grams (already in grams in DB)
         $previousNetWeightGrams = 3500;
         $previousNetWeightKg = 3.5;
         

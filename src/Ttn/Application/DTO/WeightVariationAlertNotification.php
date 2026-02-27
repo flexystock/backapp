@@ -21,7 +21,8 @@ class WeightVariationAlertNotification
         private readonly string $nameUnit,
         private readonly DateTimeImmutable $occurredAt,
         private readonly bool $isHoliday,
-        private readonly bool $outsideBusinessHours
+        private readonly bool $outsideBusinessHours,
+        private readonly ?float $conversionFactor = null
     ) {
     }
 
@@ -101,5 +102,10 @@ class WeightVariationAlertNotification
     public function isOutsideBusinessHours(): bool
     {
         return $this->outsideBusinessHours;
+    }
+
+    public function getConversionFactor(): ?float
+    {
+        return $this->conversionFactor;
     }
 }
