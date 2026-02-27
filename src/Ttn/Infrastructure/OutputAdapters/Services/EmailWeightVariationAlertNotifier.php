@@ -28,16 +28,23 @@ class EmailWeightVariationAlertNotifier implements WeightVariationAlertNotifierI
         $recipientEmails = $notification->getRecipientEmails();
         $reasons = $this->buildReasons($notification);
         $subject = sprintf('Alerta de variación de peso: %s', $notification->getProductName());
-        $textVariation = number_format($notification->getVariation(), 0, ',', '.');
-        $textCurrent = number_format($notification->getCurrentWeight(), 0, ',', '.');
-        $textPrevious = number_format($notification->getPreviousWeight(), 0, ',', '.');
-        $textThreshold = number_format($notification->getWeightRange(), 0, ',', '.');
+        $conversionFactor = $notification->getConversionFactor() ?? 1.0;
+
+        $variationInUnits = $conversionFactor > 0 ? $notification->getVariation()      / $conversionFactor : $notification->getVariation();
+        $currentInUnits   = $conversionFactor > 0 ? $notification->getCurrentWeight()  / $conversionFactor : $notification->getCurrentWeight();
+        $previousInUnits  = $conversionFactor > 0 ? $notification->getPreviousWeight() / $conversionFactor : $notification->getPreviousWeight();
+
+
+        $textVariation = number_format($variationInUnits, 0, ',', '.');
+        $textCurrent   = number_format($currentInUnits, 0, ',', '.');
+        $textPrevious  = number_format($previousInUnits, 0, ',', '.');
+
         $occurredAt = $notification->getOccurredAt()->format('d/m/Y H:i:s');
         $unit = $notification->getNameUnit();
 
         $textBody = sprintf(
             "Hola %s,\n\nSe ha detectado una variación de peso de %s %s en el producto '%s' (%s %s -> %s %s) el %s. " .
-            "La variación supera el umbral configurado (%s %s) y se ha producido %s.\n\n" .
+            "La variación se ha producido %s.\n\n" .
             "Te recomendamos revisar la báscula asociada al dispositivo %s.\n\nEquipo FlexyStock",
             $notification->getClientName(),
             $textVariation,
@@ -48,8 +55,6 @@ class EmailWeightVariationAlertNotifier implements WeightVariationAlertNotifierI
             $textCurrent,
             $unit,
             $occurredAt,
-            $textThreshold,
-            $unit,
             $reasons,
             $notification->getDeviceId()
         );
@@ -58,7 +63,7 @@ class EmailWeightVariationAlertNotifier implements WeightVariationAlertNotifierI
             '<p>Hola %s,</p>' .
             '<p>Se ha detectado una variación de peso de <strong>%s %s</strong> en el producto <strong>%s</strong>' .
             ' (de %s %s a %s %s) el %s.</p>' .
-            '<p>La variación supera el umbral configurado (<strong>%s %s</strong>) y se ha producido %s.</p>' .
+            '<p>La variación se ha producido %s.</p>' .
             '<p>Te recomendamos revisar la báscula asociada al dispositivo <strong>%s</strong>.</p>' .
             '<p>Equipo FlexyStock</p>',
             htmlspecialchars($notification->getClientName(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
@@ -70,8 +75,6 @@ class EmailWeightVariationAlertNotifier implements WeightVariationAlertNotifierI
             $textCurrent,
             htmlspecialchars($unit, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             $occurredAt,
-            $textThreshold,
-            htmlspecialchars($unit, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             htmlspecialchars($reasons, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             htmlspecialchars($notification->getDeviceId(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
         );

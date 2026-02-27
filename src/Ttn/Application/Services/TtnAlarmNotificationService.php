@@ -83,7 +83,8 @@ class TtnAlarmNotificationService
         \DateTimeImmutable $occurredAt,
         bool $isHoliday,
         bool $isOutsideBusinessHours,
-        int $alarmTypeId
+        int $alarmTypeId,
+        ?float $conversionFactor = null
     ): void {
         $recipientEmails = $this->getRecipientEmailsForAlarmType($entityManager, $uuidClient, $alarmTypeId);
 
@@ -102,7 +103,8 @@ class TtnAlarmNotificationService
             $nameUnit,
             $occurredAt,
             $isHoliday,
-            $isOutsideBusinessHours
+            $isOutsideBusinessHours,
+            $conversionFactor
         );
 
         $this->weightVariationNotifier->notify($notification);

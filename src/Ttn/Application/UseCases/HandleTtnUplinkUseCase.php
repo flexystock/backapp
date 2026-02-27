@@ -279,7 +279,8 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                     $now,
                     $isHoliday,
                     !$isWithinBusinessHours,
-                    $alarmTypeId
+                    $alarmTypeId,
+                    $product->getConversionFactor()
                 );
             }
         } elseif ($isHoliday || !$isWithinBusinessHours) {
