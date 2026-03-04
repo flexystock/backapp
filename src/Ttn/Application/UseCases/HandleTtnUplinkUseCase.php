@@ -2,15 +2,18 @@
 
 namespace App\Ttn\Application\UseCases;
 
+use App\Entity\Client\MermaConfig;
+use App\Entity\Client\ScaleEvent;
 use App\Entity\Client\WeightsLog;
 use App\Infrastructure\Services\ClientConnectionManager;
+use App\Service\Merma\Application\OutputPorts\MermaNotifierInterface;
+use App\Service\Merma\ScaleEventDetectorService;
 use App\Ttn\Application\DTO\TtnUplinkRequest;
 use App\Ttn\Application\InputPorts\HandleTtnUplinkUseCaseInterface;
 use App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface;
 use App\Ttn\Application\Services\BusinessHoursCheckerService;
 use App\Ttn\Application\Services\TtnAlarmNotificationService;
 use App\Ttn\Application\Services\WeightsLogService;
-use App\Service\Merma\ScaleEventDetectorService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -23,9 +26,8 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         private readonly BusinessHoursCheckerService $businessHoursChecker,
         private readonly WeightsLogService $weightsLogService,
         private readonly TtnAlarmNotificationService $notificationService,
-        private readonly ScaleEventDetectorService      $mermaDetector,
-        private readonly MermaConfigRepositoryInterface $mermaConfigRepo,
-        private readonly MermaNotifierInterface         $mermaNotifier,
+        private readonly ScaleEventDetectorService $mermaDetector,
+        private readonly MermaNotifierInterface $mermaNotifier,
     ) {
     }
 
@@ -123,11 +125,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         // COMPARACIÓN EN GRAMOS
         // ============================================================
 
-        // Peso bruto recibido desde TTN (incluye contenedor/tara)
         $grossWeightGrams = $request->getWeightGrams();
-
-        // Restar la tara para obtener el peso neto del producto
-        // Asegurar que el peso neto no sea negativo (protección contra errores de configuración)
         $newWeightGrams = max(0, $grossWeightGrams - $tareGrams);
         $newWeightKg = $newWeightGrams / 1000.0;
 
@@ -185,7 +183,6 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         // ============================================================
 
         if ($variationGrams < $weightRange) {
-            // VARIACIÓN PEQUEÑA → ACTUALIZAR registro existente
             $this->logger->info('[TTN Uplink] Variación menor que umbral, ACTUALIZANDO registro existente', [
                 'variationGrams' => $variationGrams,
                 'weightRange' => $weightRange,
@@ -208,7 +205,6 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                 'realWeight' => $lastLog->getRealWeight(),
             ]);
 
-            // NO ejecutar notificaciones (no hay cambio real de stock)
             return;
         }
 
@@ -216,11 +212,8 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         // VARIACIÓN SIGNIFICATIVA → CREAR nuevo registro
         // ============================================================
 
-        // Calcular si es AUMENTO o DISMINUCIÓN (con signo)
         $weightDelta = $newWeightGrams - $lastWeightGrams;
         $weightDeltaKg = $weightDelta / 1000.0;
-
-        // Calcular nuevo real_weight SUMANDO la diferencia
         $newRealWeightKg = $lastRealWeightKg + $weightDeltaKg;
 
         $this->logger->info('[TTN Uplink] Variación SIGNIFICATIVA detectada, creando nuevo registro', [
@@ -354,11 +347,8 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         }
 
         // ============================================================
-        // ← NUEVO: DETECCIÓN DE MERMA
-        //
-        // Al final del flujo — después de todo lo existente.
-        // Usa $lastRealWeightKg y $newRealWeightKg ya calculados.
-        // Nunca interrumpe el uplink (try/catch interno).
+        // DETECCIÓN DE MERMA
+        // Al final del flujo — nunca interrumpe el uplink (try/catch).
         // ============================================================
         $this->detectMermaEvent(
             entityManager:    $entityManager,
@@ -366,67 +356,88 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             productId:        (int) $product->getId(),
             previousWeightKg: (float) $lastRealWeightKg,
             newWeightKg:      (float) $newRealWeightKg,
-            pricePerKg:       $product->getPrecioCompra(),
+            pricePerKg:       $product->getCostPrice(),
             readAt:           \DateTime::createFromImmutable($now),
         );
     }
-// ============================================================
-// ← NUEVO: detección de merma (privado)
-// ============================================================
-private function detectMermaEvent(
-    EntityManagerInterface $entityManager,
-    int                    $scaleId,
-    int                    $productId,
-    float                  $previousWeightKg,
-    float                  $newWeightKg,
-    ?float                 $pricePerKg,
-    \DateTimeInterface     $readAt,
-): void {
-    try {
-        $config = $this->mermaConfigRepo->findByProductId($productId)
-            ?? $this->mermaConfigRepo->createDefaultForProduct($productId);
 
-        $classification = $this->mermaDetector->classify(
-            previousWeight: $previousWeightKg,
-            newWeight:      $newWeightKg,
-            readAt:         $readAt,
-            config:         $config,
-            pricePerKg:     $pricePerKg,
-        );
+    // ============================================================
+    // Detección de merma (privado)
+    // Usa el EntityManager del cliente directamente.
+    // MermaConfig y ScaleEvent son entidades de BD cliente.
+    // ============================================================
+    private function detectMermaEvent(
+        EntityManagerInterface $entityManager,
+        int                    $scaleId,
+        int                    $productId,
+        float                  $previousWeightKg,
+        float                  $newWeightKg,
+        ?float                 $pricePerKg,
+        \DateTimeInterface     $readAt,
+    ): void {
+        try {
+            $product = $entityManager->getRepository(\App\Entity\Client\Product::class)->find($productId);
+            $config = $product
+                ? $entityManager->getRepository(MermaConfig::class)->findOneBy(['product' => $product])
+                : null;
 
-        if ($classification === null) {
-            return;
+            if (!$config && $product) {
+                $config = new MermaConfig();
+                $config->setProduct($product);
+                $entityManager->persist($config);
+                $entityManager->flush();
+            }
+
+            if (!$config) {
+                return;
+            }
+
+            $classification = $this->mermaDetector->classify(
+                previousWeight: $previousWeightKg,
+                newWeight:      $newWeightKg,
+                readAt:         $readAt,
+                config:         $config,
+                pricePerKg:     $pricePerKg,
+            );
+
+            if ($classification === null) {
+                return;
+            }
+
+            $scale = $entityManager->getRepository(\App\Entity\Client\Scales::class)->find($scaleId);
+            if (!$scale) {
+                return;
+            }
+
+            $event = new ScaleEvent();
+            $event->setScale($scale)
+                ->setProduct($product)
+                ->setType($classification->type)
+                ->setWeightBefore($previousWeightKg)
+                ->setWeightAfter($newWeightKg)
+                ->setDeltaKg($classification->deltaKg)
+                ->setDeltaCost($classification->deltaCost)
+                ->setDetectedAt($readAt);
+
+            $entityManager->persist($event);
+            $entityManager->flush();
+
+            $this->logger->info('[Merma] ScaleEvent: {type} | scale={s} | delta={d}kg', [
+                'type' => $classification->type,
+                's'    => $scaleId,
+                'd'    => $classification->deltaKg,
+            ]);
+
+            if ($event->isAnomalia() && $config->isAlertOnAnomaly()) {
+                $this->mermaNotifier->sendAnomalyAlert($event);
+            }
+
+        } catch (\Throwable $e) {
+            $this->logger->error('[Merma] Error en detectMermaEvent: {msg}', [
+                'msg'       => $e->getMessage(),
+                'scaleId'   => $scaleId,
+                'productId' => $productId,
+            ]);
         }
-
-        $event = new ScaleEvent();
-        $event->setScaleId($scaleId)
-            ->setProductId($productId)
-            ->setType($classification->type)
-            ->setWeightBefore($previousWeightKg)
-            ->setWeightAfter($newWeightKg)
-            ->setDeltaKg($classification->deltaKg)
-            ->setDeltaCost($classification->deltaCost)
-            ->setDetectedAt($readAt);
-
-        $entityManager->persist($event);
-        $entityManager->flush();
-
-        $this->logger->info('[Merma] ScaleEvent: {type} | scale={s} | delta={d}kg', [
-            'type' => $classification->type,
-            's'    => $scaleId,
-            'd'    => $classification->deltaKg,
-        ]);
-
-        if ($event->isAnomalia() && $config->isAlertOnAnomaly()) {
-            $this->mermaNotifier->sendAnomalyAlert($event);
-        }
-
-    } catch (\Throwable $e) {
-        $this->logger->error('[Merma] Error en detectMermaEvent: {msg}', [
-            'msg'       => $e->getMessage(),
-            'scaleId'   => $scaleId,
-            'productId' => $productId,
-        ]);
     }
-}
 }

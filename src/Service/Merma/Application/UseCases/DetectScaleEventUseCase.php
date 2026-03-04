@@ -10,7 +10,7 @@ use App\Service\Merma\Application\OutputPorts\MermaConfigRepositoryInterface;
 use App\Service\Merma\Application\OutputPorts\MermaNotifierInterface;
 use App\Service\Merma\Application\OutputPorts\ScaleEventRepositoryInterface;
 use App\Service\Merma\Application\OutputPorts\ScaleReadingRepositoryInterface;
-use App\Services\Merma\ScaleEventDetectorService;
+use App\Service\Merma\ScaleEventDetectorService;
 use Psr\Log\LoggerInterface;
 
 /**

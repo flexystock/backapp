@@ -601,7 +601,6 @@ services:
   App\Ttn\Application\UseCases\HandleTtnUplinkUseCase:
     arguments:
       $mermaDetector: '@App\Service\Merma\ScaleEventDetectorService'
-      $mermaConfigRepo: '@App\Service\Merma\Application\OutputPorts\MermaConfigRepositoryInterface'
       $mermaNotifier: '@App\Service\Merma\Application\OutputPorts\MermaNotifierInterface'
 
   # --------------------------

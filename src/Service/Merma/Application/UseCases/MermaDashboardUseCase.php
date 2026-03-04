@@ -13,7 +13,7 @@ use App\Service\Merma\Application\OutputPorts\MermaMonthlyReportRepositoryInterf
 use App\Service\Merma\Application\OutputPorts\MermaNotifierInterface;
 use App\Service\Merma\Application\OutputPorts\ScaleEventRepositoryInterface;
 use App\Service\Merma\Application\OutputPorts\ScaleReadingRepositoryInterface;
-use App\Services\Merma\MermaReportGeneratorService;
+use App\Service\Merma\MermaReportGeneratorService;
 use Psr\Log\LoggerInterface;
 
 // ═══════════════════════════════════════════════════════

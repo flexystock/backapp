@@ -2,10 +2,10 @@
 
 namespace App\Entity\Client;
 
-use App\Repository\ScaleEventRepository;
+
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: ScaleEventRepository::class)]
+#[ORM\Entity]
 #[ORM\Table(name: 'scale_event')]
 #[ORM\Index(name: 'idx_scale_event_anomalia', columns: ['type', 'is_confirmed'])]
 #[ORM\Index(name: 'idx_scale_event_detected', columns: ['detected_at'])]
@@ -20,39 +20,36 @@ class ScaleEvent
     #[ORM\Column(type: 'integer', options: ['unsigned' => true])]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Scale::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
-    private Scale $scale;
+    #[ORM\ManyToOne(targetEntity: Scales::class)]
+    #[ORM\JoinColumn(name: 'scale_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    private Scales $scale;
 
     #[ORM\ManyToOne(targetEntity: Product::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'product_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private Product $product;
 
     #[ORM\Column(type: 'string', columnDefinition: "ENUM('reposicion','consumo','anomalia')")]
     private string $type;
 
-    #[ORM\Column(type: 'decimal', precision: 8, scale: 3)]
+    #[ORM\Column(name: 'weight_before', type: 'decimal', precision: 8, scale: 3)]
     private float $weightBefore;
 
-    #[ORM\Column(type: 'decimal', precision: 8, scale: 3)]
+    #[ORM\Column(name: 'weight_after', type: 'decimal', precision: 8, scale: 3)]
     private float $weightAfter;
 
-    /** Positivo = reposición, Negativo = consumo/anomalía */
-    #[ORM\Column(type: 'decimal', precision: 8, scale: 3)]
+    #[ORM\Column(name: 'delta_kg', type: 'decimal', precision: 8, scale: 3)]
     private float $deltaKg;
 
-    /** delta_kg × precio_compra del producto */
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
+    #[ORM\Column(name: 'delta_cost', type: 'decimal', precision: 10, scale: 2, nullable: true)]
     private ?float $deltaCost = null;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(name: 'detected_at', type: 'datetime')]
     private \DateTimeInterface $detectedAt;
 
-    /** NULL = pendiente revisión, true = confirmado, false = descartado */
-    #[ORM\Column(type: 'boolean', nullable: true)]
+    #[ORM\Column(name: 'is_confirmed', type: 'boolean', nullable: true)]
     private ?bool $isConfirmed = null;
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[ORM\Column(name: 'confirmed_at', type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $confirmedAt = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
@@ -65,11 +62,11 @@ class ScaleEvent
         return $this->id;
     }
 
-    public function getScale(): Scale
+    public function getScale(): Scales
     {
         return $this->scale;
     }
-    public function setScale(Scale $scale): self
+    public function setScale(Scales $scale): self
     {
         $this->scale = $scale;
         return $this;
