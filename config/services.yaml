@@ -1050,3 +1050,83 @@ services:
   App\Service\Merma\Infrastructure\OutputAdapters\Repositories\WeightsLogReadingAdapter:
     arguments:
       $entityManager: '@doctrine.orm.main_entity_manager'
+
+  # Merma API Use Cases
+  App\Service\Merma\Application\UseCases\GetMermaSummaryUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Service\Merma\Application\InputPorts\GetMermaSummaryUseCaseInterface:
+    alias: App\Service\Merma\Application\UseCases\GetMermaSummaryUseCase
+
+  App\Service\Merma\Application\UseCases\GetMermaMonthlyHistoryUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Service\Merma\Application\InputPorts\GetMermaMonthlyHistoryUseCaseInterface:
+    alias: App\Service\Merma\Application\UseCases\GetMermaMonthlyHistoryUseCase
+
+  App\Service\Merma\Application\UseCases\ConfirmAnomalyUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Service\Merma\Application\InputPorts\ConfirmAnomalyUseCaseInterface:
+    alias: App\Service\Merma\Application\UseCases\ConfirmAnomalyUseCase
+
+  App\Service\Merma\Application\UseCases\DiscardAnomalyUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Service\Merma\Application\InputPorts\DiscardAnomalyUseCaseInterface:
+    alias: App\Service\Merma\Application\UseCases\DiscardAnomalyUseCase
+
+  App\Service\Merma\Application\UseCases\GetMermaConfigUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Service\Merma\Application\InputPorts\GetMermaConfigUseCaseInterface:
+    alias: App\Service\Merma\Application\UseCases\GetMermaConfigUseCase
+
+  App\Service\Merma\Application\UseCases\UpdateMermaConfigUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Service\Merma\Application\InputPorts\UpdateMermaConfigUseCaseInterface:
+    alias: App\Service\Merma\Application\UseCases\UpdateMermaConfigUseCase
+
+  # Merma API Controllers
+  App\Service\Merma\Infrastructure\InputAdapters\GetMermaSummaryController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Service\Merma\Infrastructure\InputAdapters\GetMermaMonthlyHistoryController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Service\Merma\Infrastructure\InputAdapters\ConfirmAnomalyController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Service\Merma\Infrastructure\InputAdapters\DiscardAnomalyController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Service\Merma\Infrastructure\InputAdapters\GetMermaConfigController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Service\Merma\Infrastructure\InputAdapters\UpdateMermaConfigController:
+    tags: ['controller.service_arguments']
+    public: true
