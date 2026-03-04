@@ -10,6 +10,7 @@ use App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface;
 use App\Ttn\Application\Services\BusinessHoursCheckerService;
 use App\Ttn\Application\Services\TtnAlarmNotificationService;
 use App\Ttn\Application\Services\WeightsLogService;
+use App\Service\Merma\ScaleEventDetectorService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -21,7 +22,10 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         private readonly LoggerInterface $logger,
         private readonly BusinessHoursCheckerService $businessHoursChecker,
         private readonly WeightsLogService $weightsLogService,
-        private readonly TtnAlarmNotificationService $notificationService
+        private readonly TtnAlarmNotificationService $notificationService,
+        private readonly ScaleEventDetectorService      $mermaDetector,
+        private readonly MermaConfigRepositoryInterface $mermaConfigRepo,
+        private readonly MermaNotifierInterface         $mermaNotifier,
     ) {
     }
 
@@ -348,5 +352,81 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                 $product->getConversionFactor()
             );
         }
+
+        // ============================================================
+        // ← NUEVO: DETECCIÓN DE MERMA
+        //
+        // Al final del flujo — después de todo lo existente.
+        // Usa $lastRealWeightKg y $newRealWeightKg ya calculados.
+        // Nunca interrumpe el uplink (try/catch interno).
+        // ============================================================
+        $this->detectMermaEvent(
+            entityManager:    $entityManager,
+            scaleId:          (int) $scale->getId(),
+            productId:        (int) $product->getId(),
+            previousWeightKg: (float) $lastRealWeightKg,
+            newWeightKg:      (float) $newRealWeightKg,
+            pricePerKg:       $product->getPrecioCompra(),
+            readAt:           \DateTime::createFromImmutable($now),
+        );
     }
+// ============================================================
+// ← NUEVO: detección de merma (privado)
+// ============================================================
+private function detectMermaEvent(
+    EntityManagerInterface $entityManager,
+    int                    $scaleId,
+    int                    $productId,
+    float                  $previousWeightKg,
+    float                  $newWeightKg,
+    ?float                 $pricePerKg,
+    \DateTimeInterface     $readAt,
+): void {
+    try {
+        $config = $this->mermaConfigRepo->findByProductId($productId)
+            ?? $this->mermaConfigRepo->createDefaultForProduct($productId);
+
+        $classification = $this->mermaDetector->classify(
+            previousWeight: $previousWeightKg,
+            newWeight:      $newWeightKg,
+            readAt:         $readAt,
+            config:         $config,
+            pricePerKg:     $pricePerKg,
+        );
+
+        if ($classification === null) {
+            return;
+        }
+
+        $event = new ScaleEvent();
+        $event->setScaleId($scaleId)
+            ->setProductId($productId)
+            ->setType($classification->type)
+            ->setWeightBefore($previousWeightKg)
+            ->setWeightAfter($newWeightKg)
+            ->setDeltaKg($classification->deltaKg)
+            ->setDeltaCost($classification->deltaCost)
+            ->setDetectedAt($readAt);
+
+        $entityManager->persist($event);
+        $entityManager->flush();
+
+        $this->logger->info('[Merma] ScaleEvent: {type} | scale={s} | delta={d}kg', [
+            'type' => $classification->type,
+            's'    => $scaleId,
+            'd'    => $classification->deltaKg,
+        ]);
+
+        if ($event->isAnomalia() && $config->isAlertOnAnomaly()) {
+            $this->mermaNotifier->sendAnomalyAlert($event);
+        }
+
+    } catch (\Throwable $e) {
+        $this->logger->error('[Merma] Error en detectMermaEvent: {msg}', [
+            'msg'       => $e->getMessage(),
+            'scaleId'   => $scaleId,
+            'productId' => $productId,
+        ]);
+    }
+}
 }

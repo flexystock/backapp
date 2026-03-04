@@ -598,7 +598,11 @@ services:
     arguments:
       $mainEntityManager: '@doctrine.orm.main_entity_manager'
 
-  App\Ttn\Application\UseCases\HandleTtnUplinkUseCase: ~
+  App\Ttn\Application\UseCases\HandleTtnUplinkUseCase:
+    arguments:
+      $mermaDetector: '@App\Service\Merma\ScaleEventDetectorService'
+      $mermaConfigRepo: '@App\Service\Merma\Application\OutputPorts\MermaConfigRepositoryInterface'
+      $mermaNotifier: '@App\Service\Merma\Application\OutputPorts\MermaNotifierInterface'
 
   # --------------------------
   # ALARM
@@ -1011,3 +1015,39 @@ services:
 
   App\ControlPanel\Purchase\Application\InputPorts\ProcessPurchaseScalesUseCaseInterface:
     alias: App\ControlPanel\Purchase\Application\UseCases\ProcessPurchaseScalesUseCase
+  # --------------------------
+  # MERMA
+  # --------------------------
+  App\Service\Merma\Application\OutputPorts\ScaleEventRepositoryInterface:
+    alias: App\Service\Merma\Infrastructure\OutputAdapters\Repositories\ScaleEventRepository
+
+  App\Service\Merma\Application\OutputPorts\MermaConfigRepositoryInterface:
+    alias: App\Service\Merma\Infrastructure\OutputAdapters\Repositories\MermaConfigRepository
+
+  App\Service\Merma\Application\OutputPorts\MermaMonthlyReportRepositoryInterface:
+    alias: App\Service\Merma\Infrastructure\OutputAdapters\Repositories\MermaMonthlyReportRepository
+
+
+  App\Service\Merma\Application\OutputPorts\MermaNotifierInterface:
+    alias: App\Service\Merma\Infrastructure\OutputAdapters\MermaNotifier
+
+  App\Service\Merma\Application\InputPorts\MermaEventDetectorInterface:
+    alias: App\Service\Merma\Application\UseCases\DetectScaleEventUseCase
+
+  App\Service\Merma\Application\InputPorts\MermaReportGeneratorInterface:
+    alias: App\Service\Merma\Application\UseCases\GenerateMermaReportUseCase
+
+  App\Service\Merma\Application\InputPorts\MermaDashboardInterface:
+    alias: App\Service\Merma\Application\UseCases\MermaDashboardUseCase
+
+  App\Service\Merma\Infrastructure\OutputAdapters\MermaNotifier:
+    arguments:
+      $fromEmail: '%env(MAILER_FROM)%'
+      $appUrl: '%env(APP_URL)%'
+
+  App\Service\Merma\Application\OutputPorts\ScaleReadingRepositoryInterface:
+    alias: App\Service\Merma\Infrastructure\OutputAdapters\Repositories\WeightsLogReadingAdapter
+
+  App\Service\Merma\Infrastructure\OutputAdapters\Repositories\WeightsLogReadingAdapter:
+    arguments:
+      $entityManager: '@doctrine.orm.main_entity_manager'

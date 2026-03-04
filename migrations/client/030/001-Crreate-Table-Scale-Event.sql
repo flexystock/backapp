@@ -1,0 +1,22 @@
+CREATE TABLE scale_event (
+                id              INT UNSIGNED AUTO_INCREMENT NOT NULL,
+                scale_id        INT UNSIGNED NOT NULL,
+                product_id      INT UNSIGNED NOT NULL,
+                type            ENUM('reposicion','consumo','anomalia') NOT NULL,
+                weight_before   DECIMAL(8,3) NOT NULL COMMENT 'kg antes del evento',
+                weight_after    DECIMAL(8,3) NOT NULL COMMENT 'kg después del evento',
+                delta_kg        DECIMAL(8,3) NOT NULL COMMENT '+reposición / -consumo',
+                delta_cost      DECIMAL(10,2) DEFAULT NULL COMMENT 'delta_kg × precio_compra',
+                detected_at     DATETIME NOT NULL,
+                is_confirmed    TINYINT(1) DEFAULT NULL COMMENT 'NULL=pendiente, 1=confirmado, 0=descartado',
+                confirmed_at    DATETIME DEFAULT NULL,
+                notes           VARCHAR(255) DEFAULT NULL,
+                PRIMARY KEY (id),
+                INDEX idx_scale_event_scale      (scale_id),
+                INDEX idx_scale_event_product    (product_id),
+                INDEX idx_scale_event_type       (type),
+                INDEX idx_scale_event_detected   (detected_at),
+                INDEX idx_scale_event_anomalia   (type, is_confirmed),
+                CONSTRAINT fk_scale_event_scale   FOREIGN KEY (scale_id)   REFERENCES scales(id)   ON DELETE CASCADE,
+                CONSTRAINT fk_scale_event_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
