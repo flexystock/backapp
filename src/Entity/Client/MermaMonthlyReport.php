@@ -2,6 +2,8 @@
 
 namespace App\Entity\Client;
 
+use Doctrine\ORM\Mapping as ORM;
+
 // ═══════════════════════════════════════════════════════
 // MermaMonthlyReport — calculado por cron cada mes
 // ═══════════════════════════════════════════════════════
@@ -21,9 +23,9 @@ class MermaMonthlyReport
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private Product $product;
 
-    #[ORM\ManyToOne(targetEntity: Scale::class)]
+    #[ORM\ManyToOne(targetEntity: Scales::class)]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
-    private Scale $scale;
+    private Scales $scale;
 
     /** Primer día del mes reportado. Ej: 2026-03-01 */
     #[ORM\Column(type: 'date')]
@@ -109,11 +111,11 @@ class MermaMonthlyReport
         $this->product = $p;
         return $this;
     }
-    public function getScale(): Scale
+    public function getScale(): Scales
     {
         return $this->scale;
     }
-    public function setScale(Scale $s): self
+    public function setScale(Scales $s): self
     {
         $this->scale = $s;
         return $this;
