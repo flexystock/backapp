@@ -83,4 +83,9 @@ controllers_control_panel:
     path: ../src/ControlPanel/
     namespace: App\ControlPanel
   type: attribute
+controllers_merma:
+  resource:
+    path: ../src/Service/Merma/Infrastructure/InputAdapters/
+    namespace: App\Service\Merma\Infrastructure\InputAdapters
+  type: attribute
 

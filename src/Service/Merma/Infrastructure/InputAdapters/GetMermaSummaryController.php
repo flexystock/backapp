@@ -33,11 +33,17 @@ class GetMermaSummaryController extends AbstractController
     #[OA\Get(
         path: '/api/merma/summary',
         summary: 'Obtiene el resumen de merma del mes actual para una balanza y producto',
-        parameters: [
-            new OA\Parameter(name: 'uuidClient', in: 'query', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
-            new OA\Parameter(name: 'scaleId', in: 'query', required: true, schema: new OA\Schema(type: 'integer')),
-            new OA\Parameter(name: 'productId', in: 'query', required: true, schema: new OA\Schema(type: 'integer')),
-        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['uuidClient', 'scaleId', 'productId'],
+                properties: [
+                    new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid'),
+                    new OA\Property(property: 'scaleId', type: 'integer', example: 1),
+                    new OA\Property(property: 'productId', type: 'integer', example: 1),
+                ]
+            )
+        ),
         tags: ['Merma'],
         responses: [
             new OA\Response(response: 200, description: 'Resumen recuperado correctamente'),
@@ -55,12 +61,21 @@ class GetMermaSummaryController extends AbstractController
                 return $permissionCheck;
             }
 
-            $uuidClient = $request->query->get('uuidClient', '');
-            $scaleId    = (int) $request->query->get('scaleId', 0);
-            $productId  = (int) $request->query->get('productId', 0);
+            $data       = json_decode($request->getContent(), true) ?? [];
+            $uuidClient = $data['uuidClient'] ?? '';
+            $scaleId    = isset($data['scaleId']) ? (int) $data['scaleId'] : 0;
+            $productId  = isset($data['productId']) ? (int) $data['productId'] : 0;
 
             if (empty($uuidClient)) {
                 return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_CLIENT_ID'], Response::HTTP_BAD_REQUEST);
+            }
+
+            if (empty($scaleId)) {
+                return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_SCALE_ID'], Response::HTTP_BAD_REQUEST);
+            }
+
+            if (empty($productId)) {
+                return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_PRODUCT_ID'], Response::HTTP_BAD_REQUEST);
             }
 
             $dto    = new GetMermaSummaryRequest($uuidClient, $scaleId, $productId);
