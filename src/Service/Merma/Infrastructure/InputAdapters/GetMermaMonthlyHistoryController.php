@@ -33,12 +33,18 @@ class GetMermaMonthlyHistoryController extends AbstractController
     #[OA\Get(
         path: '/api/merma/history',
         summary: 'Obtiene el historial de informes mensuales de merma para una balanza y producto',
-        parameters: [
-            new OA\Parameter(name: 'uuidClient', in: 'query', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
-            new OA\Parameter(name: 'scaleId', in: 'query', required: true, schema: new OA\Schema(type: 'integer')),
-            new OA\Parameter(name: 'productId', in: 'query', required: true, schema: new OA\Schema(type: 'integer')),
-            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 12)),
-        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['uuidClient', 'scaleId', 'productId'],
+                properties: [
+                    new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid'),
+                    new OA\Property(property: 'scaleId', type: 'integer', example: 1),
+                    new OA\Property(property: 'productId', type: 'integer', example: 1),
+                    new OA\Property(property: 'limit', type: 'integer', example: 12, default: 12),
+                ]
+            )
+        ),
         tags: ['Merma'],
         responses: [
             new OA\Response(response: 200, description: 'Historial recuperado correctamente'),
@@ -56,13 +62,22 @@ class GetMermaMonthlyHistoryController extends AbstractController
                 return $permissionCheck;
             }
 
-            $uuidClient = $request->query->get('uuidClient', '');
-            $scaleId    = (int) $request->query->get('scaleId', 0);
-            $productId  = (int) $request->query->get('productId', 0);
-            $limit      = (int) $request->query->get('limit', 12);
+            $data       = json_decode($request->getContent(), true) ?? [];
+            $uuidClient = $data['uuidClient'] ?? '';
+            $scaleId    = isset($data['scaleId']) ? (int) $data['scaleId'] : 0;
+            $productId  = isset($data['productId']) ? (int) $data['productId'] : 0;
+            $limit      = isset($data['limit']) ? (int) $data['limit'] : 12;
 
             if (empty($uuidClient)) {
                 return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_CLIENT_ID'], Response::HTTP_BAD_REQUEST);
+            }
+
+            if (empty($scaleId)) {
+                return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_SCALE_ID'], Response::HTTP_BAD_REQUEST);
+            }
+
+            if (empty($productId)) {
+                return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_PRODUCT_ID'], Response::HTTP_BAD_REQUEST);
             }
 
             $dto    = new GetMermaMonthlyHistoryRequest($uuidClient, $scaleId, $productId, $limit);
@@ -77,18 +92,18 @@ class GetMermaMonthlyHistoryController extends AbstractController
                 'status'  => 'success',
                 'message' => 'MERMA_HISTORY_RETRIEVED',
                 'reports' => array_map(fn($r) => [
-                    'report_id'       => $r->reportId,
-                    'product_id'      => $r->productId,
-                    'scale_id'        => $r->scaleId,
-                    'period_label'    => $r->periodLabel,
-                    'input_kg'        => $r->inputKg,
-                    'consumed_kg'     => $r->consumedKg,
-                    'anomaly_kg'      => $r->anomalyKg,
-                    'actual_waste_kg' => $r->actualWasteKg,
-                    'waste_pct'       => $r->wastePct,
+                    'report_id'         => $r->reportId,
+                    'product_id'        => $r->productId,
+                    'scale_id'          => $r->scaleId,
+                    'period_label'      => $r->periodLabel,
+                    'input_kg'          => $r->inputKg,
+                    'consumed_kg'       => $r->consumedKg,
+                    'anomaly_kg'        => $r->anomalyKg,
+                    'actual_waste_kg'   => $r->actualWasteKg,
+                    'waste_pct'         => $r->wastePct,
                     'waste_cost_euros'  => $r->wasteCostEuros,
                     'saved_vs_baseline' => $r->savedVsBaseline,
-                    'status'          => $r->status,
+                    'status'            => $r->status,
                 ], $reports),
             ], Response::HTTP_OK);
         } catch (\RuntimeException $e) {

@@ -29,7 +29,7 @@ class GetMermaConfigController extends AbstractController
         $this->permissionService = $permissionService;
     }
 
-    #[Route('/api/merma/config/{productId}', name: 'api_merma_config_get', methods: ['GET'])]
+    #[Route('/api/merma/config/', name: 'api_merma_config_get', methods: ['GET'])]
     #[OA\Get(
         path: '/api/merma/config/{productId}',
         summary: 'Obtiene la configuración de merma de un producto',
@@ -46,7 +46,7 @@ class GetMermaConfigController extends AbstractController
             new OA\Response(response: 404, description: 'Cliente o configuración no encontrada'),
         ]
     )]
-    public function __invoke(Request $request, int $productId): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
         try {
             $permissionCheck = $this->checkPermissionJson('merma.view', 'No tienes permisos para consultar la merma');
@@ -54,10 +54,17 @@ class GetMermaConfigController extends AbstractController
                 return $permissionCheck;
             }
 
-            $uuidClient = $request->query->get('uuidClient', '');
+            $data      = json_decode($request->getContent(), true) ?? [];
+            $uuidClient = $data['uuidClient'] ?? '';
+            $productId  = $data['productId'] ?? null;
+
 
             if (empty($uuidClient)) {
                 return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_CLIENT_ID'], Response::HTTP_BAD_REQUEST);
+            }
+
+            if (empty($productId) || !is_int($productId)) {
+                return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_PRODUCT_ID'], Response::HTTP_BAD_REQUEST);
             }
 
             $dto    = new GetMermaConfigRequest($uuidClient, $productId);

@@ -29,16 +29,17 @@ class UpdateMermaConfigController extends AbstractController
         $this->permissionService = $permissionService;
     }
 
-    #[Route('/api/merma/config/{productId}', name: 'api_merma_config_update', methods: ['PUT'])]
+    #[Route('/api/merma/config', name: 'api_merma_config_update', methods: ['PUT'])]
     #[OA\Put(
-        path: '/api/merma/config/{productId}',
+        path: '/api/merma/config',
         summary: 'Crea o actualiza la configuración de merma de un producto',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['uuidClient', 'rendimientoEsperadoPct', 'serviceStart', 'serviceEnd', 'anomalyThresholdKg', 'alertOnAnomaly'],
+                required: ['uuidClient', 'productId', 'rendimientoEsperadoPct', 'serviceStart', 'serviceEnd', 'anomalyThresholdKg', 'alertOnAnomaly'],
                 properties: [
                     new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid'),
+                    new OA\Property(property: 'productId', type: 'integer', example: 1),
                     new OA\Property(property: 'rendimientoEsperadoPct', type: 'integer', minimum: 0, maximum: 100, example: 80),
                     new OA\Property(property: 'serviceStart', type: 'string', example: '09:00'),
                     new OA\Property(property: 'serviceEnd', type: 'string', example: '23:59'),
@@ -56,7 +57,7 @@ class UpdateMermaConfigController extends AbstractController
             new OA\Response(response: 404, description: 'Cliente o producto no encontrado'),
         ]
     )]
-    public function __invoke(Request $request, int $productId): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
         try {
             $permissionCheck = $this->checkPermissionJson('merma.manage', 'No tienes permisos para gestionar la merma');
@@ -64,18 +65,23 @@ class UpdateMermaConfigController extends AbstractController
                 return $permissionCheck;
             }
 
-            $payload = json_decode($request->getContent(), true) ?? [];
+            $payload    = json_decode($request->getContent(), true) ?? [];
+            $uuidClient = $payload['uuidClient'] ?? '';
+            $productId  = $payload['productId'] ?? null;
 
-            $uuidClient             = $payload['uuidClient'] ?? '';
+            if (empty($uuidClient)) {
+                return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_CLIENT_ID'], Response::HTTP_BAD_REQUEST);
+            }
+
+            if (empty($productId) || !is_int($productId)) {
+                return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_PRODUCT_ID'], Response::HTTP_BAD_REQUEST);
+            }
+
             $rendimientoEsperadoPct = isset($payload['rendimientoEsperadoPct']) ? (int) $payload['rendimientoEsperadoPct'] : 80;
             $serviceStart           = $payload['serviceStart'] ?? '09:00';
             $serviceEnd             = $payload['serviceEnd'] ?? '23:59';
             $anomalyThresholdKg     = isset($payload['anomalyThresholdKg']) ? (float) $payload['anomalyThresholdKg'] : 0.200;
             $alertOnAnomaly         = (bool) ($payload['alertOnAnomaly'] ?? true);
-
-            if (empty($uuidClient)) {
-                return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_CLIENT_ID'], Response::HTTP_BAD_REQUEST);
-            }
 
             $dto = new UpdateMermaConfigRequest(
                 $uuidClient,
@@ -120,10 +126,10 @@ class UpdateMermaConfigController extends AbstractController
     {
         $message    = $e->getMessage();
         $statusCode = match (true) {
-            $message === 'CLIENT_NOT_FOUND'           => Response::HTTP_NOT_FOUND,
+            $message === 'CLIENT_NOT_FOUND'                => Response::HTTP_NOT_FOUND,
             str_starts_with($message, 'PRODUCT_NOT_FOUND') => Response::HTTP_NOT_FOUND,
-            $message === 'INVALID_TIME_FORMAT'        => Response::HTTP_BAD_REQUEST,
-            default                                   => Response::HTTP_BAD_REQUEST,
+            $message === 'INVALID_TIME_FORMAT'             => Response::HTTP_BAD_REQUEST,
+            default                                        => Response::HTTP_BAD_REQUEST,
         };
         return new JsonResponse(['status' => 'error', 'message' => $message], $statusCode);
     }
