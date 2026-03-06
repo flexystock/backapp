@@ -598,7 +598,10 @@ services:
     arguments:
       $mainEntityManager: '@doctrine.orm.main_entity_manager'
 
-  App\Ttn\Application\UseCases\HandleTtnUplinkUseCase: ~
+  App\Ttn\Application\UseCases\HandleTtnUplinkUseCase:
+    arguments:
+      $mermaDetector: '@App\Service\Merma\ScaleEventDetectorService'
+      $mermaNotifier: '@App\Service\Merma\Application\OutputPorts\MermaNotifierInterface'
 
   # --------------------------
   # ALARM
@@ -1011,3 +1014,121 @@ services:
 
   App\ControlPanel\Purchase\Application\InputPorts\ProcessPurchaseScalesUseCaseInterface:
     alias: App\ControlPanel\Purchase\Application\UseCases\ProcessPurchaseScalesUseCase
+  # --------------------------
+  # MERMA
+  # --------------------------
+  App\Service\Merma\Application\OutputPorts\ScaleEventRepositoryInterface:
+    alias: App\Service\Merma\Infrastructure\OutputAdapters\Repositories\ScaleEventRepository
+
+  App\Service\Merma\Application\OutputPorts\MermaConfigRepositoryInterface:
+    alias: App\Service\Merma\Infrastructure\OutputAdapters\Repositories\MermaConfigRepository
+
+  App\Service\Merma\Application\OutputPorts\MermaMonthlyReportRepositoryInterface:
+    alias: App\Service\Merma\Infrastructure\OutputAdapters\Repositories\MermaMonthlyReportRepository
+
+
+  App\Service\Merma\Application\OutputPorts\MermaNotifierInterface:
+    alias: App\Service\Merma\Infrastructure\OutputAdapters\MermaNotifier
+
+  App\Service\Merma\Application\InputPorts\MermaEventDetectorInterface:
+    alias: App\Service\Merma\Application\UseCases\DetectScaleEventUseCase
+
+  App\Service\Merma\Application\InputPorts\MermaReportGeneratorInterface:
+    alias: App\Service\Merma\Application\UseCases\GenerateMermaReportUseCase
+
+  App\Service\Merma\Application\InputPorts\MermaDashboardInterface:
+    alias: App\Service\Merma\Application\UseCases\MermaDashboardUseCase
+
+  App\Service\Merma\Infrastructure\OutputAdapters\MermaNotifier:
+    arguments:
+      $fromEmail: '%env(MAILER_FROM)%'
+      $appUrl: '%env(APP_URL)%'
+
+  App\Service\Merma\Application\OutputPorts\ScaleReadingRepositoryInterface:
+    alias: App\Service\Merma\Infrastructure\OutputAdapters\Repositories\WeightsLogReadingAdapter
+
+  App\Service\Merma\Infrastructure\OutputAdapters\Repositories\WeightsLogReadingAdapter:
+    arguments:
+      $entityManager: '@doctrine.orm.main_entity_manager'
+
+  # Merma API Use Cases
+  App\Service\Merma\Application\UseCases\GetMermaSummaryUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Service\Merma\Application\InputPorts\GetMermaSummaryUseCaseInterface:
+    alias: App\Service\Merma\Application\UseCases\GetMermaSummaryUseCase
+
+  App\Service\Merma\Application\UseCases\GetMermaMonthlyHistoryUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Service\Merma\Application\InputPorts\GetMermaMonthlyHistoryUseCaseInterface:
+    alias: App\Service\Merma\Application\UseCases\GetMermaMonthlyHistoryUseCase
+
+  App\Service\Merma\Application\UseCases\ConfirmAnomalyUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Service\Merma\Application\InputPorts\ConfirmAnomalyUseCaseInterface:
+    alias: App\Service\Merma\Application\UseCases\ConfirmAnomalyUseCase
+
+  App\Service\Merma\Application\UseCases\DiscardAnomalyUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Service\Merma\Application\InputPorts\DiscardAnomalyUseCaseInterface:
+    alias: App\Service\Merma\Application\UseCases\DiscardAnomalyUseCase
+
+  App\Service\Merma\Application\UseCases\GetMermaConfigUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Service\Merma\Application\InputPorts\GetMermaConfigUseCaseInterface:
+    alias: App\Service\Merma\Application\UseCases\GetMermaConfigUseCase
+
+  App\Service\Merma\Application\UseCases\UpdateMermaConfigUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Service\Merma\Application\InputPorts\UpdateMermaConfigUseCaseInterface:
+    alias: App\Service\Merma\Application\UseCases\UpdateMermaConfigUseCase
+  App\Service\Merma\Application\OutputPorts\MermaProductRepositoryInterface:
+    class: App\Service\Merma\Infrastructure\OutputAdapters\Repositories\ClientMermaProductRepository
+
+  # Merma API Controllers
+  App\Service\Merma\Infrastructure\InputAdapters\GetMermaSummaryController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Service\Merma\Infrastructure\InputAdapters\GetMermaMonthlyHistoryController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Service\Merma\Infrastructure\InputAdapters\ConfirmAnomalyController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Service\Merma\Infrastructure\InputAdapters\DiscardAnomalyController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Service\Merma\Infrastructure\InputAdapters\GetMermaConfigController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Service\Merma\Infrastructure\InputAdapters\UpdateMermaConfigController:
+    tags: ['controller.service_arguments']
+    public: true
