@@ -29,7 +29,7 @@ class GetMermaConfigController extends AbstractController
         $this->permissionService = $permissionService;
     }
 
-    #[Route('/api/merma/config/', name: 'api_merma_config_get', methods: ['GET'])]
+    #[Route('/api/merma/config/get', name: 'api_merma_config_get', methods: ['POST'])]
     #[OA\Get(
         path: '/api/merma/config/{productId}',
         summary: 'Obtiene la configuración de merma de un producto',

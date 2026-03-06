@@ -11,6 +11,7 @@ use App\Service\Merma\Application\InputPorts\MermaReportGeneratorInterface;
 use App\Service\Merma\Application\OutputPorts\MermaConfigRepositoryInterface;
 use App\Service\Merma\Application\OutputPorts\MermaMonthlyReportRepositoryInterface;
 use App\Service\Merma\Application\OutputPorts\MermaNotifierInterface;
+use App\Service\Merma\Application\OutputPorts\MermaProductRepositoryInterface;
 use App\Service\Merma\Application\OutputPorts\ScaleEventRepositoryInterface;
 use App\Service\Merma\Application\OutputPorts\ScaleReadingRepositoryInterface;
 use App\Service\Merma\MermaReportGeneratorService;
@@ -28,6 +29,7 @@ final class GenerateMermaReportUseCase implements MermaReportGeneratorInterface
         private readonly ScaleReadingRepositoryInterface       $readingRepo,
         private readonly MermaConfigRepositoryInterface        $configRepo,
         private readonly MermaMonthlyReportRepositoryInterface $reportRepo,
+        private readonly MermaProductRepositoryInterface       $productRepo,
         private readonly MermaNotifierInterface                $notifier,
         private readonly LoggerInterface                       $logger,
     ) {}
@@ -89,6 +91,12 @@ final class GenerateMermaReportUseCase implements MermaReportGeneratorInterface
 
         if ($result === null) {
             return null; // Sin actividad ese mes
+        }
+
+        $product = $this->productRepo->findById($productId); // ver nota abajo
+        if ($product !== null && $product->getCostPrice() > 0) {
+            $pricePerKg = $product->getCostPrice() / $product->getConversionFactor();
+            $result     = $this->generator->applyPricing($result, $pricePerKg);
         }
 
         // Persistir

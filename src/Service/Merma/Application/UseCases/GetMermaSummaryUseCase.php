@@ -45,13 +45,22 @@ final class GetMermaSummaryUseCase implements GetMermaSummaryUseCaseInterface
             'productId' => $request->getProductId(),
         ]);
 
+        $estimatedCostEuros = 0.0;
+        $product = $em->getRepository(\App\Entity\Client\Product::class)
+            ->find($request->getProductId());
+
+        if ($product !== null && $product->getCostPrice() > 0 && $estimatedWasteKg > 0) {
+            $pricePerKg         = $product->getCostPrice() / $product->getConversionFactor();
+            $estimatedCostEuros = round($estimatedWasteKg * $pricePerKg, 2);
+        }
+
         return new MermaSummaryDTO(
             inputKg:               $inputKg,
             consumedKg:            $consumedKg,
             anomalyKg:             $anomalyKg,
             estimatedWasteKg:      $estimatedWasteKg,
             estimatedWastePct:     $estimatedWastePct,
-            estimatedCostEuros:    0.0,
+            estimatedCostEuros:    $estimatedCostEuros,
             pendingAnomaliesCount: $pendingCount,
         );
     }

@@ -28,41 +28,41 @@ class MermaMonthlyReport
     private Scales $scale;
 
     /** Primer día del mes reportado. Ej: 2026-03-01 */
-    #[ORM\Column(type: 'date')]
+    #[ORM\Column(name: 'period_month', type: 'date')]
     private \DateTimeInterface $periodMonth;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 3)]
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 3, name: 'input_kg')]
     private float $inputKg = 0;          // Total reposiciones (kg)
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 3)]
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 3, name: 'consumed_kg')]
     private float $consumedKg = 0;       // Consumo en horario servicio (kg)
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 3)]
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 3, name: 'anomaly_kg')]
     private float $anomalyKg = 0;        // Consumo fuera de horario (kg)
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 3)]
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 3, name: 'stock_start_kg')]
     private float $stockStartKg = 0;     // Stock inicio de mes (kg)
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 3)]
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 3, name: 'stock_end_kg')]
     private float $stockEndKg = 0;       // Stock fin de mes (kg)
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 3)]
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 3, name: 'expected_waste_kg')]
     private float $expectedWasteKg = 0;  // Merma operativa esperada (kg)
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 3)]
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 3, name: 'actual_waste_kg')]
     private float $actualWasteKg = 0;    // Merma real calculada (kg)
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, name: 'waste_cost_euros')]
     private float $wasteCostEuros = 0;   // actualWasteKg × precio_compra
 
-    #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]
+    #[ORM\Column(type: 'decimal', precision: 5, scale: 2, name: 'waste_pct')]
     private float $wastePct = 0;         // actualWasteKg / inputKg × 100
 
     /** Euros ahorrados vs. merma media del sector (baseline 8%) */
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, name: 'saved_vs_baseline')]
     private float $savedVsBaseline = 0;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(type: 'datetime', name: 'generated_at')]
     private \DateTimeInterface $generatedAt;
 
     public function __construct()
