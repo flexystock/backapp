@@ -29,7 +29,7 @@ class GetMermaSummaryController extends AbstractController
         $this->permissionService = $permissionService;
     }
 
-    #[Route('/api/merma/summary', name: 'api_merma_summary', methods: ['GET'])]
+    #[Route('/api/merma/summary', name: 'api_merma_summary', methods: ['POST'])]
     #[OA\Get(
         path: '/api/merma/summary',
         summary: 'Obtiene el resumen de merma del mes actual para una balanza y producto',

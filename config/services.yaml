@@ -1105,6 +1105,8 @@ services:
 
   App\Service\Merma\Application\InputPorts\UpdateMermaConfigUseCaseInterface:
     alias: App\Service\Merma\Application\UseCases\UpdateMermaConfigUseCase
+  App\Service\Merma\Application\OutputPorts\MermaProductRepositoryInterface:
+    class: App\Service\Merma\Infrastructure\OutputAdapters\Repositories\ClientMermaProductRepository
 
   # Merma API Controllers
   App\Service\Merma\Infrastructure\InputAdapters\GetMermaSummaryController:

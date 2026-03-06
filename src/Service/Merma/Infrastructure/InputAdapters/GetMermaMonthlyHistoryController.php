@@ -29,7 +29,7 @@ class GetMermaMonthlyHistoryController extends AbstractController
         $this->permissionService = $permissionService;
     }
 
-    #[Route('/api/merma/history', name: 'api_merma_history', methods: ['GET'])]
+    #[Route('/api/merma/history', name: 'api_merma_history', methods: ['POST'])]
     #[OA\Get(
         path: '/api/merma/history',
         summary: 'Obtiene el historial de informes mensuales de merma para una balanza y producto',
