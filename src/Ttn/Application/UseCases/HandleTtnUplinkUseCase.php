@@ -356,7 +356,9 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             productId:        (int) $product->getId(),
             previousWeightKg: (float) $lastRealWeightKg,
             newWeightKg:      (float) $newRealWeightKg,
-            pricePerKg:       $product->getCostPrice(),
+            pricePerKg:       $product->getConversionFactor() > 0
+                                ? $product->getCostPrice() / $product->getConversionFactor()
+                                : $product->getCostPrice(),
             readAt:           \DateTime::createFromImmutable($now),
         );
     }

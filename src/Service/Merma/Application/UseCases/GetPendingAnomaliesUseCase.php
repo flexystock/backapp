@@ -33,8 +33,10 @@ final class GetPendingAnomaliesUseCase implements GetPendingAnomaliesUseCaseInte
         $anomalies = array_map(static function ($event): array {
             return [
                 'id'           => $event->getId(),
-                'scale_id'     => $event->getScale()->getId(),
-                'product_id'   => $event->getProduct()->getId(),
+                'scale_id'    => $event->getScale()->getId(),
+                'scale_name' => $event->getScale()->getEndDeviceId(),
+                'product_id'  => $event->getProduct()->getId(),
+                'product_name' => $event->getProduct()->getName(),
                 'weight_before' => $event->getWeightBefore(),
                 'weight_after'  => $event->getWeightAfter(),
                 'delta_kg'     => $event->getDeltaKg(),
