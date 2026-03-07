@@ -9,10 +9,12 @@ use App\Service\Merma\Application\DTO\DiscardAnomalyRequest;
 use App\Service\Merma\Application\DTO\GetMermaConfigRequest;
 use App\Service\Merma\Application\DTO\GetMermaMonthlyHistoryRequest;
 use App\Service\Merma\Application\DTO\GetMermaSummaryRequest;
+use App\Service\Merma\Application\DTO\GetAnomalyHistoryRequest;
 use App\Service\Merma\Application\DTO\GetPendingAnomaliesRequest;
 use App\Service\Merma\Application\DTO\GetScalesByProductRequest;
 use App\Service\Merma\Application\UseCases\ConfirmAnomalyUseCase;
 use App\Service\Merma\Application\UseCases\DiscardAnomalyUseCase;
+use App\Service\Merma\Application\UseCases\GetAnomalyHistoryUseCase;
 use App\Service\Merma\Application\UseCases\GetMermaConfigUseCase;
 use App\Service\Merma\Application\UseCases\GetMermaMonthlyHistoryUseCase;
 use App\Service\Merma\Application\UseCases\GetMermaSummaryUseCase;
@@ -216,5 +218,28 @@ class MermaApiUseCasesTest extends TestCase
 
         $useCase = new GetScalesByProductUseCase($this->clientRepository, $this->connectionManager, $this->logger);
         $useCase->execute(new GetScalesByProductRequest('non-existent-uuid', 1));
+    }
+
+    // ── GetAnomalyHistoryUseCase ──────────────────────────────────────────────
+
+    public function testGetAnomalyHistoryUseCaseCanBeInstantiated(): void
+    {
+        $useCase = new GetAnomalyHistoryUseCase(
+            $this->clientRepository,
+            $this->connectionManager,
+            $this->logger,
+        );
+        $this->assertInstanceOf(GetAnomalyHistoryUseCase::class, $useCase);
+    }
+
+    public function testGetAnomalyHistoryThrowsExceptionWhenClientNotFound(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('CLIENT_NOT_FOUND');
+
+        $this->clientRepository->method('findByUuid')->willReturn(null);
+
+        $useCase = new GetAnomalyHistoryUseCase($this->clientRepository, $this->connectionManager, $this->logger);
+        $useCase->execute(new GetAnomalyHistoryRequest('non-existent-uuid', 1, 1));
     }
 }
