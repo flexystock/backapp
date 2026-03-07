@@ -1,0 +1,1 @@
+ALTER TABLE merma_config DROP COLUMN anomaly_threshold_kg;

@@ -33,9 +33,6 @@ class ConfirmAnomalyController extends AbstractController
     #[OA\Post(
         path: '/api/merma/event/{id}/confirm',
         summary: 'Confirma una anomalía como sustracción real',
-        parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
-        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -46,6 +43,9 @@ class ConfirmAnomalyController extends AbstractController
             )
         ),
         tags: ['Merma'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
         responses: [
             new OA\Response(response: 200, description: 'Anomalía confirmada'),
             new OA\Response(response: 400, description: 'Datos inválidos'),

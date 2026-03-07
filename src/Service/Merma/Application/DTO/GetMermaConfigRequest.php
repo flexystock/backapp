@@ -20,6 +20,12 @@ class GetMermaConfigRequest
         $this->productId  = $productId;
     }
 
-    public function getUuidClient(): string { return $this->uuidClient; }
-    public function getProductId(): int     { return $this->productId; }
+    public function getUuidClient(): string
+    {
+        return $this->uuidClient;
+    }
+    public function getProductId(): int
+    {
+        return $this->productId;
+    }
 }
