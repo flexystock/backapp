@@ -17,7 +17,8 @@ final class GetMermaSummaryUseCase implements GetMermaSummaryUseCaseInterface
         private readonly ClientRepositoryInterface $clientRepository,
         private readonly ClientConnectionManager   $connectionManager,
         private readonly LoggerInterface           $logger,
-    ) {}
+    ) {
+    }
 
     public function execute(GetMermaSummaryRequest $request): MermaSummaryDTO
     {
@@ -29,30 +30,38 @@ final class GetMermaSummaryUseCase implements GetMermaSummaryUseCaseInterface
         $em        = $this->connectionManager->getEntityManager($client->getUuidClient());
         $eventRepo = new ClientScaleEventRepository($em);
 
-        $start = new \DateTime('first day of this month 00:00:00');
-        $end   = new \DateTime('now');
+        // ── Producto y precio por kg ─────────────────────────────────────────────
+        $product    = $em->getRepository(\App\Entity\Client\Product::class)->find($request->getProductId());
+        $pricePerKg = 0.0;
+        if ($product !== null && $product->getCostPrice() > 0 && $product->getConversionFactor() > 0) {
+            $pricePerKg = $product->getCostPrice() / $product->getConversionFactor();
+        }
 
+        // ── Mes anterior ─────────────────────────────────────────────────────────
+        $prevStart      = new \DateTime('first day of last month 00:00:00');
+        $prevEnd        = new \DateTime('last day of last month 23:59:59');
+        $prevInputKg    = $eventRepo->sumDeltaByType($request->getScaleId(), $request->getProductId(), ScaleEvent::TYPE_REPOSICION, $prevStart, $prevEnd);
+        $prevConsumedKg = abs($eventRepo->sumDeltaByType($request->getScaleId(), $request->getProductId(), ScaleEvent::TYPE_CONSUMO, $prevStart, $prevEnd));
+        $prevWasteKg    = max(0.0, round($prevInputKg - $prevConsumedKg, 3));
+        $prevWastePct   = $prevInputKg > 0 ? round(($prevWasteKg / $prevInputKg) * 100, 1) : 0.0;
+        $prevCostEuros  = $pricePerKg > 0 && $prevWasteKg > 0 ? round($prevWasteKg * $pricePerKg, 2) : 0.0;
+
+        // ── Mes actual ───────────────────────────────────────────────────────────
+        $start      = new \DateTime('first day of this month 00:00:00');
+        $end        = new \DateTime('now');
         $inputKg    = $eventRepo->sumDeltaByType($request->getScaleId(), $request->getProductId(), ScaleEvent::TYPE_REPOSICION, $start, $end);
         $consumedKg = abs($eventRepo->sumDeltaByType($request->getScaleId(), $request->getProductId(), ScaleEvent::TYPE_CONSUMO, $start, $end));
         $anomalyKg  = abs($eventRepo->sumDeltaByType($request->getScaleId(), $request->getProductId(), ScaleEvent::TYPE_ANOMALIA, $start, $end));
 
-        $estimatedWasteKg  = max(0.0, round($inputKg - $consumedKg, 3));
-        $estimatedWastePct = $inputKg > 0 ? round(($estimatedWasteKg / $inputKg) * 100, 1) : 0.0;
-        $pendingCount      = $eventRepo->countPendingAnomalies($request->getScaleId(), $request->getProductId());
+        $estimatedWasteKg   = max(0.0, round($inputKg - $consumedKg, 3));
+        $estimatedWastePct  = $inputKg > 0 ? round(($estimatedWasteKg / $inputKg) * 100, 1) : 0.0;
+        $estimatedCostEuros = $pricePerKg > 0 && $estimatedWasteKg > 0 ? round($estimatedWasteKg * $pricePerKg, 2) : 0.0;
+        $pendingCount       = $eventRepo->countPendingAnomalies($request->getScaleId(), $request->getProductId());
 
         $this->logger->info('MermaSummary retrieved', [
             'scaleId'   => $request->getScaleId(),
             'productId' => $request->getProductId(),
         ]);
-
-        $estimatedCostEuros = 0.0;
-        $product = $em->getRepository(\App\Entity\Client\Product::class)
-            ->find($request->getProductId());
-
-        if ($product !== null && $product->getCostPrice() > 0 && $estimatedWasteKg > 0) {
-            $pricePerKg         = $product->getCostPrice() / $product->getConversionFactor();
-            $estimatedCostEuros = round($estimatedWasteKg * $pricePerKg, 2);
-        }
 
         return new MermaSummaryDTO(
             inputKg:               $inputKg,
@@ -62,6 +71,8 @@ final class GetMermaSummaryUseCase implements GetMermaSummaryUseCaseInterface
             estimatedWastePct:     $estimatedWastePct,
             estimatedCostEuros:    $estimatedCostEuros,
             pendingAnomaliesCount: $pendingCount,
+            prevMonthWastePct:     $prevWastePct,
+            prevMonthCostEuros:    $prevCostEuros,
         );
     }
 }

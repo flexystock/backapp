@@ -98,6 +98,9 @@ class GetMermaSummaryController extends AbstractController
                     'estimated_cost_euros' => $summary->estimatedCostEuros,
                     'pending_anomalies'    => $summary->pendingAnomaliesCount,
                     'status'               => $summary->getStatus(),
+                    'prev_month_waste_pct'   => $summary->prevMonthWastePct,
+                    'prev_month_cost_euros'  => $summary->prevMonthCostEuros,
+                    'trend'                  => $summary->getTrend(), // 'improving' | 'worsening' | 'neutral'
                 ],
             ], Response::HTTP_OK);
         } catch (\RuntimeException $e) {
