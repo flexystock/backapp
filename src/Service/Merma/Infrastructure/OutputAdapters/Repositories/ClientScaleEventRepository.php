@@ -3,6 +3,7 @@
 namespace App\Service\Merma\Infrastructure\OutputAdapters\Repositories;
 
 use App\Entity\Client\ScaleEvent;
+use App\Service\Merma\Application\OutputPorts\GetPendingAnomaliesRepositoryInterface;
 use App\Service\Merma\Application\OutputPorts\ScaleEventRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -10,7 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
  * Implementación real del repositorio de eventos de balanza.
  * Se instancia con el EntityManager del cliente (multi-tenant).
  */
-final class ClientScaleEventRepository implements ScaleEventRepositoryInterface
+final class ClientScaleEventRepository implements ScaleEventRepositoryInterface, GetPendingAnomaliesRepositoryInterface
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
@@ -106,5 +107,18 @@ final class ClientScaleEventRepository implements ScaleEventRepositoryInterface
             ->getSingleScalarResult();
 
         return (int) $result;
+    }
+
+    public function findAllPendingAnomalies(): array
+    {
+        return $this->em->createQuery(
+            'SELECT e
+             FROM App\Entity\Client\ScaleEvent e
+             WHERE e.type = :type
+               AND e.isConfirmed IS NULL
+             ORDER BY e.detectedAt DESC'
+        )
+            ->setParameter('type', ScaleEvent::TYPE_ANOMALIA)
+            ->getResult();
     }
 }

@@ -1132,3 +1132,12 @@ services:
   App\Service\Merma\Infrastructure\InputAdapters\UpdateMermaConfigController:
     tags: ['controller.service_arguments']
     public: true
+
+  App\Service\Merma\Application\UseCases\GetPendingAnomaliesUseCase:
+
+  App\Service\Merma\Application\InputPorts\GetPendingAnomaliesUseCaseInterface:
+    alias: App\Service\Merma\Application\UseCases\GetPendingAnomaliesUseCase
+
+  App\Service\Merma\Infrastructure\InputAdapters\GetPendingAnomaliesController:
+    tags: ['controller.service_arguments']
+    public: true

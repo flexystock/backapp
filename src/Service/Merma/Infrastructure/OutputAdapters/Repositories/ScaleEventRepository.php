@@ -3,12 +3,13 @@
 namespace App\Service\Merma\Infrastructure\OutputAdapters\Repositories;
 
 use App\Entity\Client\ScaleEvent;
+use App\Service\Merma\Application\OutputPorts\GetPendingAnomaliesRepositoryInterface;
 use App\Service\Merma\Application\OutputPorts\ScaleEventRepositoryInterface;
 
 /**
  * Stub — la lógica real usa el EntityManager del cliente directamente.
  */
-final class ScaleEventRepository implements ScaleEventRepositoryInterface
+final class ScaleEventRepository implements ScaleEventRepositoryInterface, GetPendingAnomaliesRepositoryInterface
 {
     public function save(ScaleEvent $event): void {}
 
@@ -40,5 +41,10 @@ final class ScaleEventRepository implements ScaleEventRepositoryInterface
     public function countPendingAnomalies(int $scaleId, int $productId): int
     {
         return 0;
+    }
+
+    public function findAllPendingAnomalies(): array
+    {
+        return [];
     }
 }
