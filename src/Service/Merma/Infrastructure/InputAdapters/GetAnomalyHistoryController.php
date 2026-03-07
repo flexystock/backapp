@@ -4,8 +4,8 @@ namespace App\Service\Merma\Infrastructure\InputAdapters;
 
 use App\Security\PermissionControllerTrait;
 use App\Security\PermissionService;
-use App\Service\Merma\Application\DTO\GetMermaSummaryRequest;
-use App\Service\Merma\Application\InputPorts\GetMermaSummaryUseCaseInterface;
+use App\Service\Merma\Application\DTO\GetAnomalyHistoryRequest;
+use App\Service\Merma\Application\InputPorts\GetAnomalyHistoryUseCaseInterface;
 use OpenApi\Attributes as OA;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,37 +16,39 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-class GetMermaSummaryController extends AbstractController
+class GetAnomalyHistoryController extends AbstractController
 {
     use PermissionControllerTrait;
 
     public function __construct(
-        private readonly GetMermaSummaryUseCaseInterface $useCase,
-        private readonly ValidatorInterface              $validator,
-        private readonly LoggerInterface                 $logger,
-        PermissionService                                $permissionService,
+        private readonly GetAnomalyHistoryUseCaseInterface $useCase,
+        private readonly ValidatorInterface                $validator,
+        private readonly LoggerInterface                   $logger,
+        PermissionService                                  $permissionService,
     ) {
         $this->permissionService = $permissionService;
     }
 
-    #[Route('/api/merma/summary', name: 'api_merma_summary', methods: ['POST'])]
-    #[OA\Get(
-        path: '/api/merma/summary',
-        summary: 'Obtiene el resumen de merma del mes actual para una balanza y producto',
+    #[Route('/api/merma/anomalies/history', name: 'api_merma_anomalies_history', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/merma/anomalies/history',
+        summary: 'Obtiene el historial de anomalías resueltas (confirmadas o descartadas)',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
                 required: ['uuidClient', 'scaleId', 'productId'],
                 properties: [
                     new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid'),
-                    new OA\Property(property: 'scaleId', type: 'integer', example: 1),
-                    new OA\Property(property: 'productId', type: 'integer', example: 1),
+                    new OA\Property(property: 'scaleId', type: 'integer'),
+                    new OA\Property(property: 'productId', type: 'integer'),
+                    new OA\Property(property: 'dateFrom', type: 'string', format: 'date-time', nullable: true),
+                    new OA\Property(property: 'dateTo', type: 'string', format: 'date-time', nullable: true),
                 ]
             )
         ),
         tags: ['Merma'],
         responses: [
-            new OA\Response(response: 200, description: 'Resumen recuperado correctamente'),
+            new OA\Response(response: 200, description: 'Historial de anomalías resueltas'),
             new OA\Response(response: 400, description: 'Datos inválidos'),
             new OA\Response(response: 401, description: 'No autenticado'),
             new OA\Response(response: 403, description: 'Sin permisos'),
@@ -63,50 +65,38 @@ class GetMermaSummaryController extends AbstractController
 
             $data       = json_decode($request->getContent(), true) ?? [];
             $uuidClient = $data['uuidClient'] ?? '';
-            $scaleId    = isset($data['scaleId']) ? (int) $data['scaleId'] : 0;
-            $productId  = isset($data['productId']) ? (int) $data['productId'] : 0;
+            $scaleId    = (int) ($data['scaleId'] ?? 0);
+            $productId  = (int) ($data['productId'] ?? 0);
 
             if (empty($uuidClient)) {
                 return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_CLIENT_ID'], Response::HTTP_BAD_REQUEST);
             }
 
-            if (empty($scaleId)) {
-                return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_SCALE_ID'], Response::HTTP_BAD_REQUEST);
-            }
+            $dateFrom = isset($data['dateFrom']) && $data['dateFrom'] !== null
+                ? new \DateTime($data['dateFrom'])
+                : null;
 
-            if (empty($productId)) {
-                return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_PRODUCT_ID'], Response::HTTP_BAD_REQUEST);
-            }
+            $dateTo = isset($data['dateTo']) && $data['dateTo'] !== null
+                ? new \DateTime($data['dateTo'])
+                : null;
 
-            $dto    = new GetMermaSummaryRequest($uuidClient, $scaleId, $productId);
+            $dto    = new GetAnomalyHistoryRequest($uuidClient, $scaleId, $productId, $dateFrom, $dateTo);
             $errors = $this->validator->validate($dto);
             if (count($errors) > 0) {
                 return $this->validationErrorResponse($errors);
             }
 
-            $summary = $this->useCase->execute($dto);
+            $response = $this->useCase->execute($dto);
 
             return new JsonResponse([
-                'status'  => 'success',
-                'message' => 'MERMA_SUMMARY_RETRIEVED',
-                'summary' => [
-                    'input_kg'             => $summary->inputKg,
-                    'consumed_kg'          => $summary->consumedKg,
-                    'anomaly_kg'           => $summary->anomalyKg,
-                    'estimated_waste_kg'   => $summary->estimatedWasteKg,
-                    'estimated_waste_pct'  => $summary->estimatedWastePct,
-                    'estimated_cost_euros' => $summary->estimatedCostEuros,
-                    'pending_anomalies'    => $summary->pendingAnomaliesCount,
-                    'status'               => $summary->getStatus(),
-                    'prev_month_waste_pct'   => $summary->prevMonthWastePct,
-                    'prev_month_cost_euros'  => $summary->prevMonthCostEuros,
-                    'trend'                  => $summary->getTrend(), // 'improving' | 'worsening' | 'neutral'
-                ],
+                'status'    => 'success',
+                'message'   => 'ANOMALY_HISTORY_RETRIEVED',
+                'anomalies' => $response->anomalies,
             ], Response::HTTP_OK);
         } catch (\RuntimeException $e) {
             return $this->handleRuntimeException($e);
         } catch (\Throwable $e) {
-            $this->logger->error('Unexpected error fetching merma summary', ['exception' => $e->getMessage()]);
+            $this->logger->error('Unexpected error fetching anomaly history', ['exception' => $e->getMessage()]);
             return new JsonResponse(['status' => 'error', 'message' => 'UNEXPECTED_ERROR'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

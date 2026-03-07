@@ -121,4 +121,43 @@ final class ClientScaleEventRepository implements ScaleEventRepositoryInterface,
             ->setParameter('type', ScaleEvent::TYPE_ANOMALIA)
             ->getResult();
     }
+
+    /**
+     * Returns resolved anomalies (where isConfirmed is not null) for a given scale and product,
+     * optionally filtered by date range, ordered by detectedAt descending.
+     */
+    public function findResolvedAnomalies(int $scaleId, int $productId, ?\DateTime $from, ?\DateTime $to): array
+    {
+        $dql = 'SELECT e
+                FROM App\Entity\Client\ScaleEvent e
+                WHERE IDENTITY(e.scale) = :scaleId
+                  AND IDENTITY(e.product) = :productId
+                  AND e.type = :type
+                  AND e.isConfirmed IS NOT NULL';
+
+        if ($from !== null) {
+            $dql .= ' AND e.detectedAt >= :from';
+        }
+
+        if ($to !== null) {
+            $dql .= ' AND e.detectedAt <= :to';
+        }
+
+        $dql .= ' ORDER BY e.detectedAt DESC';
+
+        $query = $this->em->createQuery($dql)
+            ->setParameter('scaleId', $scaleId)
+            ->setParameter('productId', $productId)
+            ->setParameter('type', ScaleEvent::TYPE_ANOMALIA);
+
+        if ($from !== null) {
+            $query->setParameter('from', $from);
+        }
+
+        if ($to !== null) {
+            $query->setParameter('to', $to);
+        }
+
+        return $query->getResult();
+    }
 }

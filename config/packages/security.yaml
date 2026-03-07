@@ -114,7 +114,7 @@ security:
         - { path: ^/api/ia/prediction/all-products , roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/ia/prediction/product , roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/merma/config, roles: IS_AUTHENTICATED_FULLY }
-        - { path: ^/api/merma/anomalies/pending, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/merma/anomalies, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/merma/scales-by-product, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
