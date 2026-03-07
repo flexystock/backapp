@@ -94,4 +94,15 @@ class ScalesRepository implements ScalesRepositoryInterface
 
         return $qb->getQuery()->getResult();
     }
+
+    public function findAllByProductId(int $productId): array
+    {
+        return $this->em->createQueryBuilder()
+            ->select('s')
+            ->from(\App\Entity\Client\Scales::class, 's')
+            ->where('IDENTITY(s.product_id) = :productId')
+            ->setParameter('productId', $productId)
+            ->getQuery()
+            ->getResult();
+    }
 }

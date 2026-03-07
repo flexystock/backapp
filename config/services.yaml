@@ -1141,3 +1141,16 @@ services:
   App\Service\Merma\Infrastructure\InputAdapters\GetPendingAnomaliesController:
     tags: ['controller.service_arguments']
     public: true
+
+  App\Service\Merma\Application\UseCases\GetScalesByProductUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Service\Merma\Application\InputPorts\GetScalesByProductUseCaseInterface:
+    alias: App\Service\Merma\Application\UseCases\GetScalesByProductUseCase
+
+  App\Service\Merma\Infrastructure\InputAdapters\GetScalesByProductController:
+    tags: ['controller.service_arguments']
+    public: true
