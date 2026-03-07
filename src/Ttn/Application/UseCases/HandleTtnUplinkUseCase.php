@@ -356,7 +356,9 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             productId:        (int) $product->getId(),
             previousWeightKg: (float) $lastRealWeightKg,
             newWeightKg:      (float) $newRealWeightKg,
-            pricePerKg:       $product->getCostPrice(),
+            pricePerKg:       $product->getConversionFactor() > 0
+                                ? $product->getCostPrice() / $product->getConversionFactor()
+                                : $product->getCostPrice(),
             readAt:           \DateTime::createFromImmutable($now),
         );
     }
@@ -391,6 +393,13 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             if (!$config) {
                 return;
             }
+            $businessHours = $entityManager
+                ->getRepository(\App\Entity\Client\BusinessHour::class)
+                ->findAll();
+
+            $thresholdKg = ($product->getWeightRange() > 0)
+                ? (float) $product->getWeightRange() / 1000 // ← ojo, weight_range está en gramos
+                : 0.010;
 
             $classification = $this->mermaDetector->classify(
                 previousWeight: $previousWeightKg,
@@ -398,6 +407,8 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                 readAt:         $readAt,
                 config:         $config,
                 pricePerKg:     $pricePerKg,
+                businessHours:  $businessHours,
+                thresholdKg:    $thresholdKg,
             );
 
             if ($classification === null) {

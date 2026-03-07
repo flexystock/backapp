@@ -9,11 +9,15 @@ use App\Service\Merma\Application\DTO\DiscardAnomalyRequest;
 use App\Service\Merma\Application\DTO\GetMermaConfigRequest;
 use App\Service\Merma\Application\DTO\GetMermaMonthlyHistoryRequest;
 use App\Service\Merma\Application\DTO\GetMermaSummaryRequest;
+use App\Service\Merma\Application\DTO\GetPendingAnomaliesRequest;
+use App\Service\Merma\Application\DTO\GetScalesByProductRequest;
 use App\Service\Merma\Application\UseCases\ConfirmAnomalyUseCase;
 use App\Service\Merma\Application\UseCases\DiscardAnomalyUseCase;
 use App\Service\Merma\Application\UseCases\GetMermaConfigUseCase;
 use App\Service\Merma\Application\UseCases\GetMermaMonthlyHistoryUseCase;
 use App\Service\Merma\Application\UseCases\GetMermaSummaryUseCase;
+use App\Service\Merma\Application\UseCases\GetPendingAnomaliesUseCase;
+use App\Service\Merma\Application\UseCases\GetScalesByProductUseCase;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -166,5 +170,51 @@ class MermaApiUseCasesTest extends TestCase
 
         $useCase = new \App\Service\Merma\Application\UseCases\UpdateMermaConfigUseCase($this->clientRepository, $this->connectionManager, $this->logger);
         $useCase->execute(new \App\Service\Merma\Application\DTO\UpdateMermaConfigRequest('non-existent-uuid', 1, 80, '09:00', '23:59', 0.200, true));
+    }
+
+    // ── GetPendingAnomaliesUseCase ────────────────────────────────────────────
+
+    public function testGetPendingAnomaliesUseCaseCanBeInstantiated(): void
+    {
+        $useCase = new GetPendingAnomaliesUseCase(
+            $this->clientRepository,
+            $this->connectionManager,
+            $this->logger,
+        );
+        $this->assertInstanceOf(GetPendingAnomaliesUseCase::class, $useCase);
+    }
+
+    public function testGetPendingAnomaliesThrowsExceptionWhenClientNotFound(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('CLIENT_NOT_FOUND');
+
+        $this->clientRepository->method('findByUuid')->willReturn(null);
+
+        $useCase = new GetPendingAnomaliesUseCase($this->clientRepository, $this->connectionManager, $this->logger);
+        $useCase->execute(new GetPendingAnomaliesRequest('non-existent-uuid'));
+    }
+
+    // ── GetScalesByProductUseCase ─────────────────────────────────────────────
+
+    public function testGetScalesByProductUseCaseCanBeInstantiated(): void
+    {
+        $useCase = new GetScalesByProductUseCase(
+            $this->clientRepository,
+            $this->connectionManager,
+            $this->logger,
+        );
+        $this->assertInstanceOf(GetScalesByProductUseCase::class, $useCase);
+    }
+
+    public function testGetScalesByProductThrowsExceptionWhenClientNotFound(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('CLIENT_NOT_FOUND');
+
+        $this->clientRepository->method('findByUuid')->willReturn(null);
+
+        $useCase = new GetScalesByProductUseCase($this->clientRepository, $this->connectionManager, $this->logger);
+        $useCase->execute(new GetScalesByProductRequest('non-existent-uuid', 1));
     }
 }

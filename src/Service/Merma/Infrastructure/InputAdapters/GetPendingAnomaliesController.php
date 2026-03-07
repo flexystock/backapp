@@ -4,8 +4,8 @@ namespace App\Service\Merma\Infrastructure\InputAdapters;
 
 use App\Security\PermissionControllerTrait;
 use App\Security\PermissionService;
-use App\Service\Merma\Application\DTO\ConfirmAnomalyRequest;
-use App\Service\Merma\Application\InputPorts\ConfirmAnomalyUseCaseInterface;
+use App\Service\Merma\Application\DTO\GetPendingAnomaliesRequest;
+use App\Service\Merma\Application\InputPorts\GetPendingAnomaliesUseCaseInterface;
 use OpenApi\Attributes as OA;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,23 +16,23 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-class ConfirmAnomalyController extends AbstractController
+class GetPendingAnomaliesController extends AbstractController
 {
     use PermissionControllerTrait;
 
     public function __construct(
-        private readonly ConfirmAnomalyUseCaseInterface $useCase,
-        private readonly ValidatorInterface             $validator,
-        private readonly LoggerInterface                $logger,
-        PermissionService                               $permissionService,
+        private readonly GetPendingAnomaliesUseCaseInterface $useCase,
+        private readonly ValidatorInterface                  $validator,
+        private readonly LoggerInterface                     $logger,
+        PermissionService                                    $permissionService,
     ) {
         $this->permissionService = $permissionService;
     }
 
-    #[Route('/api/merma/event/{id}/confirm', name: 'api_merma_event_confirm', methods: ['POST'])]
+    #[Route('/api/merma/anomalies/pending', name: 'api_merma_anomalies_pending', methods: ['POST'])]
     #[OA\Post(
-        path: '/api/merma/event/{id}/confirm',
-        summary: 'Confirma una anomalía como sustracción real',
+        path: '/api/merma/anomalies/pending',
+        summary: 'Obtiene el listado de anomalías pendientes de confirmación',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -43,45 +43,46 @@ class ConfirmAnomalyController extends AbstractController
             )
         ),
         tags: ['Merma'],
-        parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
-        ],
         responses: [
-            new OA\Response(response: 200, description: 'Anomalía confirmada'),
+            new OA\Response(response: 200, description: 'Listado de anomalías pendientes'),
             new OA\Response(response: 400, description: 'Datos inválidos'),
             new OA\Response(response: 401, description: 'No autenticado'),
             new OA\Response(response: 403, description: 'Sin permisos'),
-            new OA\Response(response: 404, description: 'Cliente o evento no encontrado'),
+            new OA\Response(response: 404, description: 'Cliente no encontrado'),
         ]
     )]
-    public function __invoke(Request $request, int $id): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
         try {
-            $permissionCheck = $this->checkPermissionJson('merma.manage', 'No tienes permisos para gestionar la merma');
+            $permissionCheck = $this->checkPermissionJson('merma.view', 'No tienes permisos para consultar la merma');
             if ($permissionCheck) {
                 return $permissionCheck;
             }
 
-            $payload    = json_decode($request->getContent(), true) ?? [];
-            $uuidClient = $payload['uuidClient'] ?? '';
+            $data       = json_decode($request->getContent(), true) ?? [];
+            $uuidClient = $data['uuidClient'] ?? '';
 
             if (empty($uuidClient)) {
                 return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_CLIENT_ID'], Response::HTTP_BAD_REQUEST);
             }
 
-            $dto    = new ConfirmAnomalyRequest($uuidClient, $id);
+            $dto    = new GetPendingAnomaliesRequest($uuidClient);
             $errors = $this->validator->validate($dto);
             if (count($errors) > 0) {
                 return $this->validationErrorResponse($errors);
             }
 
-            $this->useCase->execute($dto);
+            $response = $this->useCase->execute($dto);
 
-            return new JsonResponse(['status' => 'success', 'message' => 'ANOMALY_CONFIRMED'], Response::HTTP_OK);
+            return new JsonResponse([
+                'status'    => 'success',
+                'message'   => 'PENDING_ANOMALIES_RETRIEVED',
+                'anomalies' => $response->anomalies,
+            ], Response::HTTP_OK);
         } catch (\RuntimeException $e) {
             return $this->handleRuntimeException($e);
         } catch (\Throwable $e) {
-            $this->logger->error('Unexpected error confirming anomaly', ['exception' => $e->getMessage()]);
+            $this->logger->error('Unexpected error fetching pending anomalies', ['exception' => $e->getMessage()]);
             return new JsonResponse(['status' => 'error', 'message' => 'UNEXPECTED_ERROR'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -99,8 +100,8 @@ class ConfirmAnomalyController extends AbstractController
     {
         $message    = $e->getMessage();
         $statusCode = match ($message) {
-            'CLIENT_NOT_FOUND', 'EVENT_NOT_FOUND' => Response::HTTP_NOT_FOUND,
-            default                               => Response::HTTP_BAD_REQUEST,
+            'CLIENT_NOT_FOUND' => Response::HTTP_NOT_FOUND,
+            default            => Response::HTTP_BAD_REQUEST,
         };
         return new JsonResponse(['status' => 'error', 'message' => $message], $statusCode);
     }

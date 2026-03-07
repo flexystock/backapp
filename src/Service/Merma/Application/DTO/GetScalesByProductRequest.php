@@ -4,7 +4,7 @@ namespace App\Service\Merma\Application\DTO;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
-class GetMermaConfigRequest
+class GetScalesByProductRequest
 {
     #[Assert\NotBlank(message: 'REQUIRED_CLIENT_ID')]
     #[Assert\Uuid(message: 'INVALID_CLIENT_ID')]
@@ -20,12 +20,7 @@ class GetMermaConfigRequest
         $this->productId  = $productId;
     }
 
-    public function getUuidClient(): string
-    {
-        return $this->uuidClient;
-    }
-    public function getProductId(): int
-    {
-        return $this->productId;
-    }
+    public function getUuidClient(): string { return $this->uuidClient; }
+
+    public function getProductId(): int { return $this->productId; }
 }

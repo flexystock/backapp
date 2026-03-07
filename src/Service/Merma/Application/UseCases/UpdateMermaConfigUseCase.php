@@ -33,19 +33,7 @@ final class UpdateMermaConfigUseCase implements UpdateMermaConfigUseCaseInterfac
             $config = $configRepo->createDefaultForProduct($request->getProductId());
         }
 
-        try {
-            $serviceStart = \DateTime::createFromFormat('H:i', $request->getServiceStart());
-            $serviceEnd   = \DateTime::createFromFormat('H:i', $request->getServiceEnd());
-            if ($serviceStart === false || $serviceEnd === false) {
-                throw new \RuntimeException('INVALID_TIME_FORMAT');
-            }
-        } catch (\Exception) {
-            throw new \RuntimeException('INVALID_TIME_FORMAT');
-        }
-
         $config->setRendimientoEsperadoPct($request->getRendimientoEsperadoPct())
-               ->setServiceStart($serviceStart)
-               ->setServiceEnd($serviceEnd)
                ->setAnomalyThresholdKg($request->getAnomalyThresholdKg())
                ->setAlertOnAnomaly($request->isAlertOnAnomaly());
 
@@ -59,8 +47,6 @@ final class UpdateMermaConfigUseCase implements UpdateMermaConfigUseCaseInterfac
             'id'                      => $config->getId(),
             'product_id'              => $config->getProduct()->getId(),
             'rendimiento_esperado_pct' => $config->getRendimientoEsperadoPct(),
-            'service_start'           => $config->getServiceStart()->format('H:i'),
-            'service_end'             => $config->getServiceEnd()->format('H:i'),
             'anomaly_threshold_kg'    => $config->getAnomalyThresholdKg(),
             'alert_on_anomaly'        => $config->isAlertOnAnomaly(),
             'created_at'              => $config->getCreatedAt()->format('Y-m-d H:i:s'),
