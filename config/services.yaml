@@ -1142,6 +1142,13 @@ services:
     tags: ['controller.service_arguments']
     public: true
 
+  App\Service\Merma\Application\InputPorts\GetAnomalyHistoryUseCaseInterface:
+    class: App\Service\Merma\Application\UseCases\GetAnomalyHistoryUseCase
+
+  App\Service\Merma\Infrastructure\InputAdapters\GetAnomalyHistoryController:
+    tags: ['controller.service_arguments']
+    public: true
+
   App\Service\Merma\Application\UseCases\GetScalesByProductUseCase:
     arguments:
       $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
