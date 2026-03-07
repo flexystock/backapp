@@ -55,7 +55,8 @@ class PermissionService
             'user.view',
             'client.view',
             'user.update',
-            'merma.view'
+            'merma.view',
+            'merma.manage'
         ],
         'ROLE_MANAGER' => [
             'alarm.update',

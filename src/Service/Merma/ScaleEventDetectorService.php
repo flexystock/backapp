@@ -24,16 +24,17 @@ final class ScaleEventDetectorService
         \DateTimeInterface $readAt,
         MermaConfig        $config,
         ?float             $pricePerKg = null,
+        array              $businessHours = [],
+        float              $thresholdKg,
     ): ?ScaleEventClassification {
 
         $delta = round($newWeight - $previousWeight, 3);
 
-        // Filtrar ruido del sensor
-        if (abs($delta) < $config->getAnomalyThresholdKg()) {
+        if (abs($delta) < $thresholdKg) {
             return null;
         }
 
-        $type = $this->classifyType($delta, $readAt, $config);
+        $type = $this->classifyType($delta, $readAt, $businessHours); // ← pasar businessHours
 
         $deltaCost = ($pricePerKg !== null && $pricePerKg > 0)
             ? round(abs($delta) * $pricePerKg, 2)
@@ -46,19 +47,30 @@ final class ScaleEventDetectorService
         );
     }
 
-    private function classifyType(float $delta, \DateTimeInterface $readAt, MermaConfig $config): string
-    {
+    private function classifyType(
+        float              $delta,
+        \DateTimeInterface $readAt,
+        array              $businessHours,
+    ): string {
         // Subida de peso → siempre es reposición
         if ($delta > 0) {
             return 'reposicion';
         }
 
-        // Bajada dentro del horario de servicio → consumo normal
-        if ($config->isDuringService($readAt)) {
-            return 'consumo';
-        }
+        // Bajada — determinar si es dentro o fuera del horario de servicio
+        $dayOfWeek  = (int) $readAt->format('N'); // 1=lunes ... 7=domingo
+        $todayHours = array_filter(
+            $businessHours,
+            fn(\App\Entity\Client\BusinessHour $bh) => $bh->getDayOfWeek() === $dayOfWeek
+        );
 
-        // Bajada fuera del horario → anomalía (posible sustracción)
-        return 'anomalia';
+        $isDuringService = array_reduce(
+            $todayHours,
+            fn(bool $carry, \App\Entity\Client\BusinessHour $bh) => $carry || $bh->coversDateTime($readAt),
+            false
+        );
+
+        // ← aquí estaba el bug: nunca se usaba $isDuringService
+        return $isDuringService ? 'consumo' : 'anomalia';
     }
 }

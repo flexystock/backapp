@@ -28,15 +28,15 @@ final class MermaNotifier implements MermaNotifierInterface
     {
         if (empty($recipientEmails)) {
             $this->logger->info('[MermaNotifier] sendAnomalyAlert: sin destinatarios, omitiendo.', [
-                'scaleId'   => $event->getScaleId(),
-                'productId' => $event->getProductId(),
+                'scaleId'   => $event->getScale()->getId(),
+                'productId' => $event->getProduct()->getId(),
             ]);
             return;
         }
 
         $subject = sprintf(
             '⚠️ Anomalía detectada — báscula #%d',
-            $event->getScaleId()
+            $event->getScale()->getId()
         );
 
         $htmlBody = sprintf(
@@ -51,8 +51,8 @@ final class MermaNotifier implements MermaNotifierInterface
                 <tr><td><strong>Detectado</strong></td><td>%s</td></tr>
             </table>
             <p><a href="%s">Revisar en FlexyStock</a></p>',
-            $event->getScaleId(),
-            $event->getProductId(),
+            $event->getScale()->getId(),
+            $event->getProduct()->getId(),
             $event->getWeightBefore(),
             $event->getWeightAfter(),
             abs($event->getDeltaKg()),
@@ -62,7 +62,7 @@ final class MermaNotifier implements MermaNotifierInterface
 
         $textBody = sprintf(
             "Anomalía detectada — báscula #%d\n\nVariación de %.3f kg fuera de horario.\nPeso anterior: %.3f kg\nPeso actual: %.3f kg\nDetectado: %s\n\nRevisar en: %s",
-            $event->getScaleId(),
+            $event->getScale()->getId(),
             abs($event->getDeltaKg()),
             $event->getWeightBefore(),
             $event->getWeightAfter(),
@@ -82,7 +82,7 @@ final class MermaNotifier implements MermaNotifierInterface
                 );
                 $this->logger->info('[MermaNotifier] Alerta de anomalía enviada.', [
                     'recipient' => $recipient,
-                    'scaleId'   => $event->getScaleId(),
+                    'scaleId'   => $event->getScale()->getId(),
                 ]);
             } catch (TransportExceptionInterface $e) {
                 $this->logger->error('[MermaNotifier] Error enviando alerta de anomalía.', [
@@ -106,30 +106,33 @@ final class MermaNotifier implements MermaNotifierInterface
 
         $subject = sprintf(
             'Informe mensual de merma — %s',
-            $report->getPeriodStart()->format('F Y')
+            $report->getPeriodLabel()
         );
 
         $htmlBody = sprintf(
             '<h2>Informe mensual de merma</h2>
-            <p>Periodo: <strong>%s — %s</strong></p>
-            <table cellpadding="6" style="border-collapse:collapse">
-                <tr><td><strong>Stock inicial</strong></td><td>%.3f kg</td></tr>
-                <tr><td><strong>Entradas</strong></td><td>%.3f kg</td></tr>
-                <tr><td><strong>Consumo</strong></td><td>%.3f kg</td></tr>
-                <tr><td><strong>Stock final</strong></td><td>%.3f kg</td></tr>
-                <tr><td><strong>Merma real</strong></td><td>%.3f kg (%.1f%%)</td></tr>
-                <tr><td><strong>Merma esperada</strong></td><td>%.3f kg</td></tr>
-            </table>
-            <p><a href="%s">Ver informe completo</a></p>',
-            $report->getPeriodStart()->format('d/m/Y'),
-            $report->getPeriodEnd()->format('d/m/Y'),
-            $report->getStockStart(),
-            $report->getTotalInput(),
-            $report->getTotalConsumed(),
-            $report->getStockEnd(),
-            $report->getActualWaste(),
-            $report->getActualWastePct(),
-            $report->getExpectedWaste(),
+        <p>Periodo: <strong>%s</strong></p>
+        <table cellpadding="6" style="border-collapse:collapse">
+            <tr><td><strong>Stock inicial</strong></td><td>%.3f kg</td></tr>
+            <tr><td><strong>Entradas</strong></td><td>%.3f kg</td></tr>
+            <tr><td><strong>Consumo</strong></td><td>%.3f kg</td></tr>
+            <tr><td><strong>Stock final</strong></td><td>%.3f kg</td></tr>
+            <tr><td><strong>Merma real</strong></td><td>%.3f kg (%.2f%%)</td></tr>
+            <tr><td><strong>Merma esperada</strong></td><td>%.3f kg</td></tr>
+            <tr><td><strong>Coste merma</strong></td><td>%.2f €</td></tr>
+            <tr><td><strong>Ahorro vs sector</strong></td><td>%.2f €</td></tr>
+        </table>
+        <p><a href="%s">Ver informe completo</a></p>',
+            $report->getPeriodLabel(),
+            $report->getStockStartKg(),
+            $report->getInputKg(),
+            $report->getConsumedKg(),
+            $report->getStockEndKg(),
+            $report->getActualWasteKg(),
+            $report->getWastePct(),
+            $report->getExpectedWasteKg(),
+            $report->getWasteCostEuros(),
+            $report->getSavedVsBaseline(),
             $this->appUrl
         );
 

@@ -41,9 +41,6 @@ class UpdateMermaConfigController extends AbstractController
                     new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid'),
                     new OA\Property(property: 'productId', type: 'integer', example: 1),
                     new OA\Property(property: 'rendimientoEsperadoPct', type: 'integer', minimum: 0, maximum: 100, example: 80),
-                    new OA\Property(property: 'serviceStart', type: 'string', example: '09:00'),
-                    new OA\Property(property: 'serviceEnd', type: 'string', example: '23:59'),
-                    new OA\Property(property: 'anomalyThresholdKg', type: 'number', format: 'float', example: 0.200),
                     new OA\Property(property: 'alertOnAnomaly', type: 'boolean', example: true),
                 ]
             )
@@ -78,18 +75,12 @@ class UpdateMermaConfigController extends AbstractController
             }
 
             $rendimientoEsperadoPct = isset($payload['rendimientoEsperadoPct']) ? (int) $payload['rendimientoEsperadoPct'] : 80;
-            $serviceStart           = $payload['serviceStart'] ?? '09:00';
-            $serviceEnd             = $payload['serviceEnd'] ?? '23:59';
-            $anomalyThresholdKg     = isset($payload['anomalyThresholdKg']) ? (float) $payload['anomalyThresholdKg'] : 0.200;
             $alertOnAnomaly         = (bool) ($payload['alertOnAnomaly'] ?? true);
 
             $dto = new UpdateMermaConfigRequest(
                 $uuidClient,
                 $productId,
                 $rendimientoEsperadoPct,
-                $serviceStart,
-                $serviceEnd,
-                $anomalyThresholdKg,
                 $alertOnAnomaly,
             );
 
