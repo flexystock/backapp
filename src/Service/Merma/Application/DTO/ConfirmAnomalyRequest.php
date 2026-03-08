@@ -14,12 +14,23 @@ class ConfirmAnomalyRequest
     #[Assert\Positive(message: 'INVALID_EVENT_ID')]
     private int $eventId;
 
-    public function __construct(string $uuidClient, int $eventId)
+    public function __construct(string $uuidClient, int $eventId, ?string $notes = null)
     {
         $this->uuidClient = $uuidClient;
         $this->eventId    = $eventId;
+        $this->notes      = $notes;
     }
 
-    public function getUuidClient(): string { return $this->uuidClient; }
-    public function getEventId(): int       { return $this->eventId; }
+    public function getUuidClient(): string
+    {
+        return $this->uuidClient;
+    }
+    public function getEventId(): int
+    {
+        return $this->eventId;
+    }
+    public function getNotes(): ?string
+    {
+        return $this->notes;
+    }
 }

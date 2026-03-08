@@ -33,6 +33,7 @@ final class ConfirmAnomalyUseCase implements ConfirmAnomalyUseCaseInterface
         }
 
         $event->setIsConfirmed(true)->setConfirmedAt(new \DateTime());
+        $event->setNotes($request->getNotes());
         $eventRepo->save($event);
 
         $this->logger->info('Anomaly confirmed', [
