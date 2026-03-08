@@ -123,6 +123,28 @@ final class ClientScaleEventRepository implements ScaleEventRepositoryInterface,
     }
 
     /**
+     * Returns all events (reposicion, consumo, anomalia) for a given scale and product
+     * within the specified date range, ordered chronologically ascending.
+     */
+    public function findTimelineEvents(int $scaleId, int $productId, \DateTime $from, \DateTime $to): array
+    {
+        return $this->em->createQuery(
+            'SELECT e
+             FROM App\Entity\Client\ScaleEvent e
+             WHERE IDENTITY(e.scale) = :scaleId
+               AND IDENTITY(e.product) = :productId
+               AND e.detectedAt >= :from
+               AND e.detectedAt <= :to
+             ORDER BY e.detectedAt ASC'
+        )
+            ->setParameter('scaleId', $scaleId)
+            ->setParameter('productId', $productId)
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->getResult();
+    }
+
+    /**
      * Returns resolved anomalies (where isConfirmed is not null) for a given scale and product,
      * optionally filtered by date range, ordered by detectedAt descending.
      */
