@@ -17,20 +17,23 @@ final class MermaSummaryDTO
         public readonly int    $pendingAnomaliesCount,
         public readonly float  $prevMonthWastePct,
         public readonly float  $prevMonthCostEuros,
+        public readonly int    $rendimientoEsperadoPct,
     ) {
     }
 
     public function getStatus(): string
     {
-        if ($this->estimatedWastePct <= 3.0) {
+        $maxWastePct = 100 - $this->rendimientoEsperadoPct; // ej: 100-80 = 20%
+
+        if ($this->estimatedWastePct <= $maxWastePct * 0.25) {
             return 'excellent';
-        }
-        if ($this->estimatedWastePct <= 6.0) {
+        } // < 5%
+        if ($this->estimatedWastePct <= $maxWastePct * 0.50) {
             return 'good';
-        }
-        if ($this->estimatedWastePct <= 8.0) {
+        }      // < 10%
+        if ($this->estimatedWastePct <= $maxWastePct * 0.75) {
             return 'warning';
-        }
+        }   // < 15%
         return 'critical';
     }
 

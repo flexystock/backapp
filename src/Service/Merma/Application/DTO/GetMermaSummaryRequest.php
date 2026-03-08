@@ -25,7 +25,16 @@ class GetMermaSummaryRequest
         $this->productId  = $productId;
     }
 
-    public function getUuidClient(): string { return $this->uuidClient; }
-    public function getScaleId(): int       { return $this->scaleId; }
-    public function getProductId(): int     { return $this->productId; }
+    public function getUuidClient(): string
+    {
+        return $this->uuidClient;
+    }
+    public function getScaleId(): int
+    {
+        return $this->scaleId;
+    }
+    public function getProductId(): int
+    {
+        return $this->productId;
+    }
 }

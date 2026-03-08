@@ -37,6 +37,11 @@ final class GetMermaSummaryUseCase implements GetMermaSummaryUseCaseInterface
             $pricePerKg = $product->getCostPrice() / $product->getConversionFactor();
         }
 
+        // ── Rendimiento esperado (de MermaConfig) ────────────────────────────────
+        $mermaConfig    = $em->getRepository(\App\Entity\Client\MermaConfig::class)
+            ->findOneBy(['product' => $request->getProductId()]);
+        $rendimientoPct = $mermaConfig !== null ? $mermaConfig->getRendimientoEsperadoPct() : 80;
+
         // ── Mes anterior ─────────────────────────────────────────────────────────
         $prevStart      = new \DateTime('first day of last month 00:00:00');
         $prevEnd        = new \DateTime('last day of last month 23:59:59');
@@ -72,10 +77,11 @@ final class GetMermaSummaryUseCase implements GetMermaSummaryUseCaseInterface
         $pendingCount       = $eventRepo->countPendingAnomalies($request->getScaleId(), $request->getProductId());
 
         $this->logger->info('MermaSummary retrieved', [
-            'scaleId'        => $request->getScaleId(),
-            'productId'      => $request->getProductId(),
-            'currentStockKg' => $currentStockKg,
-            'estimatedWaste' => $estimatedWasteKg,
+            'scaleId'         => $request->getScaleId(),
+            'productId'       => $request->getProductId(),
+            'currentStockKg'  => $currentStockKg,
+            'estimatedWaste'  => $estimatedWasteKg,
+            'rendimientoPct'  => $rendimientoPct,
         ]);
 
         return new MermaSummaryDTO(
@@ -88,6 +94,8 @@ final class GetMermaSummaryUseCase implements GetMermaSummaryUseCaseInterface
             pendingAnomaliesCount: $pendingCount,
             prevMonthWastePct:     $prevWastePct,
             prevMonthCostEuros:    $prevCostEuros,
+            rendimientoEsperadoPct: $rendimientoPct,
         );
     }
 }
+
