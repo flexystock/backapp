@@ -53,14 +53,29 @@ final class GetMermaSummaryUseCase implements GetMermaSummaryUseCaseInterface
         $consumedKg = abs($eventRepo->sumDeltaByType($request->getScaleId(), $request->getProductId(), ScaleEvent::TYPE_CONSUMO, $start, $end));
         $anomalyKg  = abs($eventRepo->sumDeltaByType($request->getScaleId(), $request->getProductId(), ScaleEvent::TYPE_ANOMALIA, $start, $end));
 
-        $estimatedWasteKg   = max(0.0, round($inputKg - $consumedKg, 3));
+        // ── Stock actual en báscula ───────────────────────────────────────────────
+        $lastLog = $em->createQuery(
+            'SELECT w FROM App\Entity\Client\WeightsLog w
+             WHERE w.scale = :scaleId
+             ORDER BY w.date DESC'
+        )
+            ->setParameter('scaleId', $request->getScaleId())
+            ->setMaxResults(1)
+            ->getOneOrNullResult();
+
+        $currentStockKg = $lastLog !== null ? (float) $lastLog->getRealWeight() : 0.0;
+
+        // ── Cálculos finales ─────────────────────────────────────────────────────
+        $estimatedWasteKg   = max(0.0, round($inputKg - $consumedKg - $currentStockKg, 3));
         $estimatedWastePct  = $inputKg > 0 ? round(($estimatedWasteKg / $inputKg) * 100, 1) : 0.0;
         $estimatedCostEuros = $pricePerKg > 0 && $estimatedWasteKg > 0 ? round($estimatedWasteKg * $pricePerKg, 2) : 0.0;
         $pendingCount       = $eventRepo->countPendingAnomalies($request->getScaleId(), $request->getProductId());
 
         $this->logger->info('MermaSummary retrieved', [
-            'scaleId'   => $request->getScaleId(),
-            'productId' => $request->getProductId(),
+            'scaleId'        => $request->getScaleId(),
+            'productId'      => $request->getProductId(),
+            'currentStockKg' => $currentStockKg,
+            'estimatedWaste' => $estimatedWasteKg,
         ]);
 
         return new MermaSummaryDTO(
