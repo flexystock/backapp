@@ -77,7 +77,7 @@ class GetAnomalyHistoryController extends AbstractController
                 : null;
 
             $dateTo = isset($data['dateTo']) && $data['dateTo'] !== null
-                ? new \DateTime($data['dateTo'])
+                ? new \DateTime($data['dateTo'] . ' 23:59:59')
                 : null;
 
             $dto    = new GetAnomalyHistoryRequest($uuidClient, $scaleId, $productId, $dateFrom, $dateTo);

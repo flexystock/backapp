@@ -69,7 +69,9 @@ class ConfirmAnomalyController extends AbstractController
                 return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_CLIENT_ID'], Response::HTTP_BAD_REQUEST);
             }
 
-            $dto    = new ConfirmAnomalyRequest($uuidClient, $id);
+            $notes = $payload['notes'] ?? null;
+
+            $dto    = new ConfirmAnomalyRequest($uuidClient, $id, $notes);
             $errors = $this->validator->validate($dto);
             if (count($errors) > 0) {
                 return $this->validationErrorResponse($errors);
