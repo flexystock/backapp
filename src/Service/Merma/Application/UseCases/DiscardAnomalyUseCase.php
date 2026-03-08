@@ -8,6 +8,7 @@ use App\Service\Merma\Application\DTO\DiscardAnomalyRequest;
 use App\Service\Merma\Application\InputPorts\DiscardAnomalyUseCaseInterface;
 use App\Service\Merma\Infrastructure\OutputAdapters\Repositories\ClientScaleEventRepository;
 use Psr\Log\LoggerInterface;
+use App\Entity\Client\ScaleEvent;
 
 final class DiscardAnomalyUseCase implements DiscardAnomalyUseCaseInterface
 {
@@ -32,7 +33,9 @@ final class DiscardAnomalyUseCase implements DiscardAnomalyUseCaseInterface
             throw new \RuntimeException('EVENT_NOT_FOUND');
         }
 
-        $event->setIsConfirmed(false)->setConfirmedAt(new \DateTime());
+        $event->setIsConfirmed(false)
+            ->setConfirmedAt(new \DateTime())
+            ->setType(ScaleEvent::TYPE_CONSUMO); // ← añadir esta línea
         $eventRepo->save($event);
 
         $this->logger->info('Anomaly discarded', [
