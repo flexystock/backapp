@@ -1105,6 +1105,25 @@ services:
 
   App\Service\Merma\Application\InputPorts\UpdateMermaConfigUseCaseInterface:
     alias: App\Service\Merma\Application\UseCases\UpdateMermaConfigUseCase
+
+  App\Service\Merma\Application\UseCases\GetProductServiceHoursUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Service\Merma\Application\InputPorts\GetProductServiceHoursUseCaseInterface:
+    alias: App\Service\Merma\Application\UseCases\GetProductServiceHoursUseCase
+
+  App\Service\Merma\Application\UseCases\UpdateProductServiceHoursUseCase:
+    arguments:
+      $clientRepository: '@App\Client\Application\OutputPorts\Repositories\ClientRepositoryInterface'
+      $connectionManager: '@App\Infrastructure\Services\ClientConnectionManager'
+      $logger: '@logger'
+
+  App\Service\Merma\Application\InputPorts\UpdateProductServiceHoursUseCaseInterface:
+    alias: App\Service\Merma\Application\UseCases\UpdateProductServiceHoursUseCase
+
   App\Service\Merma\Application\OutputPorts\MermaProductRepositoryInterface:
     class: App\Service\Merma\Infrastructure\OutputAdapters\Repositories\ClientMermaProductRepository
 
@@ -1130,6 +1149,14 @@ services:
     public: true
 
   App\Service\Merma\Infrastructure\InputAdapters\UpdateMermaConfigController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Service\Merma\Infrastructure\InputAdapters\GetProductServiceHoursController:
+    tags: ['controller.service_arguments']
+    public: true
+
+  App\Service\Merma\Infrastructure\InputAdapters\UpdateProductServiceHoursController:
     tags: ['controller.service_arguments']
     public: true
 
