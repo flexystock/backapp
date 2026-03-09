@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS `product_service_hour` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_product_day` (`product_id`, `day_of_week`),
     CONSTRAINT `fk_psh_product` FOREIGN KEY (`product_id`) 
-        REFERENCES `product` (`id`) ON DELETE CASCADE
+        REFERENCES `products` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
