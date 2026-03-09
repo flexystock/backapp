@@ -38,12 +38,14 @@ final class GetMermaConfigUseCase implements GetMermaConfigUseCaseInterface
         ]);
 
         return [
-            'id'                      => $config->getId(),
-            'product_id'              => $config->getProduct()->getId(),
+            'id'                       => $config->getId(),
+            'product_id'               => $config->getProduct()->getId(),
+            'product_name'             => $config->getProduct()->getName(),
+            'weight_range_g'           => $config->getProduct()->getWeightRange(),
             'rendimiento_esperado_pct' => $config->getRendimientoEsperadoPct(),
-            'alert_on_anomaly'        => $config->isAlertOnAnomaly(),
-            'created_at'              => $config->getCreatedAt()->format('Y-m-d H:i:s'),
-            'updated_at'              => $config->getUpdatedAt()->format('Y-m-d H:i:s'),
+            'alert_on_anomaly'         => $config->isAlertOnAnomaly(),
+            'created_at'               => $config->getCreatedAt()->format('Y-m-d H:i:s'),
+            'updated_at'               => $config->getUpdatedAt()->format('Y-m-d H:i:s'),
         ];
     }
 }
