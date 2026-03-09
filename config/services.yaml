@@ -1142,6 +1142,13 @@ services:
     tags: ['controller.service_arguments']
     public: true
 
+  App\Service\Merma\Application\InputPorts\GetMonthlyTimelineUseCaseInterface:
+    class: App\Service\Merma\Application\UseCases\GetMonthlyTimelineUseCase
+
+  App\Service\Merma\Infrastructure\InputAdapters\GetMonthlyTimelineController:
+    tags: ['controller.service_arguments']
+    public: true
+
   App\Service\Merma\Application\InputPorts\GetAnomalyHistoryUseCaseInterface:
     class: App\Service\Merma\Application\UseCases\GetAnomalyHistoryUseCase
 
