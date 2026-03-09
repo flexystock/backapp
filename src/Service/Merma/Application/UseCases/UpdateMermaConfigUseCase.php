@@ -34,7 +34,6 @@ final class UpdateMermaConfigUseCase implements UpdateMermaConfigUseCaseInterfac
         }
 
         $config->setRendimientoEsperadoPct($request->getRendimientoEsperadoPct())
-               ->setAnomalyThresholdKg($request->getAnomalyThresholdKg())
                ->setAlertOnAnomaly($request->isAlertOnAnomaly());
 
         $configRepo->save($config);
@@ -47,7 +46,6 @@ final class UpdateMermaConfigUseCase implements UpdateMermaConfigUseCaseInterfac
             'id'                      => $config->getId(),
             'product_id'              => $config->getProduct()->getId(),
             'rendimiento_esperado_pct' => $config->getRendimientoEsperadoPct(),
-            'anomaly_threshold_kg'    => $config->getAnomalyThresholdKg(),
             'alert_on_anomaly'        => $config->isAlertOnAnomaly(),
             'created_at'              => $config->getCreatedAt()->format('Y-m-d H:i:s'),
             'updated_at'              => $config->getUpdatedAt()->format('Y-m-d H:i:s'),
