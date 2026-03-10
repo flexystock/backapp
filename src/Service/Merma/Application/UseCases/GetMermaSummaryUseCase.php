@@ -84,17 +84,28 @@ final class GetMermaSummaryUseCase implements GetMermaSummaryUseCaseInterface
             'rendimientoPct'  => $rendimientoPct,
         ]);
 
+        $unitLabel = match((int) ($product?->getMainUnit() ?? '0')) {
+            1 => $product->getNameUnit1() ?? 'unidades',
+            2 => $product->getNameUnit2() ?? 'unidades',
+            default => 'kg',
+        };
+        $conversionFactor = $product?->getConversionFactor() ?? 1.0;
+
+
         return new MermaSummaryDTO(
-            inputKg:               $inputKg,
-            consumedKg:            $consumedKg,
-            anomalyKg:             $anomalyKg,
-            estimatedWasteKg:      $estimatedWasteKg,
-            estimatedWastePct:     $estimatedWastePct,
-            estimatedCostEuros:    $estimatedCostEuros,
+            inputKg: $inputKg,
+            consumedKg: $consumedKg,
+            anomalyKg: $anomalyKg,
+            estimatedWasteKg: $estimatedWasteKg,
+            estimatedWastePct: $estimatedWastePct,
+            estimatedCostEuros: $estimatedCostEuros,
             pendingAnomaliesCount: $pendingCount,
-            prevMonthWastePct:     $prevWastePct,
-            prevMonthCostEuros:    $prevCostEuros,
+            prevMonthWastePct: $prevWastePct,
+            prevMonthCostEuros: $prevCostEuros,
             rendimientoEsperadoPct: $rendimientoPct,
+            currentStockKg: $currentStockKg,
+            unitLabel:         $unitLabel,
+            conversionFactor:  $conversionFactor,
         );
     }
 }

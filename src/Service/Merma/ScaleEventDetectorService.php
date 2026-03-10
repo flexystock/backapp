@@ -26,6 +26,7 @@ final class ScaleEventDetectorService
         ?float             $pricePerKg = null,
         array              $businessHours = [],
         float              $thresholdKg,
+        array              $productServiceHours = [],
     ): ?ScaleEventClassification {
 
         $delta = round($newWeight - $previousWeight, 3);
@@ -34,7 +35,7 @@ final class ScaleEventDetectorService
             return null;
         }
 
-        $type = $this->classifyType($delta, $readAt, $businessHours); // ← pasar businessHours
+        $type = $this->classifyType($delta, $readAt, $businessHours, $productServiceHours);
 
         $deltaCost = ($pricePerKg !== null && $pricePerKg > 0)
             ? round(abs($delta) * $pricePerKg, 2)
@@ -51,6 +52,7 @@ final class ScaleEventDetectorService
         float              $delta,
         \DateTimeInterface $readAt,
         array              $businessHours,
+        array              $productServiceHours = [],
     ): string {
         // Subida de peso → siempre es reposición
         if ($delta > 0) {
@@ -58,7 +60,20 @@ final class ScaleEventDetectorService
         }
 
         // Bajada — determinar si es dentro o fuera del horario de servicio
-        $dayOfWeek  = (int) $readAt->format('N'); // 1=lunes ... 7=domingo
+        $dayOfWeek = (int) $readAt->format('N'); // 1=lunes ... 7=domingo
+
+        if (!empty($productServiceHours)) {
+            $inServiceHour = false;
+            foreach ($productServiceHours as $psh) {
+                if ($psh->getDayOfWeek() === $dayOfWeek && $psh->coversDateTime($readAt)) {
+                    $inServiceHour = true;
+                    break;
+                }
+            }
+
+            return $inServiceHour ? 'consumo' : 'anomalia';
+        }
+
         $todayHours = array_filter(
             $businessHours,
             fn(\App\Entity\Client\BusinessHour $bh) => $bh->getDayOfWeek() === $dayOfWeek
@@ -70,7 +85,6 @@ final class ScaleEventDetectorService
             false
         );
 
-        // ← aquí estaba el bug: nunca se usaba $isDuringService
         return $isDuringService ? 'consumo' : 'anomalia';
     }
 }

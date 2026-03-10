@@ -7,6 +7,7 @@ use App\Entity\Client\ScaleEvent;
 use App\Entity\Client\WeightsLog;
 use App\Infrastructure\Services\ClientConnectionManager;
 use App\Service\Merma\Application\OutputPorts\MermaNotifierInterface;
+use App\Service\Merma\Infrastructure\OutputAdapters\Repositories\ClientProductServiceHourRepository;
 use App\Service\Merma\ScaleEventDetectorService;
 use App\Ttn\Application\DTO\TtnUplinkRequest;
 use App\Ttn\Application\InputPorts\HandleTtnUplinkUseCaseInterface;
@@ -393,6 +394,9 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             if (!$config) {
                 return;
             }
+            $hourRepo     = new ClientProductServiceHourRepository($entityManager);
+            $productHours = $hourRepo->findByProductId($productId);
+
             $businessHours = $entityManager
                 ->getRepository(\App\Entity\Client\BusinessHour::class)
                 ->findAll();
@@ -402,13 +406,14 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                 : 0.010;
 
             $classification = $this->mermaDetector->classify(
-                previousWeight: $previousWeightKg,
-                newWeight:      $newWeightKg,
-                readAt:         $readAt,
-                config:         $config,
-                pricePerKg:     $pricePerKg,
-                businessHours:  $businessHours,
-                thresholdKg:    $thresholdKg,
+                previousWeight:      $previousWeightKg,
+                newWeight:           $newWeightKg,
+                readAt:              $readAt,
+                config:              $config,
+                pricePerKg:          $pricePerKg,
+                businessHours:       $businessHours,
+                thresholdKg:         $thresholdKg,
+                productServiceHours: $productHours,
             );
 
             if ($classification === null) {

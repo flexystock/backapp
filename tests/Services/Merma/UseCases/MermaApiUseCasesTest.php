@@ -242,4 +242,58 @@ class MermaApiUseCasesTest extends TestCase
         $useCase = new GetAnomalyHistoryUseCase($this->clientRepository, $this->connectionManager, $this->logger);
         $useCase->execute(new GetAnomalyHistoryRequest('non-existent-uuid', 1, 1));
     }
+
+    // ── GetProductServiceHoursUseCase ─────────────────────────────────────────
+
+    public function testGetProductServiceHoursUseCaseCanBeInstantiated(): void
+    {
+        $useCase = new \App\Service\Merma\Application\UseCases\GetProductServiceHoursUseCase(
+            $this->clientRepository,
+            $this->connectionManager,
+            $this->logger,
+        );
+        $this->assertInstanceOf(\App\Service\Merma\Application\UseCases\GetProductServiceHoursUseCase::class, $useCase);
+    }
+
+    public function testGetProductServiceHoursThrowsExceptionWhenClientNotFound(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('CLIENT_NOT_FOUND');
+
+        $this->clientRepository->method('findByUuid')->willReturn(null);
+
+        $useCase = new \App\Service\Merma\Application\UseCases\GetProductServiceHoursUseCase(
+            $this->clientRepository,
+            $this->connectionManager,
+            $this->logger,
+        );
+        $useCase->execute(new \App\Service\Merma\Application\DTO\GetProductServiceHoursRequest('non-existent-uuid', 1));
+    }
+
+    // ── UpdateProductServiceHoursUseCase ──────────────────────────────────────
+
+    public function testUpdateProductServiceHoursUseCaseCanBeInstantiated(): void
+    {
+        $useCase = new \App\Service\Merma\Application\UseCases\UpdateProductServiceHoursUseCase(
+            $this->clientRepository,
+            $this->connectionManager,
+            $this->logger,
+        );
+        $this->assertInstanceOf(\App\Service\Merma\Application\UseCases\UpdateProductServiceHoursUseCase::class, $useCase);
+    }
+
+    public function testUpdateProductServiceHoursThrowsExceptionWhenClientNotFound(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('CLIENT_NOT_FOUND');
+
+        $this->clientRepository->method('findByUuid')->willReturn(null);
+
+        $useCase = new \App\Service\Merma\Application\UseCases\UpdateProductServiceHoursUseCase(
+            $this->clientRepository,
+            $this->connectionManager,
+            $this->logger,
+        );
+        $useCase->execute(new \App\Service\Merma\Application\DTO\UpdateProductServiceHoursRequest('non-existent-uuid', 1, []));
+    }
 }

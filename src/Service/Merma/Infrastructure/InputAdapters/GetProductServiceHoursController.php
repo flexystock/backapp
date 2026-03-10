@@ -4,8 +4,8 @@ namespace App\Service\Merma\Infrastructure\InputAdapters;
 
 use App\Security\PermissionControllerTrait;
 use App\Security\PermissionService;
-use App\Service\Merma\Application\DTO\GetMermaSummaryRequest;
-use App\Service\Merma\Application\InputPorts\GetMermaSummaryUseCaseInterface;
+use App\Service\Merma\Application\DTO\GetProductServiceHoursRequest;
+use App\Service\Merma\Application\InputPorts\GetProductServiceHoursUseCaseInterface;
 use OpenApi\Attributes as OA;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,41 +16,40 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-class GetMermaSummaryController extends AbstractController
+class GetProductServiceHoursController extends AbstractController
 {
     use PermissionControllerTrait;
 
     public function __construct(
-        private readonly GetMermaSummaryUseCaseInterface $useCase,
-        private readonly ValidatorInterface              $validator,
-        private readonly LoggerInterface                 $logger,
-        PermissionService                                $permissionService,
+        private readonly GetProductServiceHoursUseCaseInterface $useCase,
+        private readonly ValidatorInterface                     $validator,
+        private readonly LoggerInterface                        $logger,
+        PermissionService                                       $permissionService,
     ) {
         $this->permissionService = $permissionService;
     }
 
-    #[Route('/api/merma/summary', name: 'api_merma_summary', methods: ['POST'])]
-    #[OA\Get(
-        path: '/api/merma/summary',
-        summary: 'Obtiene el resumen de merma del mes actual para una balanza y producto',
+    #[Route('/api/merma/config/hours/get', name: 'api_merma_config_hours_get', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/merma/config/hours/get',
+        summary: 'Obtiene las horas de servicio a nivel de producto',
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['uuidClient', 'scaleId', 'productId'],
+                required: ['uuidClient', 'productId'],
                 properties: [
                     new OA\Property(property: 'uuidClient', type: 'string', format: 'uuid'),
-                    new OA\Property(property: 'scaleId', type: 'integer', example: 1),
                     new OA\Property(property: 'productId', type: 'integer', example: 1),
                 ]
             )
         ),
         tags: ['Merma'],
         responses: [
-            new OA\Response(response: 200, description: 'Resumen recuperado correctamente'),
+            new OA\Response(response: 200, description: 'Horas de servicio recuperadas correctamente'),
             new OA\Response(response: 400, description: 'Datos inválidos'),
             new OA\Response(response: 401, description: 'No autenticado'),
             new OA\Response(response: 403, description: 'Sin permisos'),
-            new OA\Response(response: 404, description: 'Cliente no encontrado'),
+            new OA\Response(response: 404, description: 'Cliente o producto no encontrado'),
         ]
     )]
     public function __invoke(Request $request): JsonResponse
@@ -63,53 +62,33 @@ class GetMermaSummaryController extends AbstractController
 
             $data       = json_decode($request->getContent(), true) ?? [];
             $uuidClient = $data['uuidClient'] ?? '';
-            $scaleId    = isset($data['scaleId']) ? (int) $data['scaleId'] : 0;
-            $productId  = isset($data['productId']) ? (int) $data['productId'] : 0;
+            $productId  = $data['productId'] ?? null;
 
             if (empty($uuidClient)) {
                 return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_CLIENT_ID'], Response::HTTP_BAD_REQUEST);
             }
 
-            if (empty($scaleId)) {
-                return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_SCALE_ID'], Response::HTTP_BAD_REQUEST);
-            }
-
-            if (empty($productId)) {
+            if (empty($productId) || !is_int($productId)) {
                 return new JsonResponse(['status' => 'error', 'message' => 'REQUIRED_PRODUCT_ID'], Response::HTTP_BAD_REQUEST);
             }
 
-            $dto    = new GetMermaSummaryRequest($uuidClient, $scaleId, $productId);
+            $dto    = new GetProductServiceHoursRequest($uuidClient, $productId);
             $errors = $this->validator->validate($dto);
             if (count($errors) > 0) {
                 return $this->validationErrorResponse($errors);
             }
 
-            $summary = $this->useCase->execute($dto);
+            $hours = $this->useCase->execute($dto);
 
             return new JsonResponse([
                 'status'  => 'success',
-                'message' => 'MERMA_SUMMARY_RETRIEVED',
-                'summary' => [
-                    'input_kg'               => $summary->inputKg,
-                    'consumed_kg'            => $summary->consumedKg,
-                    'anomaly_kg'             => $summary->anomalyKg,
-                    'estimated_waste_kg'     => $summary->estimatedWasteKg,
-                    'estimated_waste_pct'    => $summary->estimatedWastePct,
-                    'estimated_cost_euros'   => $summary->estimatedCostEuros,
-                    'pending_anomalies'      => $summary->pendingAnomaliesCount,
-                    'status'                 => $summary->getStatus(),
-                    'prev_month_waste_pct'   => $summary->prevMonthWastePct,
-                    'prev_month_cost_euros'  => $summary->prevMonthCostEuros,
-                    'trend'                  => $summary->getTrend(), // 'improving' | 'worsening' | 'neutral'
-                    'current_stock_kg'       => $summary->getCurrentStockKg(),
-                    'unit_label'             => $summary->getUnitLabel(),
-                    'conversion_factor'      => $summary->getConversionFactor(),
-                ],
+                'message' => 'HOURS_RETRIEVED',
+                'hours'   => $hours,
             ], Response::HTTP_OK);
         } catch (\RuntimeException $e) {
             return $this->handleRuntimeException($e);
         } catch (\Throwable $e) {
-            $this->logger->error('Unexpected error fetching merma summary', ['exception' => $e->getMessage()]);
+            $this->logger->error('Unexpected error fetching product service hours', ['exception' => $e->getMessage()]);
             return new JsonResponse(['status' => 'error', 'message' => 'UNEXPECTED_ERROR'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -126,9 +105,10 @@ class GetMermaSummaryController extends AbstractController
     private function handleRuntimeException(\RuntimeException $e): JsonResponse
     {
         $message    = $e->getMessage();
-        $statusCode = match ($message) {
-            'CLIENT_NOT_FOUND' => Response::HTTP_NOT_FOUND,
-            default            => Response::HTTP_BAD_REQUEST,
+        $statusCode = match (true) {
+            $message === 'CLIENT_NOT_FOUND'                => Response::HTTP_NOT_FOUND,
+            str_starts_with($message, 'PRODUCT_NOT_FOUND') => Response::HTTP_NOT_FOUND,
+            default                                        => Response::HTTP_BAD_REQUEST,
         };
         return new JsonResponse(['status' => 'error', 'message' => $message], $statusCode);
     }
