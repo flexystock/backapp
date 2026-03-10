@@ -57,9 +57,17 @@ class ProductServiceHour
         if ($time === false) {
             return false;
         }
-        $covers1 = $time >= $this->startTime1 && $time <= $this->endTime1;
-        $covers2 = $this->startTime2 && $this->endTime2
-                   && $time >= $this->startTime2 && $time <= $this->endTime2;
+
+        $start1 = \DateTime::createFromFormat('H:i:s', $this->startTime1->format('H:i:s'));
+        $end1   = \DateTime::createFromFormat('H:i:s', $this->endTime1->format('H:i:s'));
+        $covers1 = $time >= $start1 && $time <= $end1;
+
+        $covers2 = false;
+        if ($this->startTime2 && $this->endTime2) {
+            $start2  = \DateTime::createFromFormat('H:i:s', $this->startTime2->format('H:i:s'));
+            $end2    = \DateTime::createFromFormat('H:i:s', $this->endTime2->format('H:i:s'));
+            $covers2 = $time >= $start2 && $time <= $end2;
+        }
 
         return $covers1 || $covers2;
     }

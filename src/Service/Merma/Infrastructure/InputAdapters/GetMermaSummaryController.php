@@ -90,17 +90,20 @@ class GetMermaSummaryController extends AbstractController
                 'status'  => 'success',
                 'message' => 'MERMA_SUMMARY_RETRIEVED',
                 'summary' => [
-                    'input_kg'             => $summary->inputKg,
-                    'consumed_kg'          => $summary->consumedKg,
-                    'anomaly_kg'           => $summary->anomalyKg,
-                    'estimated_waste_kg'   => $summary->estimatedWasteKg,
-                    'estimated_waste_pct'  => $summary->estimatedWastePct,
-                    'estimated_cost_euros' => $summary->estimatedCostEuros,
-                    'pending_anomalies'    => $summary->pendingAnomaliesCount,
-                    'status'               => $summary->getStatus(),
+                    'input_kg'               => $summary->inputKg,
+                    'consumed_kg'            => $summary->consumedKg,
+                    'anomaly_kg'             => $summary->anomalyKg,
+                    'estimated_waste_kg'     => $summary->estimatedWasteKg,
+                    'estimated_waste_pct'    => $summary->estimatedWastePct,
+                    'estimated_cost_euros'   => $summary->estimatedCostEuros,
+                    'pending_anomalies'      => $summary->pendingAnomaliesCount,
+                    'status'                 => $summary->getStatus(),
                     'prev_month_waste_pct'   => $summary->prevMonthWastePct,
                     'prev_month_cost_euros'  => $summary->prevMonthCostEuros,
                     'trend'                  => $summary->getTrend(), // 'improving' | 'worsening' | 'neutral'
+                    'current_stock_kg'       => $summary->getCurrentStockKg(),
+                    'unit_label'             => $summary->getUnitLabel(),
+                    'conversion_factor'      => $summary->getConversionFactor(),
                 ],
             ], Response::HTTP_OK);
         } catch (\RuntimeException $e) {

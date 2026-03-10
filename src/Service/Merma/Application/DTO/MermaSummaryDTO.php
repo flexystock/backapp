@@ -18,6 +18,9 @@ final class MermaSummaryDTO
         public readonly float  $prevMonthWastePct,
         public readonly float  $prevMonthCostEuros,
         public readonly int    $rendimientoEsperadoPct,
+        private readonly float $currentStockKg,
+        private readonly string $unitLabel,
+        private readonly float  $conversionFactor,
     ) {
     }
 
@@ -49,5 +52,18 @@ final class MermaSummaryDTO
             return 'worsening';
         }
         return 'neutral';
+    }
+
+    public function getCurrentStockKg(): float
+    {
+        return $this->currentStockKg;
+    }
+    public function getUnitLabel(): string
+    {
+        return $this->unitLabel;
+    }
+    public function getConversionFactor(): float
+    {
+        return $this->conversionFactor;
     }
 }
