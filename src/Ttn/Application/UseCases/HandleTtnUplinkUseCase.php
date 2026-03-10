@@ -361,6 +361,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
                                 ? $product->getCostPrice() / $product->getConversionFactor()
                                 : $product->getCostPrice(),
             readAt:           \DateTime::createFromImmutable($now),
+            uuidClient:       $uuidClient,
         );
     }
 
@@ -377,6 +378,7 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
         float                  $newWeightKg,
         ?float                 $pricePerKg,
         \DateTimeInterface     $readAt,
+        string                 $uuidClient = '',
     ): void {
         try {
             $product = $entityManager->getRepository(\App\Entity\Client\Product::class)->find($productId);
@@ -445,7 +447,24 @@ class HandleTtnUplinkUseCase implements HandleTtnUplinkUseCaseInterface
             ]);
 
             if ($event->isAnomalia() && $config->isAlertOnAnomaly()) {
-                $this->mermaNotifier->sendAnomalyAlert($event);
+                $mainClient = $this->notificationService->findMainClient($uuidClient);
+                $recipients = [];
+                if ($mainClient && $mainClient->getCompanyEmail()) {
+                    $recipients[] = $mainClient->getCompanyEmail();
+                }
+
+                $unitLabel        = match((int) ($product->getMainUnit() ?? '0')) {
+                    1 => $product->getNameUnit1() ?? 'unidades',
+                    2 => $product->getNameUnit2() ?? 'unidades',
+                    default => 'kg',
+                };
+
+                $this->mermaNotifier->sendAnomalyAlert(
+                    $event,
+                    $recipients,
+                    $unitLabel,
+                    $product->getConversionFactor(),
+                );
             }
 
         } catch (\Throwable $e) {

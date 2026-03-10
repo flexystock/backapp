@@ -12,7 +12,12 @@ use App\Entity\Client\ScaleEvent;
 interface MermaNotifierInterface
 {
     /** Alerta inmediata cuando se detecta una anomalía fuera de horario */
-    public function sendAnomalyAlert(ScaleEvent $event): void;
+    public function sendAnomalyAlert(
+        ScaleEvent $event,
+        array $recipientEmails = [],
+        string $unitLabel = 'kg',
+        float $conversionFactor = 1.0,
+    ): void;
 
     /** Informe mensual completo al cliente */
     public function sendMonthlyReport(MermaMonthlyReport $report): void;
