@@ -86,6 +86,7 @@ class GetProductWeightSummaryUseCase implements GetProductWeightSummaryUseCaseIn
             $responseData = [
                 'summary' => $summaryArray,
                 'unit_info' => $unitInfo,
+                'min_stock' => $product->getStock(),
             ];
 
             return new GetProductWeightSummaryResponse($responseData, null, 200);
