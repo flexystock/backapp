@@ -93,23 +93,29 @@ class PredictionService
         }
 
         // ── Sin consumos detectados → respuesta segura ───────────────────────
+        $conversionFactor = $product->getConversionFactor() ?: 1.0;
+
         if (empty($consumptions)) {
             return [
-                'product_id'             => $product->getId(),
-                'product_uuid'           => $product->getUuid(),
-                'product_name'           => $product->getName(),
-                'current_weight'         => round($currentWeight, 2),
-                'min_stock'              => round($minStock, 2),
-                'consumption_rate'       => 0.0,
-                'days_until_min_stock'   => null,
-                'stock_depletion_date'   => null,
+                'product_id'               => $product->getId(),
+                'product_uuid'             => $product->getUuid(),
+                'product_name'             => $product->getName(),
+                'current_weight'           => round($currentWeight, 2),
+                'min_stock'                => round($minStock, 2),
+                'consumption_rate'         => 0.0,
+                'days_until_min_stock'     => null,
+                'stock_depletion_date'     => null,
                 'recommended_restock_date' => null,
-                'restock_is_overdue'     => false,
-                'days_serve_order'       => $product->getDaysServeOrder() ?? 15,
-                'alert_level'            => 'unknown',
-                'total_consumptions'     => 0,
-                'total_restocks'         => count($restocks),
-                'analysis_period_days'   => $daysDifference,
+                'restock_is_overdue'       => false,
+                'days_serve_order'         => $product->getDaysServeOrder() ?? 15,
+                'alert_level'              => 'unknown',
+                'total_consumptions'       => 0,
+                'total_restocks'           => count($restocks),
+                'analysis_period_days'     => $daysDifference,
+                'unit_name'                => $this->resolveUnitName($product),
+                'current_stock_units'      => round($currentWeight / $conversionFactor, 2),
+                'min_stock_units'          => round($minStock / $conversionFactor, 2),
+                'consumption_rate_units'   => 0.0,
             ];
         }
 
@@ -186,6 +192,10 @@ class PredictionService
             'total_consumptions'       => count($consumptions),
             'total_restocks'           => count($restocks),
             'analysis_period_days'     => $daysDifference,
+            'unit_name'                => $this->resolveUnitName($product),
+            'current_stock_units'      => round($currentWeight / $conversionFactor, 2),
+            'min_stock_units'          => round($minStock / $conversionFactor, 2),
+            'consumption_rate_units'   => round($consumptionRate / $conversionFactor, 4),
         ];
     }
 
@@ -285,6 +295,25 @@ class PredictionService
         } else {
             return 'low';
         }
+    }
+
+    /**
+     * Devuelve el nombre legible de la unidad configurada para el producto.
+     *
+     * '1' → nombre de unidad 1 configurado (o 'Unidades' como fallback)
+     * '2' → nombre de unidad 2 configurado (o 'Unidades' como fallback)
+     * '0' o cualquier otro valor → 'kg'
+     *
+     * @param Product $product
+     * @return string
+     */
+    private function resolveUnitName(Product $product): string
+    {
+        return match ($product->getMainUnit()) {
+            '1' => $product->getNameUnit1() ?? 'Unidades',
+            '2' => $product->getNameUnit2() ?? 'Unidades',
+            default => 'kg',
+        };
     }
 
     /**
