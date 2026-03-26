@@ -199,7 +199,18 @@ class DockerService
             '-e','MYSQL_USER='.$user,
             '-e','MYSQL_PASSWORD='.$password,
             '-e','MYSQL_ROOT_PASSWORD=UZJIvESy5x',
+            '--memory','384m',
+            '--memory-reservation','192m',
+            '--memory-swap','768m',
             'mysql:8.0',
+            '--innodb-buffer-pool-size=128M',
+            '--performance-schema=OFF',
+            '--innodb-log-buffer-size=8M',
+            '--key-buffer-size=8M',
+            '--max-connections=25',
+            '--tmp-table-size=16M',
+            '--max-heap-table-size=16M',
+            '--innodb-flush-log-at-trx-commit=2',
         ];
 
         $this->logger->debug('Comando Docker: '.implode(' ', $command));
