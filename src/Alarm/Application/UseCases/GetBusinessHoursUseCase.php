@@ -33,7 +33,8 @@ class GetBusinessHoursUseCase implements GetBusinessHoursUseCaseInterface
         $clientConfigRepository = new ClientConfigRepository($entityManager);
         $businessHours = $businessHourRepository->findAll();
 
-        $checkoutOfHours = $clientConfigRepository->findConfig()->isCheckHolidays();
+        $clientConfig = $clientConfigRepository->findConfig();
+        $checkoutOfHours = $clientConfig !== null ? $clientConfig->isCheckHolidays() : false;
 
         $businessHoursData = array_map(
             fn (BusinessHour $businessHour): array => [

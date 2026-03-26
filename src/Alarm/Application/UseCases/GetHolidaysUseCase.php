@@ -30,7 +30,8 @@ class GetHolidaysUseCase implements GetHolidaysUseCaseInterface
 
         $entityManager = $this->connectionManager->getEntityManager($client->getUuidClient());
         $clientConfigRepository = new ClientConfigRepository($entityManager);
-        $checkoutOfHolidays = $clientConfigRepository->findConfig()->isCheckHolidays();
+        $clientConfig = $clientConfigRepository->findConfig();
+        $checkoutOfHolidays = $clientConfig !== null ? $clientConfig->isCheckHolidays() : false;
         $holidayRepository = new HolidayRepository($entityManager);
 
         $holidays = $holidayRepository->findAll();
