@@ -125,7 +125,8 @@ class CreateAlarmOutOfHoursUseCase implements CreateAlarmOutOfHoursUseCaseInterf
             $businessHourRepository->findAll()
         );
 
-        $checkHoliday = $clientConfigRepository->findConfig()->isCheckHolidays();
+        $clientConfig = $clientConfigRepository->findConfig();
+        $checkHoliday = $clientConfig !== null ? $clientConfig->isCheckHolidays() : false;
         return new CreateAlarmOutOfHoursResponse($uuidClient, $businessHours, $checkHoliday);
     }
 
