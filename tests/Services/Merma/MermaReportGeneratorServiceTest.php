@@ -3,11 +3,11 @@
 namespace App\Tests\Services\Merma;
 
 use App\Entity\Client\MermaConfig;
-use App\Merma\Application\OutputPorts\MermaConfigRepositoryInterface;
-use App\Merma\Application\OutputPorts\ScaleEventRepositoryInterface;
-use App\Merma\Application\OutputPorts\ScaleReadingRepositoryInterface;
-use App\Services\Merma\MermaCalculationResult;
-use App\Services\Merma\MermaReportGeneratorService;
+use App\Service\Merma\Application\OutputPorts\MermaConfigRepositoryInterface;
+use App\Service\Merma\Application\OutputPorts\ScaleEventRepositoryInterface;
+use App\Service\Merma\Application\OutputPorts\ScaleReadingRepositoryInterface;
+use App\Service\Merma\MermaCalculationResult;
+use App\Service\Merma\MermaReportGeneratorService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -291,11 +291,14 @@ class MermaReportGeneratorServiceTest extends TestCase
     {
         $this->eventRepo
             ->method('sumDeltaByType')
-            ->willReturnMap([
-                [self::SCALE_ID, self::PRODUCT_ID, 'reposicion', $this->anything(), $this->anything(), $inputKg],
-                [self::SCALE_ID, self::PRODUCT_ID, 'consumo',    $this->anything(), $this->anything(), $consumedKg],
-                [self::SCALE_ID, self::PRODUCT_ID, 'anomalia',   $this->anything(), $this->anything(), $anomalyKg],
-            ]);
+            ->willReturnCallback(function (int $scaleId, int $productId, string $type) use ($inputKg, $consumedKg, $anomalyKg): float {
+                return match ($type) {
+                    'reposicion' => $inputKg,
+                    'consumo'    => $consumedKg,
+                    'anomalia'   => $anomalyKg,
+                    default      => 0.0,
+                };
+            });
     }
 
     private function mockReadingRepo(float $stockStart, float $stockEnd): void
@@ -309,8 +312,6 @@ class MermaReportGeneratorServiceTest extends TestCase
     {
         $config = new MermaConfig();
         $config->setRendimientoEsperadoPct($rendimiento);
-        $config->setServiceStart(new \DateTime('09:00'));
-        $config->setServiceEnd(new \DateTime('23:00'));
 
         $this->configRepo
             ->method('findByProductId')

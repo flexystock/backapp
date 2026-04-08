@@ -2,9 +2,10 @@
 
 namespace App\Tests\Services\Merma;
 
+use App\Entity\Client\BusinessHour;
 use App\Entity\Client\MermaConfig;
-use App\Services\Merma\ScaleEventClassification;
-use App\Services\Merma\ScaleEventDetectorService;
+use App\Service\Merma\ScaleEventClassification;
+use App\Service\Merma\ScaleEventDetectorService;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -38,6 +39,9 @@ class ScaleEventDetectorServiceTest extends TestCase
             newWeight:      5.0,
             readAt:         $readAt,
             config:         $config,
+            pricePerKg:     null,
+            businessHours:  [],
+            thresholdKg:    0.200,
         );
 
         $this->assertNotNull($result);
@@ -47,10 +51,10 @@ class ScaleEventDetectorServiceTest extends TestCase
 
     public function test_subida_de_peso_fuera_de_horario_sigue_siendo_reposicion(): void
     {
-        $config = $this->makeConfig(serviceStart: '09:00', serviceEnd: '23:00');
+        $config = $this->makeConfig();
         $readAt = $this->makeTime('03:00'); // fuera de horario
 
-        $result = $this->detector->classify(2.0, 5.0, $readAt, $config);
+        $result = $this->detector->classify(2.0, 5.0, $readAt, $config, null, [], 0.200);
 
         // Reposición siempre es reposición, independientemente del horario
         $this->assertNotNull($result);
@@ -63,10 +67,11 @@ class ScaleEventDetectorServiceTest extends TestCase
 
     public function test_bajada_dentro_de_horario_es_consumo(): void
     {
-        $config = $this->makeConfig(serviceStart: '09:00', serviceEnd: '23:00');
+        $config = $this->makeConfig();
         $readAt = $this->makeTime('13:30');
+        $businessHours = [$this->makeBusinessHour(7, '09:00', '23:00')];
 
-        $result = $this->detector->classify(5.0, 4.2, $readAt, $config);
+        $result = $this->detector->classify(5.0, 4.2, $readAt, $config, null, $businessHours, 0.200);
 
         $this->assertNotNull($result);
         $this->assertSame('consumo', $result->type);
@@ -75,20 +80,22 @@ class ScaleEventDetectorServiceTest extends TestCase
 
     public function test_bajada_al_inicio_del_horario_es_consumo(): void
     {
-        $config = $this->makeConfig(serviceStart: '09:00', serviceEnd: '23:00');
+        $config = $this->makeConfig();
         $readAt = $this->makeTime('09:00'); // exactamente al inicio
+        $businessHours = [$this->makeBusinessHour(7, '09:00', '23:00')];
 
-        $result = $this->detector->classify(5.0, 4.5, $readAt, $config);
+        $result = $this->detector->classify(5.0, 4.5, $readAt, $config, null, $businessHours, 0.200);
 
         $this->assertSame('consumo', $result->type);
     }
 
     public function test_bajada_al_final_del_horario_es_consumo(): void
     {
-        $config = $this->makeConfig(serviceStart: '09:00', serviceEnd: '23:00');
+        $config = $this->makeConfig();
         $readAt = $this->makeTime('23:00'); // exactamente al cierre
+        $businessHours = [$this->makeBusinessHour(7, '09:00', '23:00')];
 
-        $result = $this->detector->classify(5.0, 4.5, $readAt, $config);
+        $result = $this->detector->classify(5.0, 4.5, $readAt, $config, null, $businessHours, 0.200);
 
         $this->assertSame('consumo', $result->type);
     }
@@ -99,10 +106,11 @@ class ScaleEventDetectorServiceTest extends TestCase
 
     public function test_bajada_fuera_de_horario_es_anomalia(): void
     {
-        $config = $this->makeConfig(serviceStart: '09:00', serviceEnd: '23:00');
+        $config = $this->makeConfig();
         $readAt = $this->makeTime('03:00'); // madrugada
+        $businessHours = [$this->makeBusinessHour(7, '09:00', '23:00')];
 
-        $result = $this->detector->classify(5.0, 4.0, $readAt, $config);
+        $result = $this->detector->classify(5.0, 4.0, $readAt, $config, null, $businessHours, 0.200);
 
         $this->assertNotNull($result);
         $this->assertSame('anomalia', $result->type);
@@ -111,20 +119,22 @@ class ScaleEventDetectorServiceTest extends TestCase
 
     public function test_bajada_antes_de_apertura_es_anomalia(): void
     {
-        $config = $this->makeConfig(serviceStart: '09:00', serviceEnd: '23:00');
+        $config = $this->makeConfig();
         $readAt = $this->makeTime('08:59');
+        $businessHours = [$this->makeBusinessHour(7, '09:00', '23:00')];
 
-        $result = $this->detector->classify(5.0, 4.5, $readAt, $config);
+        $result = $this->detector->classify(5.0, 4.5, $readAt, $config, null, $businessHours, 0.200);
 
         $this->assertSame('anomalia', $result->type);
     }
 
     public function test_bajada_despues_del_cierre_es_anomalia(): void
     {
-        $config = $this->makeConfig(serviceStart: '09:00', serviceEnd: '23:00');
+        $config = $this->makeConfig();
         $readAt = $this->makeTime('23:01');
+        $businessHours = [$this->makeBusinessHour(7, '09:00', '23:00')];
 
-        $result = $this->detector->classify(5.0, 4.5, $readAt, $config);
+        $result = $this->detector->classify(5.0, 4.5, $readAt, $config, null, $businessHours, 0.200);
 
         $this->assertSame('anomalia', $result->type);
     }
@@ -136,20 +146,20 @@ class ScaleEventDetectorServiceTest extends TestCase
     public function test_delta_por_debajo_del_umbral_devuelve_null(): void
     {
         // Umbral: 200g. Delta: 100g → ruido del sensor
-        $config = $this->makeConfig(anomalyThresholdKg: 0.200);
+        $config = $this->makeConfig();
         $readAt = $this->makeTime('14:00');
 
-        $result = $this->detector->classify(5.000, 5.100, $readAt, $config);
+        $result = $this->detector->classify(5.000, 5.100, $readAt, $config, null, [], 0.200);
 
         $this->assertNull($result, 'Un delta de 100g no debe generar evento con umbral de 200g');
     }
 
     public function test_delta_exactamente_en_el_umbral_genera_evento(): void
     {
-        $config = $this->makeConfig(anomalyThresholdKg: 0.200);
+        $config = $this->makeConfig();
         $readAt = $this->makeTime('14:00');
 
-        $result = $this->detector->classify(5.000, 5.200, $readAt, $config);
+        $result = $this->detector->classify(5.000, 5.200, $readAt, $config, null, [], 0.200);
 
         $this->assertNotNull($result, 'Un delta exactamente en el umbral debe generar evento');
     }
@@ -159,7 +169,7 @@ class ScaleEventDetectorServiceTest extends TestCase
         $config = $this->makeConfig();
         $readAt = $this->makeTime('14:00');
 
-        $result = $this->detector->classify(5.000, 5.000, $readAt, $config);
+        $result = $this->detector->classify(5.000, 5.000, $readAt, $config, null, [], 0.200);
 
         $this->assertNull($result);
     }
@@ -179,6 +189,8 @@ class ScaleEventDetectorServiceTest extends TestCase
             readAt:         $readAt,
             config:         $config,
             pricePerKg:     4.50, // 4,50€/kg
+            businessHours:  [],
+            thresholdKg:    0.200,
         );
 
         $this->assertNotNull($result);
@@ -191,7 +203,7 @@ class ScaleEventDetectorServiceTest extends TestCase
         $config = $this->makeConfig();
         $readAt = $this->makeTime('14:00');
 
-        $result = $this->detector->classify(5.0, 3.0, $readAt, $config, pricePerKg: null);
+        $result = $this->detector->classify(5.0, 3.0, $readAt, $config, null, [], 0.200);
 
         $this->assertNull($result->deltaCost);
     }
@@ -201,7 +213,7 @@ class ScaleEventDetectorServiceTest extends TestCase
         $config = $this->makeConfig();
         $readAt = $this->makeTime('14:00');
 
-        $result = $this->detector->classify(5.0, 3.0, $readAt, $config, pricePerKg: 2.0);
+        $result = $this->detector->classify(5.0, 3.0, $readAt, $config, 2.0, [], 0.200);
 
         // El coste es el valor absoluto del delta × precio — nunca negativo
         $this->assertGreaterThan(0, $result->deltaCost);
@@ -214,30 +226,33 @@ class ScaleEventDetectorServiceTest extends TestCase
     public function test_horario_nocturno_que_cruza_medianoche_consumo_a_las_23h(): void
     {
         // Restaurante que abre a las 13:00 y cierra a las 02:00
-        $config = $this->makeConfig(serviceStart: '13:00', serviceEnd: '02:00');
+        $config = $this->makeConfig();
         $readAt = $this->makeTime('23:30');
+        $businessHours = [$this->makeBusinessHour(7, '13:00', '02:00')];
 
-        $result = $this->detector->classify(5.0, 4.0, $readAt, $config);
+        $result = $this->detector->classify(5.0, 4.0, $readAt, $config, null, $businessHours, 0.200);
 
         $this->assertSame('consumo', $result->type);
     }
 
     public function test_horario_nocturno_que_cruza_medianoche_consumo_a_la_01h(): void
     {
-        $config = $this->makeConfig(serviceStart: '13:00', serviceEnd: '02:00');
+        $config = $this->makeConfig();
         $readAt = $this->makeTime('01:30');
+        $businessHours = [$this->makeBusinessHour(7, '13:00', '02:00')];
 
-        $result = $this->detector->classify(5.0, 4.0, $readAt, $config);
+        $result = $this->detector->classify(5.0, 4.0, $readAt, $config, null, $businessHours, 0.200);
 
         $this->assertSame('consumo', $result->type);
     }
 
     public function test_horario_nocturno_anomalia_a_las_10h(): void
     {
-        $config = $this->makeConfig(serviceStart: '13:00', serviceEnd: '02:00');
+        $config = $this->makeConfig();
         $readAt = $this->makeTime('10:00'); // fuera de servicio
+        $businessHours = [$this->makeBusinessHour(7, '13:00', '02:00')];
 
-        $result = $this->detector->classify(5.0, 4.0, $readAt, $config);
+        $result = $this->detector->classify(5.0, 4.0, $readAt, $config, null, $businessHours, 0.200);
 
         $this->assertSame('anomalia', $result->type);
     }
@@ -259,18 +274,20 @@ class ScaleEventDetectorServiceTest extends TestCase
     // HELPERS
     // ════════════════════════════════════════════════════════
 
-    private function makeConfig(
-        string $serviceStart      = '09:00',
-        string $serviceEnd        = '23:00',
-        float  $anomalyThresholdKg = 0.200,
-        int    $rendimiento        = 80,
-    ): MermaConfig {
+    private function makeConfig(int $rendimiento = 80): MermaConfig
+    {
         $config = new MermaConfig();
-        $config->setServiceStart(new \DateTime($serviceStart));
-        $config->setServiceEnd(new \DateTime($serviceEnd));
-        $config->setAnomalyThresholdKg($anomalyThresholdKg);
         $config->setRendimientoEsperadoPct($rendimiento);
         return $config;
+    }
+
+    private function makeBusinessHour(int $dayOfWeek, string $start, string $end): BusinessHour
+    {
+        $bh = new BusinessHour();
+        $bh->setDayOfWeek($dayOfWeek);
+        $bh->setStartTime(new \DateTime($start));
+        $bh->setEndTime(new \DateTime($end));
+        return $bh;
     }
 
     private function makeTime(string $time): \DateTimeInterface
