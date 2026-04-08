@@ -187,12 +187,19 @@ class UpdateProductController extends AbstractController
             // 6) Ejecutar el caso de uso
             $response = $this->updateProductUseCase->execute($updateRequest);
 
-            // 7) Respuesta exitosa
+            // 7) Respuesta
+            if ($response->getStatusCode() !== 200) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => $response->getError() ?? 'UNKNOWN_ERROR',
+                ], $response->getStatusCode());
+            }
+
             return new JsonResponse([
                 'status' => 'success',
                 'message' => 'PRODUCT_UPDATED_SUCCESSFULLY',
-                'product' => $response->getProduct(), // Por ej. array con uuid, name...
-            ], $response->getStatusCode());
+                'product' => $response->getProduct(),
+            ], 200);
         } catch (\RuntimeException $e) {
             // Errores de dominio esperados (p.ej. "PRODUCT_NOT_FOUND", "CLIENT_NOT_FOUND", etc.)
             if ('PRODUCT_NOT_FOUND' === $e->getMessage()) {
