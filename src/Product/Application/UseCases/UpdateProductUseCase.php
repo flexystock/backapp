@@ -48,7 +48,7 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
                 'uuid' => $product->getUuid(),
                 'name' => $product->getName(),
                 'ean' => $product->getEan(),
-                'expiration_date' => $product->getExpirationDate(),
+                'expiration_date' => $product->getExpirationDate()?->format('Y-m-d H:i:s'),
                 'perishable' => $product->getPerishable(),
                 'stock' => $product->getStock(),
                 'weight_range' => $product->getWeightRange(),
@@ -100,7 +100,7 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
             if (null === $mainUnit || '' === $mainUnit) {
                 $product->setMainUnit('0');
             } else {
-                $product->setMainUnit($mainUnit);
+                $product->setMainUnit((string) $mainUnit);
             }
             if (null !== $request->getTare()) {
                 $product->setTare($request->getTare());
@@ -125,7 +125,7 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
                 'uuid' => $product->getUuid(),
                 'name' => $product->getName(),
                 'ean' => $product->getEan(),
-                'expiration_date' => $product->getExpirationDate(),
+                'expiration_date' => $product->getExpirationDate()?->format('Y-m-d H:i:s'),
                 'perishable' => $product->getPerishable(),
                 'stock' => $product->getStock(),
                 'weight_range' => $product->getWeightRange(),
@@ -166,11 +166,12 @@ class UpdateProductUseCase implements UpdateProductUseCaseInterface
             ];
 
             return new UpdateProductResponse($productData, null, 200);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error('UpdateProductUseCase: Error updating product.', [
                 'uuid_client' => $uuidClient,
                 'uuid_product' => $uuidProduct,
-                'exception' => $e,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return new UpdateProductResponse(null, 'Internal Server Error', 500);

@@ -147,12 +147,13 @@ class UpdateProductController extends AbstractController
     )]
     public function invoke(Request $request): JsonResponse
     {
-        $permissionCheck = $this->checkPermissionJson('product.update');
-        if ($permissionCheck) {
-            return $permissionCheck;
-        }
-
         try {
+            // MOVIDO DENTRO del try
+            $permissionCheck = $this->checkPermissionJson('product.update');
+            if ($permissionCheck) {
+                return $permissionCheck;
+            }
+
             // 1) Deserializar el JSON al DTO UpdateProductRequest
             $updateRequest = $this->serializer->deserialize(
                 $request->getContent(),
@@ -164,7 +165,6 @@ class UpdateProductController extends AbstractController
             $errors = $this->validator->validate($updateRequest);
             if (count($errors) > 0) {
                 $errorMessages = $this->formatValidationErrors($errors);
-
                 return new JsonResponse([
                     'status' => 'error',
                     'message' => 'INVALID_DATA',
@@ -187,14 +187,21 @@ class UpdateProductController extends AbstractController
             // 6) Ejecutar el caso de uso
             $response = $this->updateProductUseCase->execute($updateRequest);
 
-            // 7) Respuesta exitosa
+            // 7) Respuesta
+            if ($response->getStatusCode() !== 200) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => $response->getError() ?? 'UNKNOWN_ERROR',
+                ], $response->getStatusCode());
+            }
+
             return new JsonResponse([
                 'status' => 'success',
                 'message' => 'PRODUCT_UPDATED_SUCCESSFULLY',
-                'product' => $response->getProduct(), // Por ej. array con uuid, name...
-            ], $response->getStatusCode());
+                'product' => $response->getProduct(),
+            ], 200);
+
         } catch (\RuntimeException $e) {
-            // Errores de dominio esperados (p.ej. "PRODUCT_NOT_FOUND", "CLIENT_NOT_FOUND", etc.)
             if ('PRODUCT_NOT_FOUND' === $e->getMessage()) {
                 return $this->jsonError('PRODUCT_NOT_FOUND', JsonResponse::HTTP_NOT_FOUND);
             }
@@ -207,14 +214,18 @@ class UpdateProductController extends AbstractController
                     'message' => 'USER_NOT_AUTHENTICATED',
                 ], Response::HTTP_UNAUTHORIZED);
             }
-            // etc. Manejo 403, 409, etc.
-
             return new JsonResponse([
                 'status' => 'error',
                 'message' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        } catch (\Exception $e) {
-            // Errores inesperados
+
+        } catch (\Throwable $e) {
+            $this->logger->error('UpdateProductController Throwable', [
+                'message' => $e->getMessage(),
+                'class' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ]);
             return new JsonResponse([
                 'status' => 'error',
                 'message' => $e->getMessage(),
