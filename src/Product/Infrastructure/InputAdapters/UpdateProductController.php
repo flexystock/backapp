@@ -213,7 +213,7 @@ class UpdateProductController extends AbstractController
                 'status' => 'error',
                 'message' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // Errores inesperados
             return new JsonResponse([
                 'status' => 'error',
