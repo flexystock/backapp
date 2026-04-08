@@ -12,6 +12,8 @@ use App\Ttn\Application\OutputPorts\MinimumStockNotificationInterface;
 use App\Ttn\Application\OutputPorts\PoolTtnDeviceRepositoryInterface;
 use App\Ttn\Application\OutputPorts\WeightVariationAlertNotifierInterface;
 use App\Ttn\Application\Services\BusinessHoursCheckerService;
+use App\Service\Merma\Application\OutputPorts\MermaNotifierInterface;
+use App\Service\Merma\ScaleEventDetectorService;
 use App\Ttn\Application\Services\TtnAlarmNotificationService;
 use App\Ttn\Application\Services\WeightsLogService;
 use App\Ttn\Application\UseCases\HandleTtnUplinkUseCase;
@@ -28,6 +30,8 @@ class HandleTtnUplinkUseCaseTest extends TestCase
     private EntityManagerInterface $mainEntityManager;
     private MinimumStockNotificationInterface $minimumStockNotifier;
     private WeightVariationAlertNotifierInterface $weightVariationNotifier;
+    private ScaleEventDetectorService $mermaDetector;
+    private MermaNotifierInterface $mermaNotifier;
     private HandleTtnUplinkUseCase $useCase;
 
     protected function setUp(): void
@@ -38,6 +42,8 @@ class HandleTtnUplinkUseCaseTest extends TestCase
         $this->mainEntityManager = $this->createMock(EntityManagerInterface::class);
         $this->minimumStockNotifier = $this->createMock(MinimumStockNotificationInterface::class);
         $this->weightVariationNotifier = $this->createMock(WeightVariationAlertNotifierInterface::class);
+        $this->mermaDetector = new ScaleEventDetectorService();
+        $this->mermaNotifier = $this->createMock(MermaNotifierInterface::class);
 
         $notificationService = new TtnAlarmNotificationService(
             $this->minimumStockNotifier,
@@ -51,7 +57,9 @@ class HandleTtnUplinkUseCaseTest extends TestCase
             $this->logger,
             new BusinessHoursCheckerService(),
             new WeightsLogService(),
-            $notificationService
+            $notificationService,
+            $this->mermaDetector,
+            $this->mermaNotifier,
         );
     }
 
