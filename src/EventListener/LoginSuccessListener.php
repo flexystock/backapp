@@ -1,5 +1,4 @@
 <?php
-
 namespace App\EventListener;
 
 use App\Entity\Main\Login;
@@ -18,28 +17,36 @@ class LoginSuccessListener
     public function __invoke(LoginSuccessEvent $event): void
     {
         $user = $event->getAuthenticatedToken()->getUser();
-
         if (!$user instanceof User) {
             return;
         }
-
         if (!$user->isActive()) {
             return;
         }
 
-        $ipAddress = $event->getRequest()->getClientIp() ?? 'unknown';
+        // Solo ejecutar en login real, no en cada request JWT autenticado
+        $request = $event->getRequest();
+        $path = $request->getPathInfo();
+        if (!str_contains($path, '/api/login') && !str_contains($path, '/login')) {
+            return;
+        }
 
-        $user->setLastAccess(new \DateTimeImmutable());          // ← añade esto
-        $user->setFailedAttempts(0);         // ← y esto, para mantener la lógica anterior
-        $user->setLockedUntil(null);
+        try {
+            $ipAddress = $request->getClientIp() ?? 'unknown';
+            $user->setLastAccess(new \DateTimeImmutable());
+            $user->setFailedAttempts(0);
+            $user->setLockedUntil(null);
 
-        $loginRecord = new Login();
-        $loginRecord->setUuidUser($user->getUuid());
-        $loginRecord->setLoginAt(new \DateTimeImmutable());
-        $loginRecord->setIpAddress($ipAddress);
+            $loginRecord = new Login();
+            $loginRecord->setUuidUser($user->getUuid());
+            $loginRecord->setLoginAt(new \DateTimeImmutable());
+            $loginRecord->setIpAddress($ipAddress);
 
-        $this->entityManager->persist($user);
-        $this->entityManager->persist($loginRecord);
-        $this->entityManager->flush();
+            $this->entityManager->persist($user);
+            $this->entityManager->persist($loginRecord);
+            $this->entityManager->flush();
+        } catch (\Throwable $e) {
+            // No reventar la request por un fallo de auditoría
+        }
     }
 }

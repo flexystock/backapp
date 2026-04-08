@@ -17,7 +17,7 @@ class UpdateProductRequest
 
     private ?string $ean;
 
-    private ?DateTime $expiration_date;
+    private ?\DateTime $expiration_date;
 
     private ?bool $perishable;
 
@@ -70,7 +70,7 @@ class UpdateProductRequest
         string $uuidProduct,
         string $name,
         ?string $ean = null,
-        ?DateTime $expiration_date = null,
+        ?\DateTime $expiration_date = null,
         ?bool $perishable = false,
         ?float $stock = 0.00,
         ?float $weightRange = null,
@@ -127,7 +127,7 @@ class UpdateProductRequest
         return $this->ean;
     }
 
-    public function getExpirationDate(): ?DateTime
+    public function getExpirationDate(): ?\DateTime
     {
         return $this->expiration_date;
     }
