@@ -22,6 +22,9 @@ final class MermaSummaryDTO
         private readonly float $currentStockKg = 0.0,
         private readonly string $unitLabel = 'kg',
         private readonly float  $conversionFactor = 1.0,
+        public readonly float  $estimatedRevenueEuros = 0.0,
+        public readonly float  $grossMarginEuros = 0.0,
+        public readonly float  $grossMarginPct = 0.0,
     ) {
     }
 
@@ -56,6 +59,12 @@ final class MermaSummaryDTO
     }
 
     public function getAnomalyCostEuros(): float { return $this->anomalyCostEuros; }
+
+    public function getEstimatedRevenueEuros(): float { return $this->estimatedRevenueEuros; }
+
+    public function getGrossMarginEuros(): float { return $this->grossMarginEuros; }
+
+    public function getGrossMarginPct(): float { return $this->grossMarginPct; }
 
     public function getCurrentStockKg(): float
     {
