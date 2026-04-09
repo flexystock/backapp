@@ -71,9 +71,10 @@ final class GetMermaSummaryUseCase implements GetMermaSummaryUseCaseInterface
         $currentStockKg = $lastLog !== null ? (float) $lastLog->getRealWeight() : 0.0;
 
         // ── Cálculos finales ─────────────────────────────────────────────────────
-        $estimatedWasteKg   = max(0.0, round($inputKg - $consumedKg - $currentStockKg, 3));
-        $estimatedWastePct  = $inputKg > 0 ? round(($estimatedWasteKg / $inputKg) * 100, 1) : 0.0;
-        $estimatedCostEuros = $pricePerKg > 0 && $estimatedWasteKg > 0 ? round($estimatedWasteKg * $pricePerKg, 2) : 0.0;
+        $estimatedWasteKg   = max(0.0, round($inputKg - $consumedKg - $anomalyKg - $currentStockKg, 3));
+        $estimatedWastePct  = $inputKg > 0 ? round((($estimatedWasteKg + $anomalyKg) / $inputKg) * 100, 1) : 0.0;
+        $estimatedCostEuros = $pricePerKg > 0 ? round(($estimatedWasteKg + $anomalyKg) * $pricePerKg, 2) : 0.0;
+        $anomalyCostEuros   = $pricePerKg > 0 ? round($anomalyKg * $pricePerKg, 2) : 0.0;
         $pendingCount       = $eventRepo->countPendingAnomalies($request->getScaleId(), $request->getProductId());
 
         $this->logger->info('MermaSummary retrieved', [
@@ -99,6 +100,7 @@ final class GetMermaSummaryUseCase implements GetMermaSummaryUseCaseInterface
             estimatedWasteKg: $estimatedWasteKg,
             estimatedWastePct: $estimatedWastePct,
             estimatedCostEuros: $estimatedCostEuros,
+            anomalyCostEuros: $anomalyCostEuros,
             pendingAnomaliesCount: $pendingCount,
             prevMonthWastePct: $prevWastePct,
             prevMonthCostEuros: $prevCostEuros,

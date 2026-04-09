@@ -18,9 +18,10 @@ final class MermaSummaryDTO
         public readonly float  $prevMonthWastePct,
         public readonly float  $prevMonthCostEuros,
         public readonly int    $rendimientoEsperadoPct,
-        private readonly float $currentStockKg,
-        private readonly string $unitLabel,
-        private readonly float  $conversionFactor,
+        public readonly float  $anomalyCostEuros = 0.0,
+        private readonly float $currentStockKg = 0.0,
+        private readonly string $unitLabel = 'kg',
+        private readonly float  $conversionFactor = 1.0,
     ) {
     }
 
@@ -53,6 +54,8 @@ final class MermaSummaryDTO
         }
         return 'neutral';
     }
+
+    public function getAnomalyCostEuros(): float { return $this->anomalyCostEuros; }
 
     public function getCurrentStockKg(): float
     {
