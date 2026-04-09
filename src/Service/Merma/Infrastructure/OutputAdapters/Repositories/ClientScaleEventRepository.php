@@ -75,17 +75,19 @@ final class ClientScaleEventRepository implements ScaleEventRepositoryInterface,
         ], $rows);
     }
 
-    public function findPendingAnomalies(int $scaleId, int $limit = 10): array
+    public function findPendingAnomalies(int $scaleId, int $productId, int $limit = 10): array
     {
         return $this->em->createQuery(
             'SELECT e
              FROM App\Entity\Client\ScaleEvent e
              WHERE IDENTITY(e.scale) = :scaleId
+               AND IDENTITY(e.product) = :productId
                AND e.type = :type
                AND e.isConfirmed IS NULL
              ORDER BY e.detectedAt DESC'
         )
             ->setParameter('scaleId', $scaleId)
+            ->setParameter('productId', $productId)
             ->setParameter('type', ScaleEvent::TYPE_ANOMALIA)
             ->setMaxResults($limit)
             ->getResult();
