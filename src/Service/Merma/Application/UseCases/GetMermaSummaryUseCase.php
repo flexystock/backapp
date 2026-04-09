@@ -37,6 +37,11 @@ final class GetMermaSummaryUseCase implements GetMermaSummaryUseCaseInterface
             $pricePerKg = $product->getCostPrice() / $product->getConversionFactor();
         }
 
+        $salePricePerKg = 0.0;
+        if ($product !== null && $product->getSalePrice() > 0 && $product->getConversionFactor() > 0) {
+            $salePricePerKg = $product->getSalePrice() / $product->getConversionFactor();
+        }
+
         // ── Rendimiento esperado (de MermaConfig) ────────────────────────────────
         $mermaConfig    = $em->getRepository(\App\Entity\Client\MermaConfig::class)
             ->findOneBy(['product' => $request->getProductId()]);
@@ -77,6 +82,17 @@ final class GetMermaSummaryUseCase implements GetMermaSummaryUseCaseInterface
         $anomalyCostEuros   = $pricePerKg > 0 ? round($anomalyKg * $pricePerKg, 2) : 0.0;
         $pendingCount       = $eventRepo->countPendingAnomalies($request->getScaleId(), $request->getProductId());
 
+        $estimatedRevenueEuros = $salePricePerKg > 0 && $consumedKg > 0
+            ? round($consumedKg * $salePricePerKg, 2)
+            : 0.0;
+
+        $grossMarginEuros = $estimatedRevenueEuros > 0
+            ? round($estimatedRevenueEuros - ($consumedKg * $pricePerKg), 2)
+            : 0.0;
+        $grossMarginPct   = $estimatedRevenueEuros > 0
+            ? round(($grossMarginEuros / $estimatedRevenueEuros) * 100, 1)
+            : 0.0;
+
         $this->logger->info('MermaSummary retrieved', [
             'scaleId'         => $request->getScaleId(),
             'productId'       => $request->getProductId(),
@@ -108,6 +124,9 @@ final class GetMermaSummaryUseCase implements GetMermaSummaryUseCaseInterface
             currentStockKg: $currentStockKg,
             unitLabel:         $unitLabel,
             conversionFactor:  $conversionFactor,
+            estimatedRevenueEuros: $estimatedRevenueEuros,
+            grossMarginEuros: $grossMarginEuros,
+            grossMarginPct:   $grossMarginPct,
         );
     }
 }

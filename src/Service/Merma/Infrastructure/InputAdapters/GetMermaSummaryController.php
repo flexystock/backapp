@@ -105,6 +105,9 @@ class GetMermaSummaryController extends AbstractController
                     'current_stock_kg'       => $summary->getCurrentStockKg(),
                     'unit_label'             => $summary->getUnitLabel(),
                     'conversion_factor'      => $summary->getConversionFactor(),
+                    'estimated_revenue_euros' => $summary->getEstimatedRevenueEuros(),
+                    'gross_margin_euros'     => $summary->getGrossMarginEuros(),
+                    'gross_margin_pct'       => $summary->getGrossMarginPct(),
                 ],
             ], Response::HTTP_OK);
         } catch (\RuntimeException $e) {
