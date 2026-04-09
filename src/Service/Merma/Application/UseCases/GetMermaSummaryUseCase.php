@@ -67,9 +67,11 @@ final class GetMermaSummaryUseCase implements GetMermaSummaryUseCaseInterface
         $lastLog = $em->createQuery(
             'SELECT w FROM App\Entity\Client\WeightsLog w
              WHERE w.scale = :scaleId
+               AND w.product = :productId
              ORDER BY w.date DESC'
         )
             ->setParameter('scaleId', $request->getScaleId())
+            ->setParameter('productId', $request->getProductId())
             ->setMaxResults(1)
             ->getOneOrNullResult();
 

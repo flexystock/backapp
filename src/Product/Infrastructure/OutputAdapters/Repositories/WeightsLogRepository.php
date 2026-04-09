@@ -21,19 +21,26 @@ class WeightsLogRepository implements WeightsLogRepositoryInterface
      */
     public function getLatestTotalRealWeightByProduct(int $productId): float
     {
-        $qb = $this->em->createQueryBuilder();
+        $sql = '
+            SELECT SUM(w.real_weight)
+            FROM weights_log w
+            INNER JOIN (
+                SELECT scale_id, MAX(date) as max_date
+                FROM weights_log
+                WHERE product_id = :productId
+                GROUP BY scale_id
+            ) latest ON w.scale_id = latest.scale_id
+                     AND w.date = latest.max_date
+            WHERE w.product_id = :productId
+        ';
 
-        $qb->select('SUM(w.real_weight)')
-            ->from(WeightsLog::class, 'w')
-            ->where('w.id IN (
-            SELECT MAX(w2.id) 
-            FROM App\Entity\Client\WeightsLog w2 
-            WHERE w2.product = :productId 
-            GROUP BY w2.scale
-        )')
-            ->setParameter('productId', $productId);
+        $result = $this->em->getConnection()
+            ->executeQuery($sql, [
+                'productId' => $productId,
+            ])
+            ->fetchOne();
 
-        return (float) $qb->getQuery()->getSingleScalarResult();
+        return (float) ($result ?? 0);
     }
 
     /**

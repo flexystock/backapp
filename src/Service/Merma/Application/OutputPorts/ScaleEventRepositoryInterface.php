@@ -37,7 +37,7 @@ interface ScaleEventRepositoryInterface
      * Anomalías sin revisar de una balanza.
      * @return ScaleEvent[]
      */
-    public function findPendingAnomalies(int $scaleId, int $limit = 10): array;
+    public function findPendingAnomalies(int $scaleId, int $productId, int $limit = 10): array;
 
     /** Cuenta anomalías pendientes de revisión */
     public function countPendingAnomalies(int $scaleId, int $productId): int;

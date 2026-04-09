@@ -33,7 +33,7 @@ final class ScaleEventRepository implements ScaleEventRepositoryInterface, GetPe
         return [];
     }
 
-    public function findPendingAnomalies(int $scaleId, int $limit = 10): array
+    public function findPendingAnomalies(int $scaleId, int $productId, int $limit = 10): array
     {
         return [];
     }
