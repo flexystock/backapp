@@ -96,6 +96,7 @@ class GetMermaSummaryController extends AbstractController
                     'estimated_waste_kg'     => $summary->estimatedWasteKg,
                     'estimated_waste_pct'    => $summary->estimatedWastePct,
                     'estimated_cost_euros'   => $summary->estimatedCostEuros,
+                    'anomaly_cost_euros'     => $summary->getAnomalyCostEuros(),
                     'pending_anomalies'      => $summary->pendingAnomaliesCount,
                     'status'                 => $summary->getStatus(),
                     'prev_month_waste_pct'   => $summary->prevMonthWastePct,
