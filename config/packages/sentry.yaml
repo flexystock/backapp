@@ -1,0 +1,11 @@
+when@dev:
+    sentry:
+        dsn: '%env(SENTRY_DSN)%'
+        register_error_listener: true
+        options:
+            environment: '%env(APP_ENV)%'
+            ignore_exceptions:
+                - 'Symfony\Component\HttpKernel\Exception\NotFoundHttpException'
+                - 'Symfony\Component\Security\Core\Exception\AccessDeniedException'
+                - 'Lexik\Bundle\JWTAuthenticationBundle\Exception\ExpiredTokenException'
+                - 'Symfony\Component\ErrorHandler\Error\FatalError'

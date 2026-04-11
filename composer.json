@@ -20,6 +20,7 @@
         "lexik/jwt-authentication-bundle": "^3.1",
         "nelmio/api-doc-bundle": "^4.23",
         "nelmio/cors-bundle": "^2.4",
+        "sentry/sentry-symfony": "^5.10",
         "stripe/stripe-php": "^17",
         "symfony/asset": "6.4.*",
         "symfony/console": "6.4.*",
