@@ -27,6 +27,7 @@ Este backend se apoya en diversas tecnologías y herramientas para garantizar un
 - **Symfony Messenger**: Para la gestión de colas de mensajes y tareas asíncronas.
 - **PHPUnit 10.5**: Framework de testing para garantizar la calidad del código.
 - **PHP CS Fixer**: Para mantener estándares de código consistentes.
+- **Sentry**: Monitoreo de errores en tiempo real con notificaciones por email.
 - **Makefile**: Un conjunto de comandos que automatizan las tareas de gestión de Docker y el entorno de desarrollo.
 
 ## 📂 Estructura del Repositorio
@@ -39,6 +40,7 @@ Este backend se apoya en diversas tecnologías y herramientas para garantizar un
 ├── config/                   # Configuración de la aplicación
 │  ├── jwt/                  # Claves JWT (private.pem, public.pem)
 │  ├── packages/             # Configuración de bundles
+│  │  └── sentry.yaml       # Configuración de Sentry
 │  ├── routes/               # Definición de rutas
 │  ├── bundles.php
 │  ├── preload.php
@@ -215,15 +217,26 @@ El archivo `.env` contiene las variables de configuración esenciales:
 - `STRIPE_SECRET_KEY`: Clave secreta de Stripe
 - `STRIPE_WEBHOOK_SECRET`: Secret para webhooks de Stripe
 
-**Email:**
+**Email y URLs:**
 - `MAILER_DSN`: Configuración SMTP para envío de emails
+- `MAILER_FROM`: Email remitente para notificaciones
+- `APP_URL`: URL del frontend para los enlaces en emails (ej: `https://int.app.flexystock.app`)
+- `SENTRY_DSN`: DSN de Sentry para monitoreo de errores (dejar vacío en local)
 
 **Lock System:**
 - `LOCK_DSN`: flock (sistema de bloqueos)
 
+### Variables por entorno
+
+| Variable | Local (dev) | Integración | Producción |
+|----------|------------|-------------|------------|
+| `APP_URL` | `http://localhost:3000` | `https://int.app.flexystock.app` | `https://app.flexystock.app` |
+| `FRONTEND_BASE_URL` | `http://localhost:5173` | `https://int.app.flexystock.app` | `https://app.flexystock.app` |
+| `SENTRY_DSN` | *(vacío)* | `https://xxx@sentry.io/yyy` | `https://xxx@sentry.io/zzz` |
+
 ### 🔐 Claves JWT de ejemplo
 
-El directorio `config/jwt` contiene un par de claves RSA de ejemplo (`private.pem` y `public.pem`) protegidas con la frase de contraseña `FlexyStock`. Estas claves permiten que la autenticación JWT funcione en entornos locales sin configuración adicional. 
+El directorio `config/jwt` contiene un par de claves RSA de ejemplo (`private.pem` y `public.pem`) protegidas con la frase de contraseña `FlexyStock`. Estas claves permiten que la autenticación JWT funcione en entornos locales sin configuración adicional.
 
 **⚠️ IMPORTANTE: No utilices estas claves en producción**. Genera unas nuevas con el siguiente comando:
 
@@ -413,6 +426,7 @@ php bin/console messenger:consume async -vv
 ```bash
 docker stop docker-symfony-messenger
 ```
+
 ## 📅 Sistema de Informes Programados
 
 El proyecto incluye un sistema completo de generación y envío automático de informes de inventario mediante tareas programadas (cron).
@@ -428,284 +442,27 @@ El proyecto incluye un sistema completo de generación y envío automático de i
 - **Registro de ejecuciones** para auditoría y seguimiento
 - **Prevención de duplicados** mediante control de ejecuciones por período
 
-### Arquitectura del Sistema
-
-#### Contenedor Cron
-
-El sistema utiliza un contenedor Docker dedicado (`docker-symfony-cron`) que ejecuta tareas programadas:
-```yaml
-docker-symfony-cron:
-  build: ./docker/php
-  container_name: docker-symfony-cron
-  command: >
-    bash -c "
-    apt-get update && apt-get install -y cron && apt-get clean &&
-    touch /var/log/cron.log &&
-    echo '0 * * * * cd /appdata/www && /usr/local/bin/php bin/console app:check-scheduled-reports >> /var/log/cron.log 2>&1' | crontab - &&
-    cron &&
-    tail -f /var/log/cron.log
-    "
-  networks:
-    - docker-symfony-network
-  restart: always
-  volumes:
-    - ./:/appdata/www
-```
-
-**Frecuencia de ejecución**: Cada hora (a los minutos 0)
-
-#### Base de Datos
-
-El sistema utiliza dos tablas en cada base de datos de cliente:
-
-**Tabla `report`** (configuración de informes):
-```sql
-CREATE TABLE report (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    period ENUM('daily', 'weekly', 'monthly') NOT NULL,
-    send_time TIME NOT NULL,
-    report_type ENUM('csv', 'pdf') NOT NULL,
-    product_filter ENUM('all', 'below_stock') NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    uuid_user_creation VARCHAR(36) NOT NULL,
-    datehour_creation DATETIME NOT NULL,
-    INDEX idx_send_time (send_time),
-    INDEX idx_period (period)
-);
-```
-
-**Tabla `report_executions`** (registro de ejecuciones):
-```sql
-CREATE TABLE report_executions (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    report_id INT UNSIGNED NOT NULL,
-    executed_at DATETIME NOT NULL,
-    status ENUM('processing', 'success', 'failed') NOT NULL,
-    sended BOOLEAN DEFAULT FALSE,
-    error_message TEXT,
-    FOREIGN KEY (report_id) REFERENCES report(id) ON DELETE CASCADE,
-    INDEX idx_report_executed (report_id, executed_at)
-);
-```
-
-#### Entidades Doctrine
-
-**`src/Entity/Client/Report.php`**
-- Representa la configuración de un informe programado
-- Campos: name, period, send_time, report_type, product_filter, email
-
-**`src/Entity/Client/ReportExecution.php`**
-- Registra cada ejecución de un informe
-- Relación ManyToOne con Report
-- Campos: executed_at, status, sended, error_message
-
-### Flujo de Trabajo
-
-1. **Verificación Horaria** (cron cada hora)
-   - El contenedor `docker-symfony-cron` ejecuta el comando `app:check-scheduled-reports`
-   - El comando itera sobre todos los clientes/tenants del sistema
-
-2. **Detección de Informes Pendientes**
-   - Para cada cliente, cambia al schema correspondiente
-   - Busca informes cuyo `send_time` coincida con la hora actual
-   - Verifica que no se haya ejecutado ya en el período actual:
-     - **Daily**: No ejecutado hoy (00:00 - 23:59)
-     - **Weekly**: No ejecutado esta semana (lunes a domingo)
-     - **Monthly**: No ejecutado este mes (día 1 al último día)
-
-3. **Encolado de Mensaje**
-   - Si el informe debe ejecutarse, se encola un mensaje `GenerateScheduledReportMessage`
-   - El mensaje contiene el `tenantId` y el `reportId`
-
-4. **Procesamiento Asíncrono**
-   - El contenedor `docker-symfony-messenger` consume el mensaje
-   - El `GenerateScheduledReportMessageHandler` procesa la tarea:
-     - Crea un registro en `report_executions` con status='processing'
-     - Genera el informe según la configuración (período, formato, filtros)
-     - Envía el email con el informe adjunto
-     - Actualiza el registro: status='success', sended=true
-
-5. **Generación del Informe**
-   - El `GenerateReportNowUseCase` calcula los datos según el período:
-     - **Daily**: Stock actual vs stock de ayer
-     - **Weekly**: Stock de los últimos 7 días (columnas por día)
-     - **Monthly**: Stock de los últimos 30 días (columnas por día)
-   - Genera el archivo CSV o PDF según configuración
-   - Usa plantillas Twig específicas por período
-
-### Comandos Principales
-
-#### Comando de Verificación
-```bash
-# Ejecutar manualmente el verificador de informes programados
-docker exec docker-symfony-be php bin/console app:check-scheduled-reports
-
-# Ver el output en tiempo real
-docker exec docker-symfony-cron tail -f /var/log/cron.log
-```
-
-**Ubicación**: `src/Command/CheckScheduledReportsCommand.php`
-
-#### Ver Logs del Cron
-```bash
-# Logs del contenedor cron
-docker logs docker-symfony-cron --tail 50
-
-# Logs en tiempo real
-docker logs -f docker-symfony-cron
-```
-
-#### Gestión del Contenedor
-```bash
-# Iniciar el contenedor cron
-docker compose up -d docker-symfony-cron
-
-# Detener el contenedor
-docker stop docker-symfony-cron
-
-# Reiniciar el contenedor
-docker restart docker-symfony-cron
-
-# Ver estado
-docker ps | grep cron
-```
-
 ### Endpoints API
 
-El sistema expone los siguientes endpoints para gestión de informes:
 ```bash
-# Crear un informe programado
-POST /api/report_create
-{
-  "name": "Informe Diario de Stock",
-  "period": "daily",
-  "send_time": "08:00:00",
-  "report_type": "pdf",
-  "product_filter": "all",
-  "email": "admin@example.com"
-}
-
-# Listar todos los informes
-GET /api/reports
-
-# Obtener un informe específico
-GET /api/report/{id}
-
-# Actualizar un informe
-PUT /api/report_update
-{
-  "id": 1,
-  "name": "Nuevo Nombre",
-  "send_time": "09:00:00"
-}
-
-# Eliminar un informe
-DELETE /api/report_delete/{id}
-
-# Generar un informe inmediatamente (sin esperar al cron)
-POST /api/report/generate-now
-{
-  "report_type": "pdf",
-  "product_filter": "below_stock",
-  "period": "daily"
-}
+POST /api/report_create       # Crear informe programado
+GET  /api/reports             # Listar todos los informes
+GET  /api/report/{id}         # Obtener un informe específico
+PUT  /api/report_update       # Actualizar un informe
+DELETE /api/report_delete/{id} # Eliminar un informe
+POST /api/report/generate-now  # Generar informe inmediatamente
 ```
 
 ### Tipos de Informes
 
-#### Informe Diario
-- Muestra el stock actual de cada producto
-- Compara con el stock del día anterior
-- Calcula la diferencia (stock_today - stock_yesterday)
-- Formato vertical con 3 columnas
-
-#### Informe Semanal
-- Muestra el stock de los últimos 7 días
-- Una columna por cada día de la semana
-- Formato horizontal (landscape)
-- Útil para ver tendencias semanales
-
-#### Informe Mensual
-- Muestra el stock de los últimos 30 días
-- Una columna por cada día del mes
-- Formato horizontal con letra reducida
-- Perfecto para análisis mensual
+- **Diario**: Stock actual vs stock de ayer
+- **Semanal**: Stock de los últimos 7 días (columnas por día)
+- **Mensual**: Stock de los últimos 30 días (columnas por día)
 
 ### Formatos Disponibles
 
-#### CSV
-- Fácil de importar en Excel o Google Sheets
-- Separador: coma (,)
-- Encoding: UTF-8
-- Primera fila: cabeceras
-
-#### PDF
-- Formato profesional para impresión
-- Plantillas Twig personalizadas por período
-- Generado con Dompdf
-- Tamaño de página automático según contenido
-
-### Filtros de Productos
-
-- **all**: Incluye todos los productos del inventario
-- **below_stock**: Solo productos con stock actual menor al stock mínimo configurado
-
-### Plantillas Twig
-
-Las plantillas para generación de PDF están ubicadas en:
-```
-templates/report/
-├── stock_report_daily.html.twig    # Formato vertical para informes diarios
-├── stock_report_weekly.html.twig   # Formato horizontal, 7 columnas
-└── stock_report_monthly.html.twig  # Formato horizontal, 30 columnas, letra reducida
-```
-
-### Configuración Multi-Tenant
-
-El sistema funciona en arquitectura multi-tenant:
-
-- Cada cliente tiene su propia base de datos
-- El `ClientConnectionManager` gestiona las conexiones dinámicas
-- Las migraciones se aplican automáticamente a todos los clientes
-- Cada informe se ejecuta en el contexto de su cliente correspondiente
-
-**Script de migraciones**: `/opt/flexystock/migrations/client/migrate_client.php`
-
-### Mensajes y Handlers
-
-**Mensaje**: `src/Message/GenerateScheduledReportMessage.php`
-```php
-class GenerateScheduledReportMessage
-{
-    public function __construct(
-        private int $tenantId,
-        private int $reportId
-    ) {}
-}
-```
-
-**Handler**: `src/MessageHandler/GenerateScheduledReportMessageHandler.php`
-- Procesa los mensajes de la cola
-- Genera y envía los informes
-- Registra el resultado en `report_executions`
-
-### Prevención de Duplicados
-
-El sistema evita que un mismo informe se ejecute múltiples veces en el mismo período:
-```php
-// El repositorio verifica si ya existe una ejecución exitosa
-public function wasExecutedInPeriod(
-    int $reportId,
-    string $period,
-    \DateTimeInterface $now
-): bool
-```
-
-Esto garantiza que:
-- Un informe diario solo se envía una vez al día
-- Un informe semanal solo se envía una vez a la semana
-- Un informe mensual solo se envía una vez al mes
+- **CSV**: Para importar en Excel o Google Sheets
+- **PDF**: Generado con Dompdf, usando plantillas Twig
 
 ### Zona Horaria
 
@@ -715,130 +472,58 @@ Ejemplo para España (UTC+1 en invierno, UTC+2 en verano):
 - Para enviar a las 08:00 hora local en invierno: `send_time = '07:00:00'`
 - Para enviar a las 08:00 hora local en verano: `send_time = '06:00:00'`
 
-### Troubleshooting
+## 🚨 Monitoreo de Errores (Sentry)
 
-#### Los informes no se generan
+El proyecto integra **Sentry** para la captura y notificación automática de errores en tiempo real.
+
+### Configuración
+
 ```bash
-# 1. Verificar que el contenedor cron está corriendo
-docker ps | grep cron
+# .env (dev local — vacío para no enviar errores locales)
+SENTRY_DSN=
 
-# 2. Ver logs del cron
-docker logs docker-symfony-cron --tail 100
+# .env.local del servidor de integración
+SENTRY_DSN="https://xxx@sentry.io/yyy"
 
-# 3. Ejecutar el comando manualmente
-docker exec docker-symfony-be php bin/console app:check-scheduled-reports
-
-# 4. Verificar la cola de Messenger
-docker exec docker-symfony-be php bin/console messenger:stats
+# .env.local del servidor de producción
+SENTRY_DSN="https://xxx@sentry.io/zzz"
 ```
 
-#### Los emails no se envían
+La configuración del bundle se encuentra en `config/packages/sentry.yaml`.
+
+### Qué errores captura
+
+- Excepciones no capturadas (errores 500)
+- Fallos en `HandleTtnUplinkUseCase` (uplinks de balanzas IoT)
+- Errores en `MermaNotifier` (emails de anomalías de merma)
+- Fallos en los handlers de Symfony Messenger
+- Cualquier error crítico en los use cases
+
+### Qué ignora
+
+- `NotFoundHttpException` (404 — rutas inexistentes)
+- `AccessDeniedException` (403 — sin permisos)
+- `ExpiredTokenException` (tokens JWT caducados — comportamiento normal)
+
+### Activación por entorno
+
+Sentry solo está activo cuando `SENTRY_DSN` tiene un valor. En local basta con dejarlo vacío. Cada entorno (integración, producción) tiene su propio proyecto en sentry.io para mantener las alertas separadas.
+
+### Comandos útiles
+
 ```bash
-# 1. Verificar configuración MAILER_DSN en .env
-cat .env | grep MAILER_DSN
+# Test manual de conexión con Sentry
+php bin/console sentry:test
 
-# 2. Ver logs de Symfony
-docker exec docker-symfony-be cat /appdata/www/var/log/dev-$(date +%Y-%m-%d).log | grep -i mail
-
-# 3. Verificar estado del Messenger
-docker logs docker-symfony-messenger --tail 50
+# Panel web
+# https://sentry.io → proyecto flexystock-integration
 ```
-
-#### Error "Report already executed in this period"
-
-Esto es normal y significa que el sistema está funcionando correctamente. El informe ya se ejecutó en el período actual y no se volverá a ejecutar hasta el siguiente período.
-
-#### Consultar ejecuciones de un informe
-```sql
--- Desde MySQL
-SELECT * FROM report_executions 
-WHERE report_id = 1 
-ORDER BY executed_at DESC 
-LIMIT 10;
-```
-
-### Migraciones del Sistema
-
-Las migraciones del sistema de informes están ubicadas en:
-```
-migrations/client/
-├── 022/
-│   └── 001-create-table-report.sql
-└── 023/
-    └── 001-create-table-report-executions.sql
-```
-
-Para aplicar las migraciones manualmente:
-```bash
-docker exec docker-symfony-be php /opt/flexystock/migrations/client/migrate_client.php
-```
-
-### Monitoreo y Métricas
-
-Recomendaciones para monitoreo en producción:
-
-1. **Alertas de disco**: Si el uso supera el 75%
-2. **Alertas de Messenger**: Si la cola tiene más de 50 mensajes pendientes
-3. **Logs de fallos**: Revisar `report_executions` con status='failed'
-4. **Alertas de contenedor**: Si `docker-symfony-cron` o `docker-symfony-messenger` están detenidos
-```bash
-# Ver informes fallidos
-docker exec docker-symfony-be php bin/console dbal:run-sql "
-SELECT r.name, re.executed_at, re.error_message 
-FROM report_executions re 
-JOIN report r ON r.id = re.report_id 
-WHERE re.status = 'failed' 
-ORDER BY re.executed_at DESC 
-LIMIT 10"
-```
-
-### Ejemplo de Uso
-
-1. **Crear un informe diario en PDF**:
-```bash
-curl -X POST http://localhost:300/api/report_create \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -d '{
-    "name": "Stock Diario - Almacén Principal",
-    "period": "daily",
-    "send_time": "08:00:00",
-    "report_type": "pdf",
-    "product_filter": "all",
-    "email": "almacen@empresa.com"
-  }'
-```
-
-2. **El sistema automáticamente**:
-   - Verificará cada hora si es momento de ejecutar el informe
-   - A las 08:00 detectará que debe ejecutarse
-   - Encolará el mensaje en Messenger
-   - Generará el PDF con los datos del último día
-   - Enviará el email con el PDF adjunto
-   - Registrará la ejecución exitosa
-
-3. **Al día siguiente**:
-   - El sistema verificará que no se ejecutó hoy
-   - Volverá a ejecutarlo a las 08:00
-   - Y así sucesivamente cada día
-
-### Ventajas del Sistema
-
-✅ **Totalmente automatizado**: Sin intervención manual necesaria  
-✅ **Escalable**: Soporta múltiples clientes y múltiples informes por cliente  
-✅ **Robusto**: Control de duplicados, manejo de errores, registro de ejecuciones  
-✅ **Flexible**: Tres períodos, dos formatos, filtros configurables  
-✅ **Asíncrono**: No bloquea el sistema principal  
-✅ **Auditable**: Cada ejecución queda registrada con su resultado  
-✅ **Multi-tenant**: Funciona independientemente para cada cliente
 
 ## 🌐 Integración con The Things Network (TTN)
 
 El proyecto incluye integración completa con **The Things Network** para gestión de dispositivos LoRaWAN y balanzas IoT.
 
 ### Configuración TTN
-
-Variables de entorno en `.env`:
 
 ```bash
 TTN_API_BASE_URL="https://eu1.cloud.thethings.network/api/v3"
@@ -852,18 +537,11 @@ TTN_FREQUENCY_PLAN_ID="EU_863_870_TTN"
 ### Características
 
 - Registro y gestión de dispositivos LoRaWAN
-- Configuración de end devices
-- Recepción de datos de sensores
+- Recepción y procesamiento de datos de sensores (uplinks)
+- Detección de anomalías de merma fuera de horario
+- Notificaciones por email al detectar variaciones inesperadas de peso
 - Gestión de aplicaciones TTN
-- Soporte para balanzas inteligentes
-
-### Módulos TTN
-
-El código relacionado con TTN se encuentra en `src/Ttn/` e incluye servicios para:
-- Creación y configuración de dispositivos
-- Gestión de aplicaciones
-- Procesamiento de mensajes uplink/downlink
-- Integración con el sistema de balanzas
+- Soporte para balanzas inteligentes Heltec CubeCell + HX711
 
 ## 💳 Integración con Stripe
 
@@ -879,107 +557,13 @@ STRIPE_WEBHOOK_SECRET="whsec_..."
 
 ⚠️ **Nota**: Las claves mostradas son de prueba. En producción, usa claves reales de Stripe.
 
-### Módulos de Stripe
-
-- `src/Stripe/`: Integración con la API de Stripe
-- `src/Subscription/`: Sistema de suscripciones
-
-### Webhooks
-
-El proyecto está configurado para recibir webhooks de Stripe para eventos como:
-- Pagos completados
-- Suscripciones creadas/actualizadas
-- Fallos en pagos
-
-## 📊 Características Principales
-
-### Módulos del Sistema
-
-1. **Admin**: Panel de administración
-2. **Alarm**: Sistema de alarmas y notificaciones
-3. **Client**: Gestión multicliente
-4. **Dashboard**: Paneles de control y métricas
-5. **Product**: Gestión de productos e inventario
-6. **Scales**: Control de balanzas inteligentes
-7. **User**: Gestión de usuarios y perfiles
-8. **WeightAnalytics**: Análisis de datos de peso
-9. **Security**: Autenticación y autorización
-10. **Subscription**: Gestión de suscripciones
-
-### Arquitectura Hexagonal
-
-El proyecto sigue los principios de arquitectura hexagonal (ports & adapters):
-
-- **Domain Layer**: Entidades y lógica de negocio
-- **Application Layer**: Casos de uso y servicios de aplicación
-- **Infrastructure Layer**: Implementaciones concretas (repositorios, API clients)
-- **Presentation Layer**: Controladores y puntos de entrada
-
-Esto permite:
-- Separación clara de responsabilidades
-- Facilidad para testing
-- Independencia de frameworks
-- Escalabilidad
-
-## 🔧 Desarrollo
-
-### Code Style
-
-El proyecto utiliza **PHP CS Fixer** con reglas de Symfony:
-
-```bash
-# Arreglar estilo de código automáticamente
-make code-style
-
-# O manualmente
-docker exec docker-symfony-be bash -c "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix src --rules=@Symfony"
-```
-
-### Logs
-
-```bash
-# Ver logs en tiempo real
-make logs
-
-# Acceder a logs específicos
-docker exec -it docker-symfony-be cat /appdata/www/var/log/dev-$(date +%Y-%m-%d).log
-```
-
-### Acceso a Contenedores
-
-```bash
-# Backend
-make ssh-be
-
-# Messenger
-make ssh-messenger
-
-# Base de datos
-docker exec -it docker-symfony-dbMain bash
-```
-
-## 🔒 Seguridad
-
-### Autenticación JWT
-
-- Tokens JWT para autenticación stateless
-- Refresh tokens para renovación
-- Roles y permisos mediante Symfony Security
-
-### Mejores Prácticas
-
-- Variables sensibles en `.env.local` (no commiteadas)
-- Claves JWT únicas por entorno
-- Validación de entrada en todos los endpoints
-- Protección CORS configurada
-- Rate limiting disponible
-
 ## 📝 Logs y Monitoreo
 
 ### Ubicación de Logs
 
 - **Logs de Symfony**: `/appdata/www/var/log/`
 - **Logs de Docker**: Configurados con rotación (max-size: 10m, max-file: 2)
+- **Errores en tiempo real**: Panel de Sentry (sentry.io)
 
 ### Ver Logs
 
@@ -1020,9 +604,6 @@ make restart
 # Verificar que el contenedor está corriendo
 docker ps | grep dbMain
 
-# Verificar logs
-docker logs docker-symfony-dbMain
-
 # Probar conexión
 docker exec -it docker-symfony-be php -r "new PDO('mysql:host=docker-symfony-dbMain;port=3306', 'user', 'password');"
 ```
@@ -1030,15 +611,52 @@ docker exec -it docker-symfony-be php -r "new PDO('mysql:host=docker-symfony-dbM
 ### Messenger no procesa mensajes
 
 ```bash
-# Verificar estado del contenedor
-docker ps | grep messenger
-
 # Ver logs
 docker logs docker-symfony-messenger
 
 # Reiniciar manualmente
 docker restart docker-symfony-messenger
 ```
+
+### Los emails de anomalía apuntan a localhost
+
+Verificar que `APP_URL` está correctamente definido en el `.env.local` del servidor:
+
+```bash
+grep APP_URL .env.local
+# Debe mostrar: APP_URL=https://int.app.flexystock.app
+```
+
+### Errores no llegan a Sentry
+
+```bash
+# Verificar que el DSN está configurado
+grep SENTRY_DSN .env.local
+
+# Test de conexión
+php bin/console sentry:test
+```
+
+### Ver errores recientes en Sentry
+
+Acceder al panel web en sentry.io → proyecto correspondiente → Issues.
+
+## 🔒 Seguridad
+
+### Autenticación JWT
+
+- Tokens JWT para autenticación stateless
+- Refresh tokens para renovación
+- Roles y permisos mediante Symfony Security
+
+### Mejores Prácticas
+
+- Variables sensibles en `.env.local` (no commiteadas)
+- Claves JWT únicas por entorno
+- Validación de entrada en todos los endpoints
+- Protección CORS configurada
+- Rate limiting disponible
+- Monitoreo de errores con Sentry
 
 ## 📚 Recursos Adicionales
 
@@ -1048,6 +666,7 @@ docker restart docker-symfony-messenger
 - [Symfony Messenger](https://symfony.com/doc/current/messenger.html)
 - [The Things Network](https://www.thethingsnetwork.org/docs/)
 - [Stripe API Documentation](https://stripe.com/docs/api)
+- [Sentry para Symfony](https://docs.sentry.io/platforms/php/guides/symfony/)
 
 ## 🚫 Contribución
 
