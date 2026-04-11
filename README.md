@@ -1,4 +1,4 @@
-# 🛠️ BackApp
+# 🛠️ BackApp (11/04/2026)
 
 Este repositorio **BackApp** es el backend de una aplicación diseñada para la gestión eficiente de inventarios y stock a través de balanzas inteligentes.
 
