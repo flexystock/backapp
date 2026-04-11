@@ -6,6 +6,7 @@ use App\Entity\Main\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
+use Symfony\Component\Security\Http\Authenticator\JsonLoginAuthenticator;
 
 #[AsEventListener(event: LoginSuccessEvent::class)]
 class LoginSuccessListener
@@ -16,6 +17,10 @@ class LoginSuccessListener
 
     public function __invoke(LoginSuccessEvent $event): void
     {
+        if (!$event->getAuthenticator() instanceof JsonLoginAuthenticator) {
+            return;
+        }
+
         $user = $event->getAuthenticatedToken()->getUser();
         if (!$user instanceof User) {
             return;
